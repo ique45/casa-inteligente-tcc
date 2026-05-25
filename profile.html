@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Casa Inteligente — Perfil</title>
+  <link rel="stylesheet" href="css/app.css"/>
+  <style>
+    .profiles-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 32px;
+    }
+    .profile-card {
+      padding: 20px 16px; cursor: pointer; text-align: center;
+      border: 2px solid var(--border); border-radius: var(--radius);
+      background: var(--bg-card); transition: all 0.2s;
+    }
+    .profile-card:hover { border-color: var(--purple-light); }
+    .profile-card.selected { border-color: var(--purple); background: var(--purple-glow); }
+    .profile-card .icon { font-size: 2.2rem; margin-bottom: 10px; }
+    .profile-card .name { font-weight: 700; margin-bottom: 6px; }
+    .profile-card .desc { font-size: 0.78rem; color: var(--text-muted); }
+    .profile-card .triggers { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+    .trigger-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; background: var(--border); color: var(--text-muted); }
+    .profile-card.selected .trigger-tag { background: rgba(124,58,237,0.3); color: var(--purple-light); }
+
+    .toggles-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .toggles-list .toggle-row { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .toggles-list .toggle-row:last-child { border-bottom: none; }
+
+    #btn-save { margin-top: 24px; width: 100%; }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="logo">Casa Inteligente</div>
+    <div class="user-menu" id="btn-logout">Sair</div>
+  </header>
+
+  <div class="page-body">
+    <h2 class="section-title">Selecione seu perfil</h2>
+    <p style="color:var(--text-muted);margin-bottom:20px;font-size:0.9rem">
+      Escolha um ou mais perfis para configurar as funções disponíveis.
+    </p>
+
+    <div class="profiles-grid" id="profiles-grid"></div>
+
+    <div id="toggles-section" style="display:none">
+      <h3 class="section-title">Ajuste fino das funções</h3>
+      <div class="toggles-list" id="toggles-list"></div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-save">Salvar e continuar</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/profile.js"></script>
+</body>
+</html>

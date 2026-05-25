@@ -1,0 +1,96 @@
+// Redireciona para dashboard se já logado
+auth.onAuthStateChanged(user => {
+  if (user && window.location.pathname.includes('login.html')) {
+    window.location.href = 'profile.html';
+  }
+});
+
+let isSignup = false;
+
+document.getElementById('toggle-link').addEventListener('click', () => {
+  isSignup = !isSignup;
+  document.getElementById('btn-submit').textContent = isSignup ? 'Cadastrar' : 'Entrar';
+  document.getElementById('toggle-text').textContent = isSignup ? 'Já tem conta? ' : 'Não tem conta? ';
+  document.getElementById('toggle-link').textContent = isSignup ? 'Entrar' : 'Cadastrar';
+  hideError();
+});
+
+document.getElementById('btn-submit').addEventListener('click', async () => {
+  const email = document.getElementById('input-email').value.trim();
+  const senha = document.getElementById('input-senha').value;
+  if (!email || !senha) return showError('Preencha email e senha.');
+  if (isSignup && senha.length < 6) return showError('Senha deve ter pelo menos 6 caracteres.');
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  hideError();
+
+  try {
+    if (isSignup) {
+      const cred = await auth.createUserWithEmailAndPassword(email, senha);
+      await db.collection('users').doc(cred.user.uid).set({
+        email,
+        name: email.split('@')[0],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        activeProfiles: [],
+        activeToggles: {}
+      });
+    } else {
+      await auth.signInWithEmailAndPassword(email, senha);
+    }
+    window.location.href = 'profile.html';
+  } catch (err) {
+    showError(translateError(err.code));
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('btn-google').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-google');
+  btn.disabled = true;
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    const cred = await auth.signInWithPopup(provider);
+    const userDoc = db.collection('users').doc(cred.user.uid);
+    const snap = await userDoc.get();
+    if (!snap.exists) {
+      await userDoc.set({
+        email: cred.user.email,
+        name: cred.user.displayName,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        activeProfiles: [],
+        activeToggles: {}
+      });
+    }
+    window.location.href = 'profile.html';
+  } catch (err) {
+    showError(translateError(err.code));
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('error-msg').style.display = 'none';
+}
+
+function translateError(code) {
+  const msgs = {
+    'auth/user-not-found': 'Email não encontrado.',
+    'auth/wrong-password': 'Senha incorreta.',
+    'auth/invalid-credential': 'Email ou senha incorretos.',
+    'auth/email-already-in-use': 'Email já cadastrado.',
+    'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres).',
+    'auth/invalid-email': 'Email inválido.',
+    'auth/popup-closed-by-user': 'Login cancelado.',
+    'auth/popup-blocked': 'Popup bloqueado pelo navegador. Permita popups e tente novamente.'
+  };
+  return msgs[code] || 'Erro ao autenticar. Tente novamente.';
+}

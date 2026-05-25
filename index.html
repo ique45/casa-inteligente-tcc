@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Casa Inteligente</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">Casa Inteligente</div>
+    <ul class="nav-links">
+      <li><a href="#inicio" class="nav-link active" data-section="inicio">INÍCIO</a></li>
+      <li><a href="#projeto" class="nav-link" data-section="projeto">PROJETO</a></li>
+      <li><a href="#desenvolvimento" class="nav-link" data-section="desenvolvimento">DESENVOLVIMENTO</a></li>
+      <li><a href="#grupo" class="nav-link" data-section="grupo">GRUPO</a></li>
+      <li><a href="#referencia" class="nav-link" data-section="referencia">REFERÊNCIA</a></li>
+    </ul>
+    <div class="nav-search" id="searchToggle">
+      <span class="search-icon">&#x2315;</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Pesquisar..." />
+    </div>
+    <div class="nav-user">&#9711;</div>
+  </nav>
+
+  <!-- SECTION: INÍCIO -->
+  <section id="inicio" class="section hero-section">
+    <div class="hero-content">
+      <div class="badge">3 AMS DESENVOLVIMENTO DE SISTEMAS</div>
+      <h1 class="hero-title">
+        Conectando<br />
+        Tecnologia e<br />
+        <span class="purple">Qualidade de<br />Vida</span>
+      </h1>
+      <p class="hero-text">
+        A automação residencial tem se destacado como uma ferramenta essencial para promover
+        acessibilidade, conforto e autonomia.
+      </p>
+      <p class="hero-text">
+        Este projeto apresenta uma casa inteligente desenvolvida para atender pessoas com
+        mobilidade reduzida, e outros tipos de deficiências que dificultam a realização de
+        atividades diárias dentro do ambiente doméstico, proporcionando mais independência,
+        segurança e qualidade de vida.
+      </p>
+      <div class="hero-buttons">
+        <a href="#projeto" class="btn-primary">Explorar Projeto</a>
+        <a href="#referencia" class="btn-link">Referências</a>
+      </div>
+    </div>
+    <div class="hero-image">
+      <div class="house-illustration">
+        <div class="house-glow"></div>
+        <svg viewBox="0 0 300 260" xmlns="http://www.w3.org/2000/svg" class="house-svg">
+          <!-- Base platform -->
+          <polygon points="150,240 280,190 280,200 150,250 20,200 20,190" fill="#1a0a2e" stroke="#a855f7" stroke-width="1"/>
+          <!-- Left wall -->
+          <polygon points="20,100 150,50 150,240 20,190" fill="#0d0518" stroke="#a855f7" stroke-width="1"/>
+          <!-- Right wall -->
+          <polygon points="150,50 280,100 280,190 150,240" fill="#160826" stroke="#a855f7" stroke-width="1.5"/>
+          <!-- Roof left -->
+          <polygon points="5,95 150,35 150,50 20,100" fill="#2a1040" stroke="#a855f7" stroke-width="1"/>
+          <!-- Roof right -->
+          <polygon points="150,35 295,95 280,100 150,50" fill="#1e0a30" stroke="#a855f7" stroke-width="1"/>
+          <!-- Roof top panels (solar) -->
+          <rect x="160" y="55" width="50" height="25" rx="2" fill="#0d2040" stroke="#4488cc" stroke-width="1" transform="skewX(-15) translate(10,0)"/>
+          <rect x="218" y="68" width="45" height="22" rx="2" fill="#0d2040" stroke="#4488cc" stroke-width="1" transform="skewX(-15) translate(8,0)"/>
+          <!-- Windows left wall -->
+          <rect x="40" y="120" width="50" height="40" rx="3" fill="#c084fc" opacity="0.3" stroke="#c084fc" stroke-width="1"/>
+          <line x1="65" y1="120" x2="65" y2="160" stroke="#c084fc" stroke-width="0.5" opacity="0.6"/>
+          <line x1="40" y1="140" x2="90" y2="140" stroke="#c084fc" stroke-width="0.5" opacity="0.6"/>
+          <!-- Door left wall -->
+          <rect x="95" y="165" width="35" height="55" rx="2" fill="#c084fc" opacity="0.2" stroke="#c084fc" stroke-width="1"/>
+          <!-- Windows right wall -->
+          <rect x="170" y="110" width="50" height="35" rx="3" fill="#c084fc" opacity="0.2" stroke="#c084fc" stroke-width="1" transform="skewX(20) translate(-35,0)"/>
+          <rect x="230" y="125" width="40" height="30" rx="3" fill="#c084fc" opacity="0.2" stroke="#c084fc" stroke-width="1" transform="skewX(20) translate(-30,0)"/>
+          <!-- Glow lights inside windows -->
+          <ellipse cx="65" cy="140" rx="25" ry="15" fill="#c084fc" opacity="0.15"/>
+          <ellipse cx="200" cy="130" rx="20" ry="12" fill="#c084fc" opacity="0.1"/>
+          <!-- Ground glow -->
+          <ellipse cx="150" cy="235" rx="100" ry="15" fill="#a855f7" opacity="0.2"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: PROBLEMA E SOLUÇÃO -->
+  <section id="problema" class="section">
+    <h2 class="section-title">O Problema e a Solução</h2>
+    <p class="section-subtitle">
+      Muitas residências não estão preparadas para atender pessoas com mobilidade reduzida,
+      dificultando tarefas simples do dia a dia. Este projeto propõe uma solução baseada em
+      automação residencial para promover mais autonomia, segurança e inclusão.
+    </p>
+    <div class="cards-grid-2x2">
+      <div class="card card-light">
+        <div class="card-icon">&#9768;</div>
+        <h3>Desafios Atuais</h3>
+        <p>Ambientes domésticos pouco adaptados dificultam a locomoção e a independência.</p>
+      </div>
+      <div class="card card-dark highlight">
+        <div class="card-icon purple-icon">&#9889;</div>
+        <h3 class="purple">Impacto no Dia a Dia</h3>
+        <p>Mais independência, conforto e segurança dentro da própria casa.</p>
+      </div>
+      <div class="card card-image">
+        <div class="card-img-placeholder"></div>
+        <div class="card-icon">&#9965;</div>
+        <h3>Solução Tecnológica</h3>
+        <p>A automação permite controlar o ambiente de forma prática e acessível.</p>
+      </div>
+      <div class="card card-image">
+        <div class="card-img-placeholder dashboard"></div>
+        <h3>Falta de Acessibilidade</h3>
+        <p>A ausência de recursos inteligentes limita a autonomia de pessoas com deficiência.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: POR QUE É IMPORTANTE -->
+  <section id="importancia" class="section importance-section">
+    <div class="importance-grid">
+      <div class="values-grid">
+        <div class="value-card tl">
+          <span>Inclusão</span>
+        </div>
+        <div class="value-card tr highlight-card">
+          <span>Segurança</span>
+        </div>
+        <div class="value-card bl">
+          <span>Autonomia</span>
+        </div>
+        <div class="value-card br highlight-card">
+          <span>Conforto</span>
+        </div>
+      </div>
+      <div class="importance-text">
+        <h2>Por que este projeto<br /><span class="purple">é importante?</span></h2>
+        <p>
+          A tecnologia desempenha um papel importante na construção de uma sociedade mais
+          inclusiva, oferecendo soluções que tornam os ambientes mais acessíveis e funcionais.
+          Nesse contexto, a automação residencial se destaca como uma forma de adaptar espaços
+          para diferentes necessidades.
+        </p>
+        <p>
+          Este projeto busca reduzir barreiras físicas dentro da residência, facilitando
+          atividades do dia a dia e promovendo maior independência para pessoas com mobilidade
+          reduzida, contribuindo para mais conforto, segurança e qualidade de vida.
+        </p>
+        <a href="#referencia" class="link-arrow">Ver Referências do Projeto &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: PROJETO -->
+  <section id="projeto" class="section">
+    <div class="badge">3 AMS DESENVOLVIMENTO DE SISTEMAS</div>
+    <div class="split-layout">
+      <div class="split-text">
+        <h2 class="big-title">Arquitetura da<br /><span class="purple">Casa Inteligente</span></h2>
+        <p>
+          A arquitetura da casa inteligente é baseada na integração de dispositivos eletrônicos,
+          sensores e sistemas de controle, permitindo a automação de funções essenciais do
+          ambiente doméstico. Esses elementos trabalham de forma conjunta para proporcionar mais
+          acessibilidade, segurança e autonomia aos usuários.
+        </p>
+      </div>
+      <div class="split-image tech-image"></div>
+    </div>
+    <div class="project-cards">
+      <div class="card card-dark full-card">
+        <div class="card-icon-row">
+          <span class="icon-small">&#9675;</span>
+          <h3>Origem da Ideia</h3>
+        </div>
+        <p>
+          A origem deste projeto surgiu a partir da observação das dificuldades enfrentadas por
+          pessoas com mobilidade reduzida dentro de suas próprias residências. Atividades simples,
+          como acender uma luz ou abrir uma porta, podem se tornar desafiadoras na ausência de
+          adaptações adequadas.
+        </p>
+        <p>
+          Diante dessa realidade, surgiu a proposta de desenvolver uma solução baseada em
+          automação residencial, com o objetivo de tornar o ambiente mais acessível, seguro e
+          funcional.
+        </p>
+      </div>
+      <div class="card card-purple">
+        <div class="card-label">METAS CENTRAIS</div>
+        <ul class="metas-list">
+          <li><span class="check">&#10003;</span> Eficiência Energética de 40%</li>
+          <li><span class="check">&#10003;</span> Latência Zero em IoT Local</li>
+          <li><span class="check">&#10003;</span> Interface Cognitiva Adaptativa</li>
+        </ul>
+        <div class="year-label">2024</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: COMPONENTES DO SISTEMA -->
+  <section id="componentes" class="section">
+    <h2 class="section-title">Componentes do Sistema</h2>
+    <div class="components-grid">
+      <div class="component">
+        <div class="comp-number">01</div>
+        <h3 class="purple">Sensores</h3>
+        <p>Responsáveis por identificar ações no ambiente, como presença, movimento ou comandos do usuário.</p>
+      </div>
+      <div class="component">
+        <div class="comp-number">02</div>
+        <h3 class="purple">Controlador Central</h3>
+        <p>Sistema responsável por processar as informações recebidas e executar as ações programadas.</p>
+      </div>
+      <div class="component">
+        <div class="comp-number">03</div>
+        <h3 class="purple">Interface de Controle</h3>
+        <p>Permite que o usuário interaja com a casa por meio de aplicativo ou comando de voz.</p>
+      </div>
+      <div class="component">
+        <div class="comp-number">04</div>
+        <h3 class="purple">Atuadores</h3>
+        <p>Dispositivos que executam as ações, como acender luzes, abrir portas ou ativar equipamentos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: DEMO -->
+  <section id="demo" class="section">
+    <div class="demo-card">
+      <div class="demo-image"></div>
+      <div class="demo-text">
+        <h2>Veja nosso projeto funcionando</h2>
+        <p>
+          No vídeo ao lado, é possível conhecer o projeto em funcionamento, com a demonstração
+          de suas funcionalidades na prática por meio do uso de realidade virtual.
+        </p>
+        <a href="#desenvolvimento" class="btn-primary">Veja o Desenvolvimento do Projeto &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: DESENVOLVIMENTO -->
+  <section id="desenvolvimento" class="section">
+    <div class="badge">3 AMS DESENVOLVIMENTO DE SISTEMAS</div>
+    <div class="split-layout">
+      <div class="split-text">
+        <h2 class="big-title">Desenvolvimento<br />Técnico.</h2>
+        <p>
+          O desenvolvimento do projeto foi realizado com base na aplicação de tecnologias voltadas
+          à automação residencial, utilizando o microcontrolador Arduino aliado a recursos de
+          realidade virtual. A proposta consiste na integração de dispositivos inteligentes capazes
+          de se comunicar entre si, permitindo o controle e a automação de funções dentro do
+          ambiente doméstico.
+        </p>
+        <p>
+          Além disso, a realidade virtual foi utilizada para simular o funcionamento da casa
+          inteligente, possibilitando a visualização prática das funcionalidades desenvolvidas.
+          Durante o processo, foram selecionados componentes e ferramentas adequados para garantir
+          o funcionamento eficiente do sistema, priorizando acessibilidade, segurança e facilidade
+          de uso.
+        </p>
+      </div>
+      <div class="split-image chip-image"></div>
+    </div>
+
+    <div class="dev-cards">
+      <div class="card card-dark">
+        <div class="card-icon-row">
+          <span class="icon-cpu">&#9112;</span>
+          <h3>Integração de Dispositivos</h3>
+        </div>
+        <p>
+          Conexão entre sensores e atuadores por meio do sistema de controle, permitindo o
+          funcionamento automatizado e eficiente da residência. Essa integração possibilita que
+          diferentes componentes trabalhem de forma conjunta, garantindo respostas rápidas às
+          ações do usuário e ao ambiente.
+        </p>
+        <div class="dev-dots">
+          <span class="dot dot-dark"></span>
+          <span class="dot dot-purple"></span>
+        </div>
+      </div>
+      <div class="card card-purple">
+        <div class="card-icon-row">
+          <span class="icon-cpu">&#9768;</span>
+          <h3>Realidade Virtual</h3>
+        </div>
+        <p>
+          Aplicação da realidade virtual para simular o ambiente da casa inteligente e
+          demonstrar suas funcionalidades na prática.
+        </p>
+      </div>
+    </div>
+
+    <div class="dev-cards">
+      <div class="card card-dark">
+        <div class="card-icon-row">
+          <span class="icon-cpu">&#9729;</span>
+          <h3>Arduino</h3>
+        </div>
+        <p>
+          Utilização do microcontrolador Arduino para controlar os dispositivos e integrar os
+          sistemas de automação da residência.
+        </p>
+      </div>
+      <div class="card card-image server-image-card">
+        <div class="server-overlay">
+          <h3>Testes e Validação</h3>
+          <p>Realização de testes para garantir o desempenho do sistema e sua adaptação às necessidades dos usuários.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CODE SECTION -->
+    <div class="code-section">
+      <div class="code-block">
+        <h3>Programação</h3>
+        <p>
+          O trecho de código abaixo demonstra a inicialização da conexão segura com o broker
+          MQTT e a subscrição aos tópicos de controle de iluminação.
+        </p>
+        <div class="code-window">
+          <div class="code-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <pre><code><span class="code-keyword">void</span> <span class="code-fn">setup_wifi</span>() {
+  <span class="code-fn">delay</span>(10);
+  Serial.<span class="code-fn">println</span>(<span class="code-str">"Connecting to Wifi..."</span>);
+  WiFi.<span class="code-fn">begin</span>(ssid, password);
+  <span class="code-keyword">while</span> (WiFi.<span class="code-fn">status</span>() != WL_CONNECTED) {
+    <span class="code-fn">delay</span>(500);
+    Serial.<span class="code-fn">print</span>(<span class="code-str">"."</span>);
+  }
+}
+
+<span class="code-keyword">void</span> <span class="code-fn">callback</span>(<span class="code-keyword">char</span>* topic, <span class="code-keyword">byte</span>* payload, <span class="code-keyword">unsigned int</span> length) {
+  <span class="code-comment">/* logic for message processing */</span>
+  <span class="code-keyword">if</span> ((<span class="code-keyword">char</span>)payload[0] == <span class="code-str">'1'</span>) {
+    <span class="code-fn">digitalWrite</span>(RELAY_PIN, HIGH);
+  } <span class="code-keyword">else</span> {
+    <span class="code-fn">digitalWrite</span>(RELAY_PIN, LOW);
+  }
+}</code></pre>
+        </div>
+      </div>
+      <div class="flow-block">
+        <div class="flow-header">
+          <span class="flow-icon">&#9768;</span>
+          <h3>Fluxo de Dados</h3>
+        </div>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="step-num">1</div>
+            <div>
+              <strong>Sensor Input</strong>
+              <p>Leitura analógica (ESP32 ADC)</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num step-purple">2</div>
+            <div>
+              <strong>MQTT Publish</strong>
+              <p>Payload JSON via WiFi 2.4GHz</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">3</div>
+            <div>
+              <strong>Firebase Storage</strong>
+              <p>Atualização da Realtime DB</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: GRUPO -->
+  <section id="grupo" class="section">
+    <div class="badge">3 AMS DESENVOLVIMENTO DE SISTEMAS</div>
+    <h2 class="big-title">Desenvolvedores<br />do <span class="purple">Projeto</span></h2>
+    <p class="section-subtitle">
+      Este projeto foi desenvolvido por estudantes do curso de Desenvolvimento de Sistemas, com o
+      objetivo de aplicar conhecimentos técnicos na criação de uma solução voltada à acessibilidade.
+      A proposta une tecnologia e inovação para promover mais autonomia e qualidade de vida para
+      pessoas com mobilidade reduzida.<br />
+      O trabalho foi realizado de forma colaborativa, envolvendo etapas de planejamento,
+      desenvolvimento e testes, sempre com foco na criação de um sistema funcional, acessível e eficiente.
+    </p>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-photo photo-1"></div>
+        <div class="team-info">
+          <span class="team-role">LEAD DEVELOPER</span>
+          <h3>HENRIQUE DELALIBERA</h3>
+          <p>Responsável pela arquitetura de software e integração de APIs de baixo consumo energético.</p>
+        </div>
+      </div>
+      <div class="team-card">
+        <div class="team-photo photo-2"></div>
+        <div class="team-info">
+          <span class="team-role">UI/UX DESIGNER</span>
+          <h3>ISABELA SCUCCIATO</h3>
+          <p>Focada em acessibilidade e na jornada do usuário dentro do ecossistema Casa Inteligente.</p>
+        </div>
+      </div>
+      <div class="team-card">
+        <div class="team-photo photo-3"></div>
+        <div class="team-info">
+          <span class="team-role">HARDWARE SPECIALIST</span>
+          <h3>THIAGO PINHEIRO</h3>
+          <p>Especialista em sensores biométricos e prototipagem de circuitos integrados de segurança.</p>
+        </div>
+      </div>
+      <div class="team-card">
+        <div class="team-photo photo-4"></div>
+        <div class="team-info">
+          <span class="team-role">CLOUD ARCHITECT</span>
+          <h3>REBECA DAMASIO</h3>
+          <p>Implementadora da infraestrutura em nuvem e processamento de dados em tempo real.</p>
+        </div>
+      </div>
+      <div class="team-card">
+        <div class="team-photo photo-5"></div>
+        <div class="team-info">
+          <span class="team-role">IOT RESEARCHER</span>
+          <h3>SOFIA LOPES</h3>
+          <p>Pesquisadora de protocolos de comunicação sem fio e otimização de rede Mesh.</p>
+        </div>
+      </div>
+      <div class="team-card">
+        <div class="team-photo photo-6"></div>
+        <div class="team-info">
+          <span class="team-role">PROJECT MANAGER</span>
+          <h3>LUCAS RIBEIRO</h3>
+          <p>Coordenadora de cronogramas e documentação técnica seguindo normas acadêmicas ABNT.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: REFERÊNCIA -->
+  <section id="referencia" class="section">
+    <div class="badge">ARQUIVO ACADÊMICO</div>
+    <div class="split-layout">
+      <div class="split-text">
+        <h2 class="big-title-ref">REFERÊNCIAS<br /><span class="purple">&amp; FONTES</span></h2>
+        <p>
+          Compilação rigorosa das fontes bibliográficas, documentação técnica e ferramentas que
+          fundamentaram a pesquisa e o desenvolvimento do projeto Casa Inteligente.
+        </p>
+      </div>
+      <div class="split-image library-image"></div>
+    </div>
+
+    <div class="ref-layout">
+      <div class="ref-bib">
+        <div class="ref-section-title">
+          <span>&#128218;</span> Bibliografia ABNT
+        </div>
+
+        <div class="ref-item">
+          <span class="ref-type">MONOGRAFIA / TCC</span>
+          <p>
+            SILVA, Roberto. <strong>Sistemas Embarcados e Automação Residencial</strong>. 2. ed.
+            São Paulo: Editora Acadêmica, 2023. 245 p.
+          </p>
+        </div>
+        <div class="ref-item">
+          <span class="ref-type">ARTIGO CIENTÍFICO</span>
+          <p>
+            OLIVEIRA, M. A.; SANTOS, J. P. <strong>Protocolos de Comunicação IOT em Ambientes Domésticos</strong>.
+            Revista Brasileira de Tecnologia, Curitiba, v. 12, n. 3, p. 45-67, jul. 2022.
+          </p>
+        </div>
+        <div class="ref-item">
+          <span class="ref-type">DOCUMENTAÇÃO TÉCNICA</span>
+          <p>
+            IEEE STANDARDS ASSOCIATION. <strong>Standard for Smart Grid Interoperability</strong>.
+            IEEE Std 2030-2011. New York, 2011.
+          </p>
+        </div>
+        <div class="ref-item">
+          <span class="ref-type">RECURSOS ONLINE</span>
+          <p>
+            W3C. <strong>Web of Things (WoT) Architecture</strong>. Disponível em:
+            https://www.w3.org/TR/wot-architecture/. Acesso em: 15 out. 2023.
+          </p>
+        </div>
+      </div>
+
+      <div class="ref-side">
+        <div class="card card-purple">
+          <div class="card-label">FERRAMENTAS</div>
+          <ol class="tools-list">
+            <li><span class="tool-num">01</span> Arduino IDE &amp; ESP32 Framework</li>
+            <li><span class="tool-num">02</span> Figma for UI/UX Prototyping</li>
+            <li><span class="tool-num">03</span> Python (Backend Automation)</li>
+            <li><span class="tool-num">04</span> Docker &amp; Home Assistant</li>
+          </ol>
+        </div>
+        <div class="card card-dark">
+          <div class="card-label">AGRADECIMENTOS</div>
+          <p class="ack-label">Orientação</p>
+          <p class="ack-text italic">
+            Aos professores do departamento de Engenharia pela mentoria técnica e paciência
+            durante o ciclo de desenvolvimento.
+          </p>
+          <p class="ack-label">Institucional</p>
+          <p class="ack-text italic">
+            À Universidade pelo livre acesso aos laboratórios de prototipagem e infraestrutura
+            de rede.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUOTE -->
+    <div class="quote-section">
+      <div class="quote-mark">99</div>
+      <blockquote>
+        "A tecnologia é apenas uma ferramenta. No que se refere a motivar as crianças e
+        conseguir que trabalhem juntas, o professor é o mais importante."
+      </blockquote>
+      <cite>— BILL GATES</cite>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
