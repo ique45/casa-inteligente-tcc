@@ -29,7 +29,7 @@ const VOICE_SUGGESTIONS = {
   luz:        ['Ligar luz', 'Acender luz', 'Apagar luz', 'Desligar luz'],
   portao:     ['Abrir portão', 'Fechar portão'],
   ventilador: ['Ligar ventilador', 'Desligar ventilador'],
-  alarme:     ['Ligar alarme', 'Desligar alarme']
+  alarme:     ['Armar alarme', 'Desarmar alarme', 'Ativar alarme', 'Desativar alarme']
 };
 
 const ACTIONS_DEFAULT = [
@@ -114,7 +114,8 @@ function selectTrigger(id) {
   });
 
   const TRIGGER_NOTES = {
-    temperatura: 'O Arduino detecta variações de temperatura e aciona o dispositivo conforme programado no código. Não é possível definir o limite aqui.',
+    presenca:    'Requer sensor de presença (PIR) conectado ao Arduino. Sem o sensor físico, essa automação não vai disparar.',
+    temperatura: 'Requer sensor de temperatura conectado ao Arduino. O limite de temperatura é definido no código — não é possível ajustar aqui.',
     horario:     'O horário é definido no código do Arduino. Para alterar, peça ao responsável pela configuração do dispositivo.'
   };
   let noteEl = document.getElementById('trigger-note');
@@ -212,15 +213,15 @@ function updatePreview() {
 
   if (trigger === 'voz') {
     const cmd = voiceCmd || '…';
-    text = `Ao falar "<strong>${escapeHtml(cmd)}</strong>", ${actionLabel} <strong>${escapeHtml(name)}</strong>`;
+    text = `Ao falar "<strong>${escapeHtml(cmd)}</strong>", vai ${actionLabel} o dispositivo <strong>${escapeHtml(name)}</strong>`;
   } else if (trigger === 'botao') {
-    text = `Ao clicar no botão, ${actionLabel} <strong>${escapeHtml(name)}</strong>`;
+    text = `Ao clicar no botão do dashboard, vai ${actionLabel} o dispositivo <strong>${escapeHtml(name)}</strong>`;
   } else if (trigger === 'presenca') {
-    text = `Ao detectar presença, ${actionLabel} <strong>${escapeHtml(name)}</strong>`;
+    text = `Ao detectar presença, vai ${actionLabel} o dispositivo <strong>${escapeHtml(name)}</strong>`;
   } else if (trigger === 'temperatura') {
-    text = `Quando a temperatura mudar, ${actionLabel} <strong>${escapeHtml(name)}</strong>`;
+    text = `Quando o sensor de temperatura disparar, vai ${actionLabel} o dispositivo <strong>${escapeHtml(name)}</strong>`;
   } else if (trigger === 'horario') {
-    text = `No horário programado, ${actionLabel} <strong>${escapeHtml(name)}</strong>`;
+    text = `No horário programado no Arduino, vai ${actionLabel} o dispositivo <strong>${escapeHtml(name)}</strong>`;
   } else {
     text = `<strong>${escapeHtml(d.name)}</strong> — escolha o gatilho e a ação`;
   }

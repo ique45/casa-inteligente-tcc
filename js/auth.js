@@ -64,7 +64,7 @@ document.getElementById('btn-google').addEventListener('click', async () => {
         activeToggles: {}
       });
     }
-    window.location.href = 'dashboard.html';
+    window.location.href = snap.exists ? 'dashboard.html' : 'profile.html';
   } catch (err) {
     showError(translateError(err.code));
   } finally {

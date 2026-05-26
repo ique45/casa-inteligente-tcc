@@ -85,15 +85,18 @@ function listenArduinoStatus() {
     const data = snap.val() || {};
     const badge = document.getElementById('arduino-badge');
     const lastSeen = document.getElementById('last-seen');
+    const offlineHint = document.getElementById('offline-hint');
     if (data.online) {
       badge.className = 'badge badge-online';
       badge.textContent = 'Online';
       lastSeen.textContent = '';
+      if (offlineHint) offlineHint.style.display = 'none';
     } else {
       badge.className = 'badge badge-offline';
       badge.textContent = 'Offline';
       const ts = data.lastSeen ? `Última vez: ${new Date(data.lastSeen).toLocaleString('pt-BR')} · ` : '';
       lastSeen.textContent = `${ts}Dispositivos físicos não estão respondendo no momento.`;
+      if (offlineHint) offlineHint.style.display = 'block';
     }
   });
 }
@@ -161,7 +164,7 @@ function loadHistory() {
       }
       list.innerHTML = snap.docs.map(doc => {
         const d = doc.data();
-        const ts = d.timestamp ? new Date(d.timestamp.toMillis()).toLocaleString('pt-BR') : '—';
+        const ts = d.timestamp ? formatRelativeTime(new Date(d.timestamp.toMillis())) : '—';
         const stateLabels = { portao: ['Aberto','Fechado'], alarme: ['Armado','Desarmado'] };
         const [labelOn, labelOff] = stateLabels[d.deviceId] || ['Ligado','Desligado'];
         const stateLabel = d.state ? labelOn : labelOff;
@@ -224,6 +227,17 @@ function initVoice() {
       status.textContent = 'Fale um comando (ex: "ligar luz", "abrir portão")';
     }
   });
+}
+
+function formatRelativeTime(date) {
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const yesterday = new Date(now - 86400000);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  if (isToday) return `Hoje, ${time}`;
+  if (isYesterday) return `Ontem, ${time}`;
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + `, ${time}`;
 }
 
 document.getElementById('btn-logout').addEventListener('click', () => {

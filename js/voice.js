@@ -52,7 +52,7 @@ const voiceControl = (() => {
       recognition.onerror = (e) => {
         listening = false;
         if (api.onError) api.onError(e.error);
-        if (api.onEnd) api.onEnd();
+        // onEnd não chamado aqui: onError já trata o reset da UI
       };
 
       recognition.onend = () => {

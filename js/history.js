@@ -8,8 +8,7 @@ const TRIGGER_ICONS = {
   botao:       '🔘',
   presenca:    '👁️',
   horario:     '⏰',
-  temperatura: '🌡️',
-  site:        '🖥️'
+  temperatura: '🌡️'
 };
 
 const TRIGGER_LABELS = {
@@ -17,8 +16,7 @@ const TRIGGER_LABELS = {
   botao:       'Botão',
   presenca:    'Presença',
   horario:     'Horário',
-  temperatura: 'Temperatura',
-  site:        'Site'
+  temperatura: 'Temperatura'
 };
 
 const STATE_LABELS = {
@@ -97,7 +95,8 @@ async function loadHistory(reset) {
   }
 
   if (reset && docs.length === 0) {
-    table.innerHTML = '<div class="empty-msg">Nenhuma ativação encontrada.</div>';
+    const hasFilter = activeFilters.trigger !== 'todos' || activeFilters.period !== 'todos';
+    table.innerHTML = `<div class="empty-msg">Nenhuma ativação encontrada.${hasFilter ? '<br><span style="font-size:0.8rem">Tente mudar os filtros acima.</span>' : ''}</div>`;
     return;
   }
 

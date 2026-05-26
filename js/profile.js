@@ -161,6 +161,9 @@ document.getElementById('btn-save').addEventListener('click', async () => {
   }
 });
 
+document.getElementById('btn-dashboard').addEventListener('click', () => {
+  window.location.href = 'dashboard.html';
+});
 document.getElementById('btn-logout').addEventListener('click', () => {
   auth.signOut().then(() => window.location.href = 'login.html');
 });
