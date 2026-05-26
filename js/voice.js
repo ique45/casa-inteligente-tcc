@@ -9,7 +9,11 @@ const voiceControl = (() => {
     { pattern: /abrir?\s+port[ãa]o/i,      deviceId: 'portao',     action: true  },
     { pattern: /fechar?\s+port[ãa]o/i,     deviceId: 'portao',     action: false },
     { pattern: /ligar?\s+alarme/i,         deviceId: 'alarme',     action: true  },
-    { pattern: /desligar?\s+alarme/i,      deviceId: 'alarme',     action: false }
+    { pattern: /desligar?\s+alarme/i,      deviceId: 'alarme',     action: false },
+    { pattern: /armar?\s+alarme/i,         deviceId: 'alarme',     action: true  },
+    { pattern: /desarmar?\s+alarme/i,      deviceId: 'alarme',     action: false },
+    { pattern: /ativar?\s+alarme/i,        deviceId: 'alarme',     action: true  },
+    { pattern: /desativar?\s+alarme/i,     deviceId: 'alarme',     action: false }
   ];
 
   let recognition = null;
@@ -24,7 +28,7 @@ const voiceControl = (() => {
     start() {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SR) {
-        alert('Reconhecimento de voz não disponível. Use o Chrome.');
+        if (api.onError) api.onError('not-supported');
         return;
       }
 
@@ -45,8 +49,9 @@ const voiceControl = (() => {
         }
       };
 
-      recognition.onerror = () => {
+      recognition.onerror = (e) => {
         listening = false;
+        if (api.onError) api.onError(e.error);
         if (api.onEnd) api.onEnd();
       };
 

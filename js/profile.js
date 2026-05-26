@@ -60,8 +60,8 @@ auth.onAuthStateChanged(async user => {
 
   renderProfiles();
   renderToggles();
-  document.getElementById('btn-save').removeAttribute('disabled');
   document.getElementById('loading-msg').style.display = 'none';
+  updateSaveBtn();
 });
 
 function renderProfiles() {
@@ -83,8 +83,21 @@ function renderProfiles() {
       card.classList.toggle('selected');
       updateTogglesFromProfiles();
       renderToggles();
+      updateSaveBtn();
     });
   });
+}
+
+function updateSaveBtn() {
+  const btn = document.getElementById('btn-save');
+  const hint = document.getElementById('profile-hint');
+  if (selectedProfiles.size === 0) {
+    btn.disabled = true;
+    if (hint) hint.style.display = 'block';
+  } else {
+    btn.disabled = false;
+    if (hint) hint.style.display = 'none';
+  }
 }
 
 function updateTogglesFromProfiles() {

@@ -114,8 +114,8 @@ function selectTrigger(id) {
   });
 
   const TRIGGER_NOTES = {
-    temperatura: 'O sensor de temperatura do Arduino enviará o sinal automaticamente.',
-    horario:     'O horário é configurado diretamente no Arduino.'
+    temperatura: 'O Arduino detecta variações de temperatura e aciona o dispositivo conforme programado no código. Não é possível definir o limite aqui.',
+    horario:     'O horário é definido no código do Arduino. Para alterar, peça ao responsável pela configuração do dispositivo.'
   };
   let noteEl = document.getElementById('trigger-note');
   if (!noteEl) {

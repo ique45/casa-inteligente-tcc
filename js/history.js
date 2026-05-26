@@ -116,7 +116,7 @@ async function loadHistory(reset) {
       <div class="history-row">
         <div class="history-info">
           <div class="history-device-name">${escapeHtml(d.device)}</div>
-          <div class="history-sub">${icon} ${escapeHtml(triggerLabel)} · ${stateLabel}</div>
+          <div class="history-sub">${icon} ${escapeHtml(triggerLabel)}</div>
         </div>
         <span class="history-state-badge ${stateClass}">${stateLabel}</span>
         <span class="history-time">${timeStr}</span>
@@ -124,7 +124,9 @@ async function loadHistory(reset) {
     `);
   });
 
-  if (snap.docs.length === PAGE_SIZE) {
+  // Só mostra "Carregar mais" se há mais páginas E o filtro de gatilho é "todos"
+  // (filtro de gatilho é client-side: quando ativo, não há garantia de mais resultados)
+  if (snap.docs.length === PAGE_SIZE && activeFilters.trigger === 'todos') {
     lastDoc = snap.docs[snap.docs.length - 1];
     document.getElementById('btn-load-more').style.display = 'block';
   } else {

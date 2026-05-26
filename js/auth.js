@@ -1,7 +1,7 @@
 // Redireciona para dashboard se já logado
 auth.onAuthStateChanged(user => {
   if (user && window.location.pathname.includes('login.html')) {
-    window.location.href = 'profile.html';
+    window.location.href = 'dashboard.html';
   }
 });
 
@@ -11,7 +11,7 @@ document.getElementById('toggle-link').addEventListener('click', () => {
   isSignup = !isSignup;
   document.getElementById('btn-submit').textContent = isSignup ? 'Cadastrar' : 'Entrar';
   document.getElementById('toggle-text').textContent = isSignup ? 'Já tem conta? ' : 'Não tem conta? ';
-  document.getElementById('toggle-link').textContent = isSignup ? 'Entrar' : 'Cadastrar';
+  document.getElementById('toggle-link').textContent = isSignup ? 'Entrar' : 'Criar minha conta';
   hideError();
 });
 
@@ -35,10 +35,11 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
         activeProfiles: [],
         activeToggles: {}
       });
+      window.location.href = 'profile.html';
     } else {
       await auth.signInWithEmailAndPassword(email, senha);
+      window.location.href = 'dashboard.html';
     }
-    window.location.href = 'profile.html';
   } catch (err) {
     showError(translateError(err.code));
   } finally {
@@ -63,7 +64,7 @@ document.getElementById('btn-google').addEventListener('click', async () => {
         activeToggles: {}
       });
     }
-    window.location.href = 'profile.html';
+    window.location.href = 'dashboard.html';
   } catch (err) {
     showError(translateError(err.code));
   } finally {

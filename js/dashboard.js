@@ -183,6 +183,19 @@ function initVoice() {
   const btn = document.getElementById('btn-mic');
   const status = document.getElementById('mic-status');
 
+  const ERROR_MSGS = {
+    'not-allowed':  'Permissão do microfone negada. Clique no cadeado na barra de endereço e permita o microfone.',
+    'not-supported':'Controle por voz não disponível. Use o Google Chrome.',
+    'no-speech':    'Nenhuma fala detectada. Tente novamente.',
+    'audio-capture':'Microfone não encontrado. Verifique se está conectado.'
+  };
+
+  voiceControl.onError = (code) => {
+    btn.classList.remove('listening');
+    btn.textContent = '🎤 Ativar voz';
+    status.textContent = ERROR_MSGS[code] || 'Erro ao usar o microfone. Tente novamente.';
+  };
+
   voiceControl.onResult = async ({ command, deviceId, action }) => {
     if (deviceId && action !== null) {
       await rtdb.ref(`devices/${currentUser.uid}/${deviceId}`).set({ state: action });
