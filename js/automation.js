@@ -19,7 +19,7 @@ const TRIGGERS_BY_DEVICE = {
 
 const TRIGGER_INFO = {
   voz:         { label: 'Voz',           icon: '🎤' },
-  botao:       { label: 'Botão no site', icon: '🔘' },
+  botao:       { label: 'Botão no dashboard', icon: '🔘' },
   presenca:    { label: 'Presença',      icon: '👁️' },
   temperatura: { label: 'Temperatura',   icon: '🌡️' },
   horario:     { label: 'Horário',       icon: '⏰' }
@@ -114,8 +114,9 @@ function selectTrigger(id) {
   });
 
   const TRIGGER_NOTES = {
+    botao:       'O botão do dashboard sempre alterna o estado do dispositivo. A ação escolhida abaixo é usada pelo Arduino quando ele recebe o sinal do botão.',
     presenca:    'Requer sensor de presença (PIR) conectado ao Arduino. Sem o sensor físico, essa automação não vai disparar.',
-    temperatura: 'Requer sensor de temperatura conectado ao Arduino. O limite de temperatura é definido no código — não é possível ajustar aqui.',
+    temperatura: 'Requer sensor de temperatura conectado ao Arduino. O limite é definido no código — não é possível ajustar aqui.',
     horario:     'O horário é definido no código do Arduino. Para alterar, peça ao responsável pela configuração do dispositivo.'
   };
   let noteEl = document.getElementById('trigger-note');

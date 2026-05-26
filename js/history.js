@@ -96,7 +96,10 @@ async function loadHistory(reset) {
 
   if (reset && docs.length === 0) {
     const hasFilter = activeFilters.trigger !== 'todos' || activeFilters.period !== 'todos';
-    table.innerHTML = `<div class="empty-msg">Nenhuma ativação encontrada.${hasFilter ? '<br><span style="font-size:0.8rem">Tente mudar os filtros acima.</span>' : ''}</div>`;
+    const msg = hasFilter
+      ? 'Nenhuma ativação encontrada.<br><span style="font-size:0.8rem">Tente mudar os filtros acima.</span>'
+      : 'Nenhuma ativação ainda.';
+    table.innerHTML = `<div class="empty-msg">${msg}</div>`;
     return;
   }
 

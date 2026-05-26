@@ -214,7 +214,11 @@ function initVoice() {
   voiceControl.onEnd = () => {
     btn.classList.remove('listening');
     btn.textContent = '🎤 Ativar voz';
-    status.textContent = 'Clique para falar um comando';
+    // Não reseta status aqui: onResult já agendou o reset via setTimeout.
+    // Se não houve resultado (usuário parou manualmente), restaura o padrão.
+    if (status.textContent === 'Fale um comando (ex: "ligar luz", "abrir portão")') {
+      status.textContent = 'Clique para falar um comando';
+    }
   };
 
   btn.addEventListener('click', () => {
@@ -224,7 +228,7 @@ function initVoice() {
       voiceControl.start();
       btn.classList.add('listening');
       btn.textContent = '🎙️ Ouvindo...';
-      status.textContent = 'Fale um comando (ex: "ligar luz", "abrir portão")';
+      status.textContent = 'Fale um comando (ex: "ligar luz", "abrir portão", "armar alarme")';
     }
   });
 }

@@ -36,11 +36,11 @@ const TRIGGER_LABELS_PROFILE = {
 };
 
 const ALL_TOGGLES = [
-  { id: 'voz',         label: '🎤 Controle por voz' },
-  { id: 'botao',       label: '🔘 Botão no site/app' },
-  { id: 'presenca',    label: '👁️ Sensor de presença' },
-  { id: 'horario',     label: '⏰ Agendamento por horário' },
-  { id: 'temperatura', label: '🌡️ Sensor de temperatura' }
+  { id: 'voz',         label: '🎤 Controle por voz',              hint: 'Ativa o microfone no site.' },
+  { id: 'botao',       label: '🔘 Botão no dashboard',             hint: 'Permite acionar dispositivos pelos botões do dashboard.' },
+  { id: 'presenca',    label: '👁️ Sensor de presença (Arduino)',  hint: 'O Arduino detecta presença e aciona dispositivos.' },
+  { id: 'horario',     label: '⏰ Agendamento por horário (Arduino)', hint: 'O Arduino liga/desliga dispositivos em horários programados.' },
+  { id: 'temperatura', label: '🌡️ Sensor de temperatura (Arduino)', hint: 'O Arduino age conforme a temperatura ambiente.' }
 ];
 
 let selectedProfiles = new Set();
@@ -128,7 +128,10 @@ function renderToggles() {
     const isOn = toggleStates[t.id] === true;
     return `
       <div class="toggle-row">
-        <span class="toggle-label">${t.label}</span>
+        <div>
+          <span class="toggle-label">${t.label}</span>
+          ${t.hint ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">${t.hint}</div>` : ''}
+        </div>
         <div class="toggle-switch ${isOn ? 'on' : ''}" role="switch" aria-checked="${isOn}" tabindex="0" data-id="${t.id}"></div>
       </div>
     `;
