@@ -2,20 +2,20 @@
 // Expandir quando as automações forem configuradas pelo usuário
 const voiceControl = (() => {
   const COMMANDS = [
-    { pattern: /ligar?\s+luz/i,            deviceId: 'luz',        action: true  },
-    { pattern: /desligar?\s+luz/i,         deviceId: 'luz',        action: false },
-    { pattern: /acend[ae]r?\s+luz/i,        deviceId: 'luz',        action: true  },
-    { pattern: /apag(?:ar?|ue)\s+luz/i,    deviceId: 'luz',        action: false },
-    { pattern: /ligar?\s+ventilador/i,     deviceId: 'ventilador', action: true  },
-    { pattern: /desligar?\s+ventilador/i,  deviceId: 'ventilador', action: false },
-    { pattern: /abrir?\s+port[ãa]o/i,      deviceId: 'portao',     action: true  },
-    { pattern: /fechar?\s+port[ãa]o/i,     deviceId: 'portao',     action: false },
-    { pattern: /ligar?\s+alarme/i,         deviceId: 'alarme',     action: true  },
-    { pattern: /desligar?\s+alarme/i,      deviceId: 'alarme',     action: false },
-    { pattern: /armar?\s+alarme/i,         deviceId: 'alarme',     action: true  },
-    { pattern: /desarmar?\s+alarme/i,      deviceId: 'alarme',     action: false },
-    { pattern: /ativar?\s+alarme/i,        deviceId: 'alarme',     action: true  },
-    { pattern: /desativar?\s+alarme/i,     deviceId: 'alarme',     action: false }
+    { pattern: /ligar?\s+(?:a\s+)?luz/i,            deviceId: 'luz',        action: true  },
+    { pattern: /desligar?\s+(?:a\s+)?luz/i,         deviceId: 'luz',        action: false },
+    { pattern: /acend[ae]r?\s+(?:a\s+)?luz/i,       deviceId: 'luz',        action: true  },
+    { pattern: /apag(?:ar?|ue)\s+(?:a\s+)?luz/i,    deviceId: 'luz',        action: false },
+    { pattern: /ligar?\s+(?:o\s+)?ventilador/i,     deviceId: 'ventilador', action: true  },
+    { pattern: /desligar?\s+(?:o\s+)?ventilador/i,  deviceId: 'ventilador', action: false },
+    { pattern: /abrir?\s+(?:o\s+)?port[ãa]o/i,      deviceId: 'portao',     action: true  },
+    { pattern: /fechar?\s+(?:o\s+)?port[ãa]o/i,     deviceId: 'portao',     action: false },
+    { pattern: /ligar?\s+(?:o\s+)?alarme/i,         deviceId: 'alarme',     action: true  },
+    { pattern: /desligar?\s+(?:o\s+)?alarme/i,      deviceId: 'alarme',     action: false },
+    { pattern: /armar?\s+(?:o\s+)?alarme/i,         deviceId: 'alarme',     action: true  },
+    { pattern: /desarmar?\s+(?:o\s+)?alarme/i,      deviceId: 'alarme',     action: false },
+    { pattern: /ativar?\s+(?:o\s+)?alarme/i,        deviceId: 'alarme',     action: true  },
+    { pattern: /desativar?\s+(?:o\s+)?alarme/i,     deviceId: 'alarme',     action: false }
   ];
 
   let recognition = null;

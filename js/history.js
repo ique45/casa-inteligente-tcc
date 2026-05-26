@@ -126,10 +126,13 @@ async function loadHistory(reset) {
     `);
   });
 
-  // Só mostra "Carregar mais" se há mais páginas E o filtro de gatilho é "todos"
-  // (filtro de gatilho é client-side: quando ativo, não há garantia de mais resultados)
   if (snap.docs.length === PAGE_SIZE) {
     lastDoc = snap.docs[snap.docs.length - 1];
+    if (docs.length === 0 && activeFilters.trigger !== 'todos') {
+      // Página cheia mas nenhum doc passou o filtro de gatilho — avança automaticamente
+      loadHistory(false);
+      return;
+    }
     document.getElementById('btn-load-more').style.display = 'block';
   } else {
     allLoaded = true;

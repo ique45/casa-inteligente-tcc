@@ -114,7 +114,7 @@ function selectTrigger(id) {
   });
 
   const TRIGGER_NOTES = {
-    botao:       'O botão do dashboard sempre alterna o estado do dispositivo. A ação escolhida abaixo é usada pelo Arduino quando ele recebe o sinal do botão.',
+    botao:       'O botão no dashboard sempre alterna o estado do dispositivo: liga se estiver desligado, desliga se estiver ligado.',
     presenca:    'Requer sensor de presença (PIR) conectado ao Arduino. Sem o sensor físico, essa automação não vai disparar.',
     temperatura: 'Requer sensor de temperatura conectado ao Arduino. O limite é definido no código — não é possível ajustar aqui.',
     horario:     'O horário é definido no código do Arduino. Para alterar, peça ao responsável pela configuração do dispositivo.'
@@ -221,7 +221,9 @@ function updatePreview() {
     const cmd = voiceCmd || '…';
     text = `Ao falar "<strong>${escapeHtml(cmd)}</strong>", vai ${actionLabel} o dispositivo <strong>${escapeHtml(name)}</strong>`;
   } else if (trigger === 'botao') {
-    text = `Ao clicar no botão do dashboard, o dispositivo <strong>${escapeHtml(name)}</strong> vai alternar (liga se desligado, desliga se ligado)`;
+    const TOGGLE_DESC = { portao: 'abre se fechado, fecha se aberto', alarme: 'arma se desarmado, desarma se armado' };
+    const toggleDesc = TOGGLE_DESC[form.device] || 'liga se desligado, desliga se ligado';
+    text = `Ao clicar no botão do dashboard, o dispositivo <strong>${escapeHtml(name)}</strong> vai alternar (${toggleDesc})`;
   } else if (trigger === 'presenca') {
     text = `Ao detectar presença, vai ${actionLabel} o dispositivo <strong>${escapeHtml(name)}</strong>`;
   } else if (trigger === 'temperatura') {
@@ -298,6 +300,8 @@ function resetForm() {
   document.getElementById('input-voice').value = '';
   document.getElementById('step-name').style.display = 'none';
   hideFrom('step-trigger');
+  const noteEl = document.getElementById('trigger-note');
+  if (noteEl) noteEl.style.display = 'none';
 }
 
 // ---- Carregar lista de automações ----
