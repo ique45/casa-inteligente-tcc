@@ -141,6 +141,7 @@ function renderToggles() {
     sw.addEventListener('click', () => {
       toggleStates[sw.dataset.id] = !sw.classList.contains('on');
       sw.classList.toggle('on');
+      sw.setAttribute('aria-checked', String(sw.classList.contains('on')));
     });
   });
 }

@@ -216,7 +216,7 @@ function initVoice() {
     btn.textContent = '🎤 Ativar voz';
     // Não reseta status aqui: onResult já agendou o reset via setTimeout.
     // Se não houve resultado (usuário parou manualmente), restaura o padrão.
-    if (status.textContent === 'Fale um comando (ex: "ligar luz", "abrir portão")') {
+    if (status.textContent === 'Fale um comando (ex: "ligar luz", "abrir portão", "armar alarme")') {
       status.textContent = 'Clique para falar um comando';
     }
   };

@@ -143,9 +143,14 @@ function selectTrigger(id) {
     document.getElementById('action-step-num').textContent = '4';
   }
 
-  document.getElementById('step-action').style.display = 'block';
-  document.querySelectorAll('#action-chips .chip').forEach(c => c.classList.remove('selected'));
-  form.action = null;
+  if (id === 'botao') {
+    form.action = 'toggle';
+    document.getElementById('step-action').style.display = 'none';
+  } else {
+    document.getElementById('step-action').style.display = 'block';
+    document.querySelectorAll('#action-chips .chip').forEach(c => c.classList.remove('selected'));
+    form.action = null;
+  }
   updatePreview();
 }
 
@@ -216,7 +221,7 @@ function updatePreview() {
     const cmd = voiceCmd || '…';
     text = `Ao falar "<strong>${escapeHtml(cmd)}</strong>", vai ${actionLabel} o dispositivo <strong>${escapeHtml(name)}</strong>`;
   } else if (trigger === 'botao') {
-    text = `Ao clicar no botão do dashboard, vai ${actionLabel} o dispositivo <strong>${escapeHtml(name)}</strong>`;
+    text = `Ao clicar no botão do dashboard, o dispositivo <strong>${escapeHtml(name)}</strong> vai alternar (liga se desligado, desliga se ligado)`;
   } else if (trigger === 'presenca') {
     text = `Ao detectar presença, vai ${actionLabel} o dispositivo <strong>${escapeHtml(name)}</strong>`;
   } else if (trigger === 'temperatura') {

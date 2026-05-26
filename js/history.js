@@ -128,7 +128,7 @@ async function loadHistory(reset) {
 
   // Só mostra "Carregar mais" se há mais páginas E o filtro de gatilho é "todos"
   // (filtro de gatilho é client-side: quando ativo, não há garantia de mais resultados)
-  if (snap.docs.length === PAGE_SIZE && activeFilters.trigger === 'todos') {
+  if (snap.docs.length === PAGE_SIZE) {
     lastDoc = snap.docs[snap.docs.length - 1];
     document.getElementById('btn-load-more').style.display = 'block';
   } else {
