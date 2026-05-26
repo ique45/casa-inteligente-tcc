@@ -99,7 +99,7 @@ function renderTriggerChips() {
   const wrap = document.getElementById('trigger-chips');
   wrap.innerHTML = triggers.map(t => {
     const info = TRIGGER_INFO[t];
-    return `<div class="chip" data-id="${t}">${info.icon} ${escapeHtml(info.label)}</div>`;
+    return `<div class="chip ${form.trigger === t ? 'selected' : ''}" data-id="${t}">${info.icon} ${escapeHtml(info.label)}</div>`;
   }).join('');
   wrap.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => selectTrigger(c.dataset.id));
@@ -315,7 +315,9 @@ function loadAutomations() {
         const actionLabel = actionObj ? actionObj.label : d.action;
         const detail = d.trigger === 'voz'
           ? `Voz: "${escapeHtml(d.voiceCommand || '')}"`
-          : `${tInfo.label || d.trigger} → ${actionLabel}`;
+          : d.trigger === 'botao'
+            ? `Botão no dashboard (sempre alterna)`
+            : `${tInfo.label || d.trigger} → ${actionLabel}`;
         return `
           <div class="automation-card">
             <span class="auto-icon">${device?.icon || '⚙️'}</span>

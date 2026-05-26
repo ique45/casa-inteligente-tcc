@@ -1,6 +1,6 @@
-// Redireciona para dashboard se já logado
+// Redireciona para dashboard se já logado (não interfere durante o cadastro)
 auth.onAuthStateChanged(user => {
-  if (user && window.location.pathname.includes('login.html')) {
+  if (user && window.location.pathname.includes('login.html') && !isSignup) {
     window.location.href = 'dashboard.html';
   }
 });

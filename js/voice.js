@@ -4,6 +4,8 @@ const voiceControl = (() => {
   const COMMANDS = [
     { pattern: /ligar?\s+luz/i,            deviceId: 'luz',        action: true  },
     { pattern: /desligar?\s+luz/i,         deviceId: 'luz',        action: false },
+    { pattern: /acender?\s+luz/i,          deviceId: 'luz',        action: true  },
+    { pattern: /apagar?\s+luz/i,           deviceId: 'luz',        action: false },
     { pattern: /ligar?\s+ventilador/i,     deviceId: 'ventilador', action: true  },
     { pattern: /desligar?\s+ventilador/i,  deviceId: 'ventilador', action: false },
     { pattern: /abrir?\s+port[ãa]o/i,      deviceId: 'portao',     action: true  },
