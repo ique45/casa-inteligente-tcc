@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Casa Inteligente — Histórico</title>
+  <link rel="stylesheet" href="css/app.css"/>
+  <style>
+    .nav-links { display: flex; gap: 4px; }
+    .nav-link {
+      font-size: 0.85rem; color: var(--text-muted); cursor: pointer;
+      padding: 6px 10px; border-radius: 6px; transition: all 0.15s;
+    }
+    .nav-link:hover { color: var(--purple-light); background: var(--purple-glow); }
+
+    /* Filtros */
+    .filters { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .filter-label { font-size: 0.8rem; color: var(--text-muted); min-width: 60px; }
+    .filter-chip {
+      padding: 5px 12px; border-radius: 99px; font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; border: 1.5px solid var(--border);
+      background: var(--bg-card2); color: var(--text-muted); transition: all 0.15s;
+    }
+    .filter-chip:hover { border-color: var(--purple-light); color: var(--text); }
+    .filter-chip.active { border-color: var(--purple); background: var(--purple-glow); color: var(--purple-light); }
+
+    /* Tabela de histórico */
+    .history-table { display: flex; flex-direction: column; gap: 6px; }
+
+    .history-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center; gap: 12px;
+      padding: 14px 16px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 10px;
+    }
+    .history-info { min-width: 0; }
+    .history-device-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .history-state-badge {
+      font-size: 0.75rem; font-weight: 600; padding: 3px 10px;
+      border-radius: 99px; white-space: nowrap;
+    }
+    .state-on  { background: rgba(34,197,94,0.12);  color: var(--success); }
+    .state-off { background: rgba(239,68,68,0.12);  color: var(--danger);  }
+    .history-time { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; text-align: right; }
+
+    .empty-msg { color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 40px 0; }
+
+    .btn-load-more { width: 100%; margin-top: 12px; }
+
+    @media (max-width: 500px) {
+      .history-row { grid-template-columns: 1fr auto; }
+      .history-time { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="logo">Casa Inteligente</div>
+    <div class="nav-links">
+      <span class="nav-link" id="btn-dashboard">Dashboard</span>
+      <span class="nav-link" id="btn-automations">Automações</span>
+      <span class="nav-link" id="btn-profile">Perfil</span>
+      <span class="nav-link" id="btn-logout">Sair</span>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <h2 class="section-title">Histórico de ativações</h2>
+
+    <div class="filters">
+      <div class="filter-row">
+        <span class="filter-label">Gatilho</span>
+        <span class="filter-chip active" data-filter="trigger" data-value="todos">Todos</span>
+        <span class="filter-chip" data-filter="trigger" data-value="voz">🎤 Voz</span>
+        <span class="filter-chip" data-filter="trigger" data-value="botao">🔘 Botão</span>
+        <span class="filter-chip" data-filter="trigger" data-value="presenca">👁️ Presença</span>
+        <span class="filter-chip" data-filter="trigger" data-value="horario">⏰ Horário</span>
+        <span class="filter-chip" data-filter="trigger" data-value="temperatura">🌡️ Temperatura</span>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">Período</span>
+        <span class="filter-chip active" data-filter="period" data-value="todos">Tudo</span>
+        <span class="filter-chip" data-filter="period" data-value="hoje">Hoje</span>
+        <span class="filter-chip" data-filter="period" data-value="7dias">7 dias</span>
+        <span class="filter-chip" data-filter="period" data-value="30dias">30 dias</span>
+      </div>
+    </div>
+
+    <div class="history-table" id="history-table">
+      <div class="empty-msg">Carregando...</div>
+    </div>
+
+    <button class="btn btn-secondary btn-load-more" id="btn-load-more" style="display:none">
+      Carregar mais
+    </button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>

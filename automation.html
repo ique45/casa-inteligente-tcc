@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Casa Inteligente — Automações</title>
+  <link rel="stylesheet" href="css/app.css"/>
+  <style>
+    .nav-links { display: flex; gap: 4px; }
+    .nav-link {
+      font-size: 0.85rem; color: var(--text-muted); cursor: pointer;
+      padding: 6px 10px; border-radius: 6px; transition: all 0.15s;
+    }
+    .nav-link:hover { color: var(--purple-light); background: var(--purple-glow); }
+
+    /* ---- Lista de automações ---- */
+    .automations-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 36px; }
+    .automation-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    .auto-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .auto-info { flex: 1; min-width: 0; }
+    .auto-name { font-weight: 600; font-size: 0.95rem; }
+    .auto-detail { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+    .auto-trigger {
+      font-size: 0.72rem; padding: 2px 8px; border-radius: 99px;
+      background: var(--border); color: var(--text-muted); flex-shrink: 0;
+    }
+    .auto-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .btn-delete {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 1rem; padding: 4px; border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .btn-delete:hover { color: var(--danger); }
+    .empty-msg { color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 20px 0; }
+
+    /* ---- Formulário ---- */
+    .form-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+    }
+    .form-step { margin-bottom: 20px; }
+    .step-label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; font-weight: 600;
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--purple); color: #fff; font-size: 0.7rem; font-weight: 700;
+    }
+
+    /* chips de seleção */
+    .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; border: 1.5px solid var(--border);
+      background: var(--bg-card2); color: var(--text); transition: all 0.15s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .chip.chip-with-desc { flex-direction: column; align-items: flex-start; }
+    .chip .chip-main { display: flex; align-items: center; gap: 6px; }
+    .chip .chip-desc { font-size: 0.72rem; color: var(--text-muted); font-weight: 400; }
+    .chip.selected .chip-desc { color: var(--purple-light); opacity: 0.8; }
+    .chip:hover { border-color: var(--purple-light); }
+    .chip.selected { border-color: var(--purple); background: var(--purple-glow); color: var(--purple-light); }
+
+    .trigger-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; padding: 8px 12px; background: var(--bg-card2); border-radius: 6px; border-left: 3px solid var(--purple); }
+
+    .auto-status { font-size: 0.75rem; color: var(--text-muted); }
+    .auto-status.on { color: var(--success); }
+
+    #btn-save-auto { margin-top: 16px; }
+
+    /* sugestões de voz */
+    .suggestion-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .suggestion-chip {
+      padding: 4px 10px; border-radius: 99px; font-size: 0.78rem;
+      background: var(--border); color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+    }
+    .suggestion-chip:hover { background: var(--purple-glow); color: var(--purple-light); }
+
+    /* preview */
+    .preview-box {
+      margin-top: 20px; padding: 14px 16px;
+      background: var(--bg-card2); border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.9rem; color: var(--text-muted);
+      min-height: 46px; transition: all 0.2s;
+    }
+    .preview-box.ready { border-color: var(--purple); color: var(--text); }
+    .preview-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+
+    #btn-save-auto { margin-top: 16px; }
+
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="logo">Casa Inteligente</div>
+    <div class="nav-links">
+      <span class="nav-link" id="btn-dashboard">Dashboard</span>
+      <span class="nav-link" id="btn-history-page">Histórico</span>
+      <span class="nav-link" id="btn-profile">Perfil</span>
+      <span class="nav-link" id="btn-logout">Sair</span>
+    </div>
+  </header>
+
+  <div class="page-body">
+
+    <!-- Lista de automações existentes -->
+    <div class="section-header">
+      <h2 class="section-title" style="margin:0">Minhas automações</h2>
+    </div>
+    <div class="automations-list" id="automations-list">
+      <div class="empty-msg">Nenhuma automação cadastrada ainda.</div>
+    </div>
+
+    <!-- Formulário nova automação -->
+    <button class="btn btn-primary" id="btn-new-auto" style="margin-bottom:24px">+ Nova automação</button>
+
+    <div id="form-wrap" style="display:none">
+    <div class="form-card">
+
+      <!-- Passo 1 — Dispositivo -->
+      <div class="form-step">
+        <div class="step-label"><span class="step-num">1</span> Dispositivo</div>
+        <div class="chip-group" id="device-chips"></div>
+      </div>
+
+      <!-- Passo 2 — Nome -->
+      <div class="form-step" id="step-name" style="display:none">
+        <div class="form-group" style="margin:0">
+          <label class="form-label" for="input-name">
+            <span class="step-num">2</span> Nome
+            <span class="tooltip-icon" tabindex="0">ⓘ<span class="tooltip-text">Nome para identificar essa automação. Aparece no dashboard e no histórico. Ex: "Luz Cozinha", "Luz Sala".</span></span>
+          </label>
+          <input type="text" id="input-name" class="form-input" placeholder="Ex: Luz Cozinha" maxlength="40"/>
+        </div>
+      </div>
+
+      <!-- Passo 3 — Gatilho -->
+      <div class="form-step" id="step-trigger" style="display:none">
+        <div class="step-label">
+          <span class="step-num">3</span> Gatilho
+          <span class="tooltip-icon" tabindex="0">ⓘ<span class="tooltip-text">O que vai acionar essa automação: sua voz, um botão no site, sensor de presença, temperatura ou horário programado.</span></span>
+        </div>
+        <div class="chip-group" id="trigger-chips"></div>
+      </div>
+
+      <!-- Passo 4 — Comando de voz (só aparece se gatilho = voz) -->
+      <div class="form-step" id="step-voice" style="display:none">
+        <div class="form-group" style="margin:0">
+          <label class="form-label" for="input-voice">
+            <span class="step-num">4</span> Comando de voz
+            <span class="tooltip-icon" tabindex="0">ⓘ<span class="tooltip-text">A frase exata que você vai falar para ativar essa automação. Escolha uma sugestão ou escreva a sua.</span></span>
+          </label>
+          <div class="suggestion-chips" id="voice-suggestions"></div>
+          <input type="text" id="input-voice" class="form-input" placeholder="Ex: Ligar luz da sala" maxlength="60"/>
+        </div>
+      </div>
+
+      <!-- Passo 5 — Ação -->
+      <div class="form-step" id="step-action" style="display:none">
+        <div class="step-label"><span class="step-num" id="action-step-num">5</span> Ação</div>
+        <div class="chip-group" id="action-chips"></div>
+      </div>
+
+      <!-- Preview -->
+      <div id="preview-wrap" style="display:none">
+        <div class="preview-label">Como vai funcionar:</div>
+        <div class="preview-box" id="preview-box">—</div>
+      </div>
+
+      <p id="auto-error-msg" class="error-msg" style="display:none;margin-top:12px"></p>
+      <button class="btn btn-primary" id="btn-save-auto" style="display:none">Salvar automação</button>
+    </div>
+
+  </div><!-- /form-wrap -->
+  </div><!-- /page-body -->
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/automation.js"></script>
+</body>
+</html>

@@ -27,6 +27,14 @@ const PROFILES = [
   }
 ];
 
+const TRIGGER_LABELS_PROFILE = {
+  voz:         '🎤 Voz',
+  botao:       '🔘 Botão',
+  presenca:    '👁️ Presença',
+  horario:     '⏰ Horário',
+  temperatura: '🌡️ Temperatura'
+};
+
 const ALL_TOGGLES = [
   { id: 'voz',         label: '🎤 Controle por voz' },
   { id: 'botao',       label: '🔘 Botão no site/app' },
@@ -53,6 +61,7 @@ auth.onAuthStateChanged(async user => {
   renderProfiles();
   renderToggles();
   document.getElementById('btn-save').removeAttribute('disabled');
+  document.getElementById('loading-msg').style.display = 'none';
 });
 
 function renderProfiles() {
@@ -62,7 +71,7 @@ function renderProfiles() {
       <div class="icon">${p.icon}</div>
       <div class="name">${escapeHtml(p.name)}</div>
       <div class="desc">${escapeHtml(p.desc)}</div>
-      <div class="triggers">${p.triggers.map(t => `<span class="trigger-tag">${t}</span>`).join('')}</div>
+      <div class="triggers">${p.triggers.map(t => `<span class="trigger-tag">${TRIGGER_LABELS_PROFILE[t] || t}</span>`).join('')}</div>
     </div>
   `).join('');
 
@@ -122,11 +131,21 @@ function renderToggles() {
 
 document.getElementById('btn-save').addEventListener('click', async () => {
   if (!currentUser) return;
-  await db.collection('users').doc(currentUser.uid).update({
-    activeProfiles: [...selectedProfiles],
-    activeToggles: toggleStates
-  });
-  window.location.href = 'dashboard.html';
+  const btn = document.getElementById('btn-save');
+  btn.disabled = true;
+  try {
+    await db.collection('users').doc(currentUser.uid).set({
+      activeProfiles: [...selectedProfiles],
+      activeToggles: toggleStates
+    }, { merge: true });
+    window.location.href = 'dashboard.html';
+  } catch (err) {
+    console.error('Erro ao salvar perfil:', err);
+    const el = document.getElementById('error-msg') || document.createElement('p');
+    el.textContent = 'Erro ao salvar. Verifique sua conexão e tente novamente.';
+    el.style.display = 'block';
+    btn.disabled = false;
+  }
 });
 
 document.getElementById('btn-logout').addEventListener('click', () => {
