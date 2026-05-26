@@ -104,8 +104,12 @@ function updateTogglesFromProfiles() {
   const profileTriggers = new Set();
   PROFILES.filter(p => selectedProfiles.has(p.id))
     .forEach(p => p.triggers.forEach(t => profileTriggers.add(t)));
-  profileTriggers.forEach(t => {
-    if (toggleStates[t] === undefined) toggleStates[t] = true;
+  ALL_TOGGLES.forEach(t => {
+    if (profileTriggers.has(t.id)) {
+      if (toggleStates[t.id] === undefined) toggleStates[t.id] = true;
+    } else {
+      toggleStates[t.id] = false;
+    }
   });
 }
 

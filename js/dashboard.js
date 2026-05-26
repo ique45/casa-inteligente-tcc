@@ -13,6 +13,7 @@ const DEVICES = [
 let currentUser = null;
 let deviceStates = {};
 let automationNames = {}; // deviceId → primeiro nome de automação configurado
+let activeToggles = {};
 
 auth.onAuthStateChanged(async user => {
   if (!user) { window.location.href = 'login.html'; return; }
@@ -20,6 +21,7 @@ auth.onAuthStateChanged(async user => {
 
   const snap = await db.collection('users').doc(user.uid).get();
   const toggles = (snap.data() || {}).activeToggles || {};
+  activeToggles = toggles;
 
   const voiceSection = document.getElementById('voice-section');
   if (toggles.voz) {
@@ -47,6 +49,15 @@ auth.onAuthStateChanged(async user => {
 
 function renderDevices() {
   const grid = document.getElementById('devices-grid');
+  if (activeToggles.botao === false) {
+    grid.innerHTML = `<p style="color:var(--text-muted);font-size:0.9rem">
+      Controle por botão desativado.
+      <span style="color:var(--purple-light);cursor:pointer" onclick="window.location.href='profile.html'">
+        Ativar nas configurações de perfil →
+      </span>
+    </p>`;
+    return;
+  }
   grid.innerHTML = DEVICES.map(d => `
     <button class="device-btn" id="btn-${d.id}" data-id="${d.id}">
       <span class="device-icon">${d.icon}</span>
@@ -103,6 +114,7 @@ function listenArduinoStatus() {
 
 async function toggleDevice(deviceId) {
   if (!currentUser) return;
+  if (deviceStates[deviceId] === undefined) return;
   const d = DEVICES.find(x => x.id === deviceId);
   const newState = !deviceStates[deviceId];
 

@@ -1,21 +1,21 @@
 // Web Speech API — comandos mapeados para dispositivos
-// Expandir quando as automações forem configuradas pelo usuário
+// \b garante que 'desligar' não case no padrão de 'ligar' (substring)
 const voiceControl = (() => {
   const COMMANDS = [
-    { pattern: /ligar?\s+(?:a\s+)?luz/i,            deviceId: 'luz',        action: true  },
-    { pattern: /desligar?\s+(?:a\s+)?luz/i,         deviceId: 'luz',        action: false },
-    { pattern: /acend[ae]r?\s+(?:a\s+)?luz/i,       deviceId: 'luz',        action: true  },
-    { pattern: /apag(?:ar?|ue)\s+(?:a\s+)?luz/i,    deviceId: 'luz',        action: false },
-    { pattern: /ligar?\s+(?:o\s+)?ventilador/i,     deviceId: 'ventilador', action: true  },
-    { pattern: /desligar?\s+(?:o\s+)?ventilador/i,  deviceId: 'ventilador', action: false },
-    { pattern: /abrir?\s+(?:o\s+)?port[ãa]o/i,      deviceId: 'portao',     action: true  },
-    { pattern: /fechar?\s+(?:o\s+)?port[ãa]o/i,     deviceId: 'portao',     action: false },
-    { pattern: /ligar?\s+(?:o\s+)?alarme/i,         deviceId: 'alarme',     action: true  },
-    { pattern: /desligar?\s+(?:o\s+)?alarme/i,      deviceId: 'alarme',     action: false },
-    { pattern: /armar?\s+(?:o\s+)?alarme/i,         deviceId: 'alarme',     action: true  },
-    { pattern: /desarmar?\s+(?:o\s+)?alarme/i,      deviceId: 'alarme',     action: false },
-    { pattern: /ativar?\s+(?:o\s+)?alarme/i,        deviceId: 'alarme',     action: true  },
-    { pattern: /desativar?\s+(?:o\s+)?alarme/i,     deviceId: 'alarme',     action: false }
+    { pattern: /\bligar?\s+(?:a\s+)?luz/i,            deviceId: 'luz',        action: true  },
+    { pattern: /\bdesligar?\s+(?:a\s+)?luz/i,         deviceId: 'luz',        action: false },
+    { pattern: /\bacend[ae]r?\s+(?:a\s+)?luz/i,       deviceId: 'luz',        action: true  },
+    { pattern: /\bapag(?:ar?|ue)\s+(?:a\s+)?luz/i,    deviceId: 'luz',        action: false },
+    { pattern: /\bligar?\s+(?:o\s+)?ventilador/i,     deviceId: 'ventilador', action: true  },
+    { pattern: /\bdesligar?\s+(?:o\s+)?ventilador/i,  deviceId: 'ventilador', action: false },
+    { pattern: /\babrir?\s+(?:o\s+)?port[ãa]o/i,      deviceId: 'portao',     action: true  },
+    { pattern: /\bfechar?\s+(?:o\s+)?port[ãa]o/i,     deviceId: 'portao',     action: false },
+    { pattern: /\bligar?\s+(?:o\s+)?alarme/i,         deviceId: 'alarme',     action: true  },
+    { pattern: /\bdesligar?\s+(?:o\s+)?alarme/i,      deviceId: 'alarme',     action: false },
+    { pattern: /\barmar?\s+(?:o\s+)?alarme/i,         deviceId: 'alarme',     action: true  },
+    { pattern: /\bdesarmar?\s+(?:o\s+)?alarme/i,      deviceId: 'alarme',     action: false },
+    { pattern: /\bativar?\s+(?:o\s+)?alarme/i,        deviceId: 'alarme',     action: true  },
+    { pattern: /\bdesativar?\s+(?:o\s+)?alarme/i,     deviceId: 'alarme',     action: false }
   ];
 
   let recognition = null;

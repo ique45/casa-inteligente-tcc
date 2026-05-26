@@ -95,6 +95,12 @@ async function loadHistory(reset) {
   }
 
   if (reset && docs.length === 0) {
+    if (snap.docs.length === PAGE_SIZE && activeFilters.trigger !== 'todos') {
+      // Primeira página cheia mas sem resultados filtrados — avança para a próxima
+      lastDoc = snap.docs[snap.docs.length - 1];
+      loadHistory(true);
+      return;
+    }
     const hasFilter = activeFilters.trigger !== 'todos' || activeFilters.period !== 'todos';
     const msg = hasFilter
       ? 'Nenhuma ativação encontrada.<br><span style="font-size:0.8rem">Tente mudar os filtros acima.</span>'
