@@ -65,83 +65,90 @@ async function loadHistory(reset) {
     document.getElementById('btn-load-more').style.display = 'none';
   }
 
-  let query = db.collection('users').doc(currentUser.uid)
-    .collection('history')
-    .orderBy('timestamp', 'desc');
+  try {
+    let query = db.collection('users').doc(currentUser.uid)
+      .collection('history')
+      .orderBy('timestamp', 'desc');
 
-  // Filtro de período
-  const now = new Date();
-  if (activeFilters.period === 'hoje') {
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    query = query.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(start));
-  } else if (activeFilters.period === '7dias') {
-    const start = new Date(now - 7 * 24 * 60 * 60 * 1000);
-    query = query.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(start));
-  } else if (activeFilters.period === '30dias') {
-    const start = new Date(now - 30 * 24 * 60 * 60 * 1000);
-    query = query.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(start));
-  }
+    // Filtro de período
+    const now = new Date();
+    if (activeFilters.period === 'hoje') {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      query = query.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(start));
+    } else if (activeFilters.period === '7dias') {
+      const start = new Date(now - 7 * 24 * 60 * 60 * 1000);
+      query = query.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(start));
+    } else if (activeFilters.period === '30dias') {
+      const start = new Date(now - 30 * 24 * 60 * 60 * 1000);
+      query = query.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(start));
+    }
 
-  if (lastDoc) query = query.startAfter(lastDoc);
-  query = query.limit(PAGE_SIZE);
+    if (lastDoc) query = query.startAfter(lastDoc);
+    query = query.limit(PAGE_SIZE);
 
-  const snap = await query.get();
-  const table = document.getElementById('history-table');
+    const snap = await query.get();
+    const table = document.getElementById('history-table');
 
-  // Filtragem por gatilho (client-side, evita índice composto no Firestore)
-  let docs = snap.docs;
-  if (activeFilters.trigger !== 'todos') {
-    docs = docs.filter(d => d.data().trigger === activeFilters.trigger);
-  }
+    // Filtragem por gatilho (client-side, evita índice composto no Firestore)
+    let docs = snap.docs;
+    if (activeFilters.trigger !== 'todos') {
+      docs = docs.filter(d => d.data().trigger === activeFilters.trigger);
+    }
 
-  if (reset && docs.length === 0) {
-    if (snap.docs.length === PAGE_SIZE && activeFilters.trigger !== 'todos') {
-      // Primeira página cheia mas sem resultados filtrados — avança para a próxima
-      lastDoc = snap.docs[snap.docs.length - 1];
-      loadHistory(true);
+    if (reset && docs.length === 0) {
+      if (snap.docs.length === PAGE_SIZE && activeFilters.trigger !== 'todos') {
+        // Primeira página cheia mas sem resultados filtrados — avança para a próxima
+        lastDoc = snap.docs[snap.docs.length - 1];
+        loadHistory(true);
+        return;
+      }
+      const hasFilter = activeFilters.trigger !== 'todos' || activeFilters.period !== 'todos';
+      const msg = hasFilter
+        ? 'Nenhuma ativação encontrada.<br><span style="font-size:0.8rem">Tente mudar os filtros acima.</span>'
+        : 'Nenhuma ativação ainda.';
+      table.innerHTML = `<div class="empty-msg">${msg}</div>`;
       return;
     }
-    const hasFilter = activeFilters.trigger !== 'todos' || activeFilters.period !== 'todos';
-    const msg = hasFilter
-      ? 'Nenhuma ativação encontrada.<br><span style="font-size:0.8rem">Tente mudar os filtros acima.</span>'
-      : 'Nenhuma ativação ainda.';
-    table.innerHTML = `<div class="empty-msg">${msg}</div>`;
-    return;
-  }
 
-  if (reset) table.innerHTML = '';
+    if (reset) table.innerHTML = '';
 
-  docs.forEach(doc => {
-    const d = doc.data();
-    const icon = TRIGGER_ICONS[d.trigger] || '⚙️';
-    const triggerLabel = TRIGGER_LABELS[d.trigger] || d.trigger;
-    const ts = d.timestamp ? new Date(d.timestamp.toMillis()) : null;
-    const timeStr = ts ? formatTime(ts) : '—';
-    const stateLabel = stateText(d.deviceId, d.state);
-    const stateClass = d.state ? 'state-on' : 'state-off';
+    docs.forEach(doc => {
+      const d = doc.data();
+      const icon = TRIGGER_ICONS[d.trigger] || '⚙️';
+      const triggerLabel = TRIGGER_LABELS[d.trigger] || d.trigger;
+      const ts = d.timestamp ? new Date(d.timestamp.toMillis()) : null;
+      const timeStr = ts ? formatTime(ts) : '—';
+      const stateLabel = stateText(d.deviceId, d.state);
+      const stateClass = d.state ? 'state-on' : 'state-off';
 
-    table.insertAdjacentHTML('beforeend', `
-      <div class="history-row">
-        <div class="history-info">
-          <div class="history-device-name">${escapeHtml(d.device)}</div>
-          <div class="history-sub">${icon} ${escapeHtml(triggerLabel)}</div>
+      table.insertAdjacentHTML('beforeend', `
+        <div class="history-row">
+          <div class="history-info">
+            <div class="history-device-name">${escapeHtml(d.device)}</div>
+            <div class="history-sub">${icon} ${escapeHtml(triggerLabel)}</div>
+          </div>
+          <span class="history-state-badge ${stateClass}">${stateLabel}</span>
+          <span class="history-time">${timeStr}</span>
         </div>
-        <span class="history-state-badge ${stateClass}">${stateLabel}</span>
-        <span class="history-time">${timeStr}</span>
-      </div>
-    `);
-  });
+      `);
+    });
 
-  if (snap.docs.length === PAGE_SIZE) {
-    lastDoc = snap.docs[snap.docs.length - 1];
-    if (docs.length === 0 && activeFilters.trigger !== 'todos') {
-      // Página cheia mas nenhum doc passou o filtro de gatilho — avança automaticamente
-      loadHistory(false);
-      return;
+    if (snap.docs.length === PAGE_SIZE) {
+      lastDoc = snap.docs[snap.docs.length - 1];
+      if (docs.length === 0 && activeFilters.trigger !== 'todos') {
+        // Página cheia mas nenhum doc passou o filtro de gatilho — avança automaticamente
+        loadHistory(false);
+        return;
+      }
+      document.getElementById('btn-load-more').style.display = 'block';
+    } else {
+      allLoaded = true;
+      document.getElementById('btn-load-more').style.display = 'none';
     }
-    document.getElementById('btn-load-more').style.display = 'block';
-  } else {
-    allLoaded = true;
+  } catch (err) {
+    console.error('Erro ao carregar histórico:', err);
+    document.getElementById('history-table').innerHTML =
+      '<div class="empty-msg">Erro ao carregar o histórico. Verifique sua conexão e tente novamente.</div>';
     document.getElementById('btn-load-more').style.display = 'none';
   }
 }

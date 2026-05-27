@@ -19,32 +19,38 @@ auth.onAuthStateChanged(async user => {
   if (!user) { window.location.href = 'login.html'; return; }
   currentUser = user;
 
-  const snap = await db.collection('users').doc(user.uid).get();
-  const toggles = (snap.data() || {}).activeToggles || {};
-  activeToggles = toggles;
+  try {
+    const snap = await db.collection('users').doc(user.uid).get();
+    const toggles = (snap.data() || {}).activeToggles || {};
+    activeToggles = toggles;
 
-  const voiceSection = document.getElementById('voice-section');
-  if (toggles.voz) {
-    voiceSection.style.display = 'block';
-    initVoice();
-  } else {
-    voiceSection.style.display = 'block';
-    voiceSection.innerHTML = `
-      <h2 class="section-title">Controle por voz</h2>
-      <p style="color:var(--text-muted);font-size:0.875rem">
-        Controle por voz desativado.
-        <span style="color:var(--purple-light);cursor:pointer" onclick="window.location.href='profile.html'">
-          Ativar nas configurações de perfil →
-        </span>
-      </p>
-    `;
+    const voiceSection = document.getElementById('voice-section');
+    if (toggles.voz) {
+      voiceSection.style.display = 'block';
+      initVoice();
+    } else {
+      voiceSection.style.display = 'block';
+      voiceSection.innerHTML = `
+        <h2 class="section-title">Controle por voz</h2>
+        <p style="color:var(--text-muted);font-size:0.875rem">
+          Controle por voz desativado.
+          <span style="color:var(--purple-light);cursor:pointer" onclick="window.location.href='profile.html'">
+            Ativar nas configurações de perfil →
+          </span>
+        </p>
+      `;
+    }
+
+    listenAutomationNames();
+    renderDevices();
+    listenDeviceStates();
+    listenArduinoStatus();
+    loadHistory();
+  } catch (err) {
+    console.error('Erro ao carregar dashboard:', err);
+    document.getElementById('devices-grid').innerHTML =
+      '<p style="color:var(--text-muted)">Erro ao carregar. Verifique sua conexão e recarregue a página.</p>';
   }
-
-  listenAutomationNames();
-  renderDevices();
-  listenDeviceStates();
-  listenArduinoStatus();
-  loadHistory();
 });
 
 function renderDevices() {
