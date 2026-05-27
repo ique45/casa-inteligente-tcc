@@ -134,7 +134,7 @@ async function toggleDevice(deviceId) {
   }
 
   try {
-    await rtdb.ref(`devices/${currentUser.uid}/${deviceId}`).set({ state: newState });
+    await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: newState, ts: Date.now() });
     await logHistory(deviceId, 'botao', newState);
   } catch (err) {
     console.error('Erro ao acionar dispositivo:', err);
