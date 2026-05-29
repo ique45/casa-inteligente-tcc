@@ -62,6 +62,7 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
 // ---- Carregamento ----
 
 async function loadHistory(reset, _depth = 0) {
+  if (!currentUser) return;
   const myGen = reset ? ++_historyGen : _historyGen;
   if (_depth > 50) {
     if (reset) {

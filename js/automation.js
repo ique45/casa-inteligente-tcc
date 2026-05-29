@@ -73,6 +73,10 @@ auth.onAuthStateChanged(user => {
   _autoInitialized = true;
   currentUser = user;
   form = { device: null, name: '', trigger: null, voiceCommand: '', action: null };
+  const _inputName  = document.getElementById('input-name');
+  const _inputVoice = document.getElementById('input-voice');
+  if (_inputName)  _inputName.value  = '';
+  if (_inputVoice) _inputVoice.value = '';
   renderDeviceChips();
   renderActionChips();
   loadAutomations();

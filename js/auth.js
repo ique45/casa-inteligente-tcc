@@ -49,7 +49,10 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
       window.location.href = 'dashboard.html';
     }
   } catch (err) {
-    showError(translateError(err.code));
+    const msg = (err.code && err.code.startsWith('auth/'))
+      ? translateError(err.code)
+      : 'Erro ao salvar dados da conta. Verifique sua conexão e tente novamente.';
+    showError(msg);
   } finally {
     btn.disabled = false;
   }
@@ -66,13 +69,20 @@ document.getElementById('btn-google').addEventListener('click', async () => {
     const snap = await userDoc.get();
     const isNewUser = !snap.exists;
     if (isNewUser) {
-      await userDoc.set({
-        email: cred.user.email,
-        name: cred.user.displayName,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        activeProfiles: [],
-        activeToggles: {}
-      });
+      try {
+        await userDoc.set({
+          email: cred.user.email,
+          name: cred.user.displayName,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          activeProfiles: [],
+          activeToggles: {}
+        });
+      } catch (fsErr) {
+        console.error('Erro ao criar doc do usuário Google:', fsErr);
+        await auth.signOut().catch(() => {});
+        showError('Erro ao criar conta. Verifique sua conexão e tente novamente.');
+        return;
+      }
     }
     window.location.href = isNewUser ? 'profile.html' : 'dashboard.html';
   } catch (err) {

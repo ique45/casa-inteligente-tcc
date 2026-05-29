@@ -20,6 +20,7 @@ const voiceControl = (() => {
 
   let recognition = null;
   let listening = false;
+  let _sessionCounter = 0;
 
   const api = {
     onResult: null,
@@ -39,7 +40,11 @@ const voiceControl = (() => {
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
 
+      let _hadError = false;
+      const _sessionId = ++_sessionCounter;
+
       recognition.onresult = (e) => {
+        if (_sessionId !== _sessionCounter) return;
         const command = e.results[0][0].transcript.trim();
         const match = COMMANDS.find(c => c.pattern.test(command));
         if (api.onResult) {
@@ -51,18 +56,15 @@ const voiceControl = (() => {
         }
       };
 
-      let _hadError = false;
-      const _sessionId = ++voiceControl._sessionCounter;
-
       recognition.onerror = (e) => {
-        if (_sessionId !== voiceControl._sessionCounter) return;
+        if (_sessionId !== _sessionCounter) return;
         listening = false;
         _hadError = true;
         if (api.onError) api.onError(e.error);
       };
 
       recognition.onend = () => {
-        if (_sessionId !== voiceControl._sessionCounter) return;
+        if (_sessionId !== _sessionCounter) return;
         listening = false;
         recognition = null;
         if (!_hadError && api.onEnd) api.onEnd();
@@ -76,9 +78,7 @@ const voiceControl = (() => {
     stop() {
       if (recognition) { recognition.stop(); recognition = null; }
       listening = false;
-    },
-
-    _sessionCounter: 0
+    }
   };
 
   return api;

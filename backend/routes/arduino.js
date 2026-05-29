@@ -7,7 +7,6 @@ const router = express.Router();
 
 const VALID_DEVICES  = ['luz', 'ventilador', 'portao', 'alarme'];
 const VALID_TRIGGERS = ['presenca', 'temperatura', 'horario'];
-const DEVICE_NAMES   = { luz: 'Luz', ventilador: 'Ventilador', portao: 'Portão', alarme: 'Alarme' };
 
 router.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
@@ -33,6 +32,12 @@ router.post('/sync', async (req, res) => {
     for (const [deviceId, state] of Object.entries(devices)) {
       if (!VALID_DEVICES.includes(deviceId)) continue;
       await rtdb.ref(`devices/${uid}/${deviceId}`).update({ state: !!state });
+    }
+
+    // Se offline, não processa commands (evita perda quando Arduino desliga)
+    if (!online) {
+      res.json({ commands: [] });
+      return;
     }
 
     // 3. Executa automações disparadas pelos eventos do sensor

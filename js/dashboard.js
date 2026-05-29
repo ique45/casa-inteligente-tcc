@@ -28,6 +28,7 @@ function _teardownListeners() {
   deviceStates    = {};
   automationNames = {};
   activeToggles   = {};
+  currentUser     = null;
 }
 
 auth.onAuthStateChanged(async user => {
