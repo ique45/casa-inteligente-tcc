@@ -77,6 +77,7 @@ document.getElementById('btn-google').addEventListener('click', async () => {
     isPendingRedirect = false;
     showError(translateError(err.code));
   } finally {
+    isPendingRedirect = false;
     btn.disabled = false;
   }
 });

@@ -46,6 +46,8 @@ describe('GET /arduino/health', () => {
 });
 
 describe('POST /arduino/sync', () => {
+  beforeEach(() => jest.clearAllMocks());
+
   test('retorna 401 com token errado', async () => {
     const res = await request(app).post('/arduino/sync').send({
       uid: 'uid123', token: 'wrong', devices: {}, events: [], online: true
@@ -85,6 +87,26 @@ describe('POST /arduino/sync', () => {
     });
     expect(res.status).toBe(200);
     expect(executeAutomations).toHaveBeenCalledWith('uid123', 'presenca');
+  });
+
+  test('aceita devices:null sem crash', async () => {
+    const res = await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret',
+      devices: null, events: null, online: true
+    });
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.commands)).toBe(true);
+  });
+
+  test('inclui automationCommands no response', async () => {
+    const { executeAutomations } = require('../services/automation');
+    executeAutomations.mockResolvedValueOnce([{ device: 'luz', state: true }]);
+    const res = await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret',
+      devices: {}, events: ['presenca'], online: true
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.commands).toContainEqual({ device: 'luz', state: true });
   });
 
   test('ignora event inválido', async () => {

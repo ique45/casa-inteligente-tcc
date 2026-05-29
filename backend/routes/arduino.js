@@ -13,7 +13,7 @@ router.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 router.post('/sync', async (req, res) => {
   const { uid, token, online = true } = req.body;
-  const devices = (req.body.devices !== null && typeof req.body.devices === 'object') ? req.body.devices : {};
+  const devices = (req.body.devices !== null && typeof req.body.devices === 'object' && !Array.isArray(req.body.devices)) ? req.body.devices : {};
   const events  = Array.isArray(req.body.events) ? req.body.events : [];
 
   if (!uid)                                return res.status(400).json({ error: 'uid obrigatório' });
@@ -49,16 +49,16 @@ router.post('/sync', async (req, res) => {
       .filter(([deviceId]) => VALID_DEVICES.includes(deviceId))
       .map(([deviceId, val]) => ({ device: deviceId, state: !!val.state }));
 
-    // 5. Registra histórico e só então limpa a fila
+    // 5. Registra histórico (best-effort) e limpa a fila
     if (siteCommands.length > 0) {
-      for (const cmd of siteCommands) {
-        await logHistory(uid, {
+      await Promise.allSettled(siteCommands.map(cmd =>
+        logHistory(uid, {
           deviceId: cmd.device,
           device:   DEVICE_NAMES[cmd.device] || cmd.device,
           trigger:  'botao',
           state:    cmd.state
-        });
-      }
+        })
+      ));
       await rtdb.ref(`commands/${uid}`).remove();
     }
 

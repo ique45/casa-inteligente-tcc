@@ -262,6 +262,7 @@ document.getElementById('input-voice').addEventListener('input', e => {
 
 document.getElementById('btn-save-auto').addEventListener('click', async () => {
   if (!currentUser) return;
+  if (!form.device || !form.trigger || form.action == null || !form.name.trim()) return;
   const btn = document.getElementById('btn-save-auto');
   btn.disabled = true;
   btn.textContent = 'Salvando…';
@@ -354,6 +355,7 @@ function loadAutomations() {
 }
 
 async function toggleEnabled(id, enabled) {
+  if (!currentUser) return;
   try {
     await db.collection('automations').doc(currentUser.uid)
       .collection('items').doc(id).update({ enabled });
@@ -364,6 +366,7 @@ async function toggleEnabled(id, enabled) {
 }
 
 async function deleteAutomation(id) {
+  if (!currentUser) return;
   if (!confirm('Excluir essa automação?')) return;
   try {
     await db.collection('automations').doc(currentUser.uid)

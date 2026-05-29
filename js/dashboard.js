@@ -17,7 +17,7 @@ let activeToggles = {};
 let _dashboardInitialized = false;
 
 auth.onAuthStateChanged(async user => {
-  if (!user) { window.location.href = 'login.html'; return; }
+  if (!user) { _dashboardInitialized = false; window.location.href = 'login.html'; return; }
   if (_dashboardInitialized) return;
   _dashboardInitialized = true;
   currentUser = user;
@@ -96,8 +96,8 @@ function updateDeviceUI(deviceId, isOn) {
   const btn = document.getElementById(`btn-${deviceId}`);
   const stateEl = document.getElementById(`state-${deviceId}`);
   if (!btn || !stateEl || !d) return;
-  btn.classList.toggle('on', isOn);
   if (!btn.disabled) {
+    btn.classList.toggle('on', isOn);
     stateEl.textContent = isOn ? d.labelOn : d.labelOff;
   }
 }
@@ -127,7 +127,8 @@ async function toggleDevice(deviceId) {
   if (!currentUser) return;
   if (deviceStates[deviceId] === undefined) return;
   const d = DEVICES.find(x => x.id === deviceId);
-  const newState = !deviceStates[deviceId];
+  const prevState = deviceStates[deviceId];
+  const newState = !prevState;
 
   const btn = document.getElementById(`btn-${deviceId}`);
   const stateEl = document.getElementById(`state-${deviceId}`);
@@ -143,7 +144,7 @@ async function toggleDevice(deviceId) {
     await logHistory(deviceId, 'botao', newState);
   } catch (err) {
     console.error('Erro ao acionar dispositivo:', err);
-    updateDeviceUI(deviceId, deviceStates[deviceId]);
+    updateDeviceUI(deviceId, prevState);
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -208,6 +209,7 @@ function loadHistory() {
 function initVoice() {
   const btn = document.getElementById('btn-mic');
   const status = document.getElementById('mic-status');
+  let _voiceResultHandled = false;
 
   const ERROR_MSGS = {
     'not-allowed':  'Permissão do microfone negada. Clique no cadeado na barra de endereço e permita o microfone.',
@@ -223,10 +225,17 @@ function initVoice() {
   };
 
   voiceControl.onResult = async ({ command, deviceId, action }) => {
+    _voiceResultHandled = true;
     if (deviceId && action !== null) {
-      await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: action, ts: Date.now() });
-      await logHistory(deviceId, 'voz', action);
-      status.textContent = `Comando reconhecido: "${command}"`;
+      try {
+        if (!currentUser) return;
+        await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: action, ts: Date.now() });
+        await logHistory(deviceId, 'voz', action);
+        status.textContent = `Comando reconhecido: "${command}"`;
+      } catch (err) {
+        console.error('Erro ao enviar comando de voz:', err);
+        status.textContent = 'Erro ao enviar comando. Verifique sua conexão.';
+      }
       setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 3000);
     } else {
       status.textContent = `Não entendi: "${command}"`;
@@ -237,11 +246,10 @@ function initVoice() {
   voiceControl.onEnd = () => {
     btn.classList.remove('listening');
     btn.textContent = '🎤 Ativar voz';
-    // Não reseta status aqui: onResult já agendou o reset via setTimeout.
-    // Se não houve resultado (usuário parou manualmente), restaura o padrão.
-    if (status.textContent === 'Fale um comando (ex: "ligar luz", "abrir portão", "armar alarme")') {
+    if (!_voiceResultHandled) {
       status.textContent = 'Clique para falar um comando';
     }
+    _voiceResultHandled = false;
   };
 
   btn.addEventListener('click', () => {

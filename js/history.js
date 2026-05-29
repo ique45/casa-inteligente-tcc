@@ -36,6 +36,7 @@ let currentUser = null;
 let activeFilters = { trigger: 'todos', period: 'todos' };
 let lastDoc = null;
 let allLoaded = false;
+let _historyGen = 0;
 
 auth.onAuthStateChanged(user => {
   if (!user) { window.location.href = 'login.html'; return; }
@@ -58,9 +59,12 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
 // ---- Carregamento ----
 
 async function loadHistory(reset, _depth = 0) {
+  const myGen = reset ? ++_historyGen : _historyGen;
   if (_depth > 50) {
-    document.getElementById('history-table').innerHTML =
-      '<div class="empty-msg">Nenhuma ativação encontrada para esse filtro.</div>';
+    if (reset) {
+      document.getElementById('history-table').innerHTML =
+        '<div class="empty-msg">Nenhuma ativação encontrada para esse filtro.</div>';
+    }
     return;
   }
   if (reset) {
@@ -99,6 +103,8 @@ async function loadHistory(reset, _depth = 0) {
     if (activeFilters.trigger !== 'todos') {
       docs = docs.filter(d => d.data().trigger === activeFilters.trigger);
     }
+
+    if (myGen !== _historyGen) return;
 
     if (reset && docs.length === 0) {
       if (snap.docs.length === PAGE_SIZE && activeFilters.trigger !== 'todos') {

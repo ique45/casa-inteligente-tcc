@@ -166,7 +166,13 @@ document.getElementById('btn-save').addEventListener('click', async () => {
     window.location.href = 'dashboard.html';
   } catch (err) {
     console.error('Erro ao salvar perfil:', err);
-    const el = document.getElementById('error-msg') || document.createElement('p');
+    let el = document.getElementById('error-msg');
+    if (!el) {
+      el = document.createElement('p');
+      el.id = 'error-msg';
+      el.className = 'error-msg';
+      btn.insertAdjacentElement('afterend', el);
+    }
     el.textContent = 'Erro ao salvar. Verifique sua conexão e tente novamente.';
     el.style.display = 'block';
     btn.disabled = false;
