@@ -60,12 +60,19 @@ const TRIGGER_ICONS = { voz:'🎤', botao:'🔘', presenca:'👁️', temperatur
 let currentUser = null;
 let form = { device: null, name: '', trigger: null, voiceCommand: '', action: null };
 let _autoInitialized = false;
+let _automationsListUnsubscribe = null;
 
 auth.onAuthStateChanged(user => {
-  if (!user) { _autoInitialized = false; window.location.href = 'login.html'; return; }
+  if (!user) {
+    _autoInitialized = false;
+    if (_automationsListUnsubscribe) { _automationsListUnsubscribe(); _automationsListUnsubscribe = null; }
+    window.location.href = 'login.html';
+    return;
+  }
   if (_autoInitialized) return;
   _autoInitialized = true;
   currentUser = user;
+  form = { device: null, name: '', trigger: null, voiceCommand: '', action: null };
   renderDeviceChips();
   renderActionChips();
   loadAutomations();
@@ -312,7 +319,8 @@ function resetForm() {
 // ---- Carregar lista de automações ----
 
 function loadAutomations() {
-  db.collection('automations').doc(currentUser.uid)
+  if (_automationsListUnsubscribe) _automationsListUnsubscribe();
+  _automationsListUnsubscribe = db.collection('automations').doc(currentUser.uid)
     .collection('items')
     .orderBy('createdAt', 'desc')
     .onSnapshot(snap => {

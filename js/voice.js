@@ -52,15 +52,19 @@ const voiceControl = (() => {
       };
 
       let _hadError = false;
+      const _sessionId = ++voiceControl._sessionCounter;
 
       recognition.onerror = (e) => {
+        if (_sessionId !== voiceControl._sessionCounter) return;
         listening = false;
         _hadError = true;
         if (api.onError) api.onError(e.error);
       };
 
       recognition.onend = () => {
+        if (_sessionId !== voiceControl._sessionCounter) return;
         listening = false;
+        recognition = null;
         if (!_hadError && api.onEnd) api.onEnd();
         _hadError = false;
       };
@@ -70,9 +74,11 @@ const voiceControl = (() => {
     },
 
     stop() {
-      if (recognition) recognition.stop();
+      if (recognition) { recognition.stop(); recognition = null; }
       listening = false;
-    }
+    },
+
+    _sessionCounter: 0
   };
 
   return api;

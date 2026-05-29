@@ -18,12 +18,16 @@ let _dashboardInitialized = false;
 let _rtdbDevicesRef = null;
 let _rtdbStatusRef  = null;
 let _automationNamesUnsubscribe = null;
+let _historyUnsubscribe = null;
 
 function _teardownListeners() {
   if (_rtdbDevicesRef)  { _rtdbDevicesRef.off('value');  _rtdbDevicesRef  = null; }
   if (_rtdbStatusRef)   { _rtdbStatusRef.off('value');   _rtdbStatusRef   = null; }
   if (_automationNamesUnsubscribe) { _automationNamesUnsubscribe(); _automationNamesUnsubscribe = null; }
   if (_historyUnsubscribe)         { _historyUnsubscribe();         _historyUnsubscribe         = null; }
+  deviceStates    = {};
+  automationNames = {};
+  activeToggles   = {};
 }
 
 auth.onAuthStateChanged(async user => {
@@ -152,12 +156,14 @@ async function toggleDevice(deviceId) {
     if (!currentUser) { if (btn) btn.disabled = false; return; }
   }
 
+  let rtdbOk = false;
   try {
     await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: newState, ts: Date.now() });
+    rtdbOk = true;
     await logHistory(deviceId, 'botao', newState);
   } catch (err) {
     console.error('Erro ao acionar dispositivo:', err);
-    updateDeviceUI(deviceId, prevState);
+    if (!rtdbOk) updateDeviceUI(deviceId, prevState);
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -189,7 +195,6 @@ async function logHistory(deviceId, trigger, state) {
     });
 }
 
-let _historyUnsubscribe = null;
 function loadHistory() {
   if (_historyUnsubscribe) _historyUnsubscribe();
   _historyUnsubscribe = db.collection('users').doc(currentUser.uid)

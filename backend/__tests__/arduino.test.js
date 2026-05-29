@@ -47,7 +47,18 @@ describe('GET /arduino/health', () => {
 });
 
 describe('POST /arduino/sync', () => {
+  const defaultMockRef = () => ({
+    set:    jest.fn().mockResolvedValue(),
+    update: jest.fn().mockResolvedValue(),
+    once:   jest.fn().mockResolvedValue({ val: () => null }),
+    remove: jest.fn().mockResolvedValue()
+  });
+
   beforeEach(() => jest.clearAllMocks());
+  afterEach(() => {
+    const { rtdb } = require('../firebase');
+    rtdb.ref.mockImplementation(defaultMockRef);
+  });
 
   test('retorna 401 com token errado', async () => {
     const res = await request(app).post('/arduino/sync').send({

@@ -46,10 +46,21 @@ const ALL_TOGGLES = [
 let selectedProfiles = new Set();
 let toggleStates = {};
 let currentUser = null;
+let _profileInitialized = false;
 
 auth.onAuthStateChanged(async user => {
-  if (!user) { window.location.href = 'login.html'; return; }
+  if (!user) {
+    _profileInitialized = false;
+    selectedProfiles.clear();
+    toggleStates = {};
+    window.location.href = 'login.html';
+    return;
+  }
+  if (_profileInitialized) return;
+  _profileInitialized = true;
   currentUser = user;
+  selectedProfiles.clear();
+  toggleStates = {};
 
   try {
     const snap = await db.collection('users').doc(user.uid).get();

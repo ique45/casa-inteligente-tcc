@@ -37,9 +37,12 @@ let activeFilters = { trigger: 'todos', period: 'todos' };
 let lastDoc = null;
 let allLoaded = false;
 let _historyGen = 0;
+let _historyInitialized = false;
 
 auth.onAuthStateChanged(user => {
-  if (!user) { window.location.href = 'login.html'; return; }
+  if (!user) { _historyInitialized = false; window.location.href = 'login.html'; return; }
+  if (_historyInitialized) return;
+  _historyInitialized = true;
   currentUser = user;
   loadHistory(true);
 });
@@ -65,6 +68,8 @@ async function loadHistory(reset, _depth = 0) {
       document.getElementById('history-table').innerHTML =
         '<div class="empty-msg">Nenhuma ativação encontrada para esse filtro.</div>';
     }
+    allLoaded = true;
+    document.getElementById('btn-load-more').style.display = 'none';
     return;
   }
   if (reset) {

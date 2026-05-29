@@ -24,7 +24,7 @@ router.post('/sync', async (req, res) => {
 
   try {
     // 1. Atualiza status do Arduino no RTDB
-    await rtdb.ref(`arduino_status/${uid}`).set({
+    await rtdb.ref(`arduino_status/${uid}`).update({
       online,
       lastSeen: Date.now()
     });
@@ -55,11 +55,11 @@ router.post('/sync', async (req, res) => {
         state: !!(val && typeof val === 'object' ? val.state : val)
       }));
 
-    // 5. Limpa apenas os commands que foram lidos (evita apagar novos commands enfileirados)
-    // O histórico dos site-commands já é gravado pelo dashboard.js no momento do clique
-    if (siteCommands.length > 0) {
-      const keysToRemove = Object.keys(rawCommands).filter(k => VALID_DEVICES.includes(k));
-      await Promise.all(keysToRemove.map(k => rtdb.ref(`commands/${uid}/${k}`).remove()));
+    // 5. Limpa todos os commands lidos (válidos e inválidos), preservando os adicionados após este snapshot
+    // O histórico já é gravado pelo dashboard.js no momento do clique
+    const keysToRemove = Object.keys(rawCommands);
+    if (keysToRemove.length > 0) {
+      await Promise.allSettled(keysToRemove.map(k => rtdb.ref(`commands/${uid}/${k}`).remove()));
     }
 
     // Combina comandos, site-commands têm prioridade — deduplica por dispositivo

@@ -38,7 +38,9 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
           activeToggles: {}
         });
       } catch (fsErr) {
-        await cred.user.delete().catch(() => {});
+        await cred.user.delete().catch(delErr => {
+          console.error('Aviso: conta Auth criada mas Firestore falhou e conta não pôde ser excluída:', delErr);
+        });
         throw fsErr;
       }
       window.location.href = 'profile.html';
