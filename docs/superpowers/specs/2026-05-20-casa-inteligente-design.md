@@ -139,34 +139,15 @@ devices/{userId}/{deviceId}           // Realtime Database
 
 ---
 
-## 5. Firmware Arduino/ESP8266
+## 5. Firmware NodeMCU ESP8266
 
-### Estratégia
-- **Flash único:** firmware genérico flasha no ESP8266 + Arduino uma vez
-- **Config dinâmica:** ESP8266 lê automações do Firestore na inicialização e monitora Realtime DB
-- Mudanças feitas no site são aplicadas automaticamente sem re-upload
+> ⚠️ **Arquitetura revisada (2026-05-29):** A abordagem original com Arduino Mega + ESP8266 via Serial foi descartada. O hardware final usa apenas **NodeMCU ESP8266**, que controla os relés e sensores diretamente. Ver spec detalhada: `docs/superpowers/specs/2026-05-29-firmware-esp8266-design.md`
 
-### ESP8266 — responsabilidades
-- Conectar ao WiFi (credenciais configuradas na primeira vez)
-- Autenticar no Firebase com token do usuário
-- Escutar mudanças no Realtime DB (`devices/{userId}`)
-- Enviar comandos ao Arduino Mega via Serial
-- Receber eventos do Arduino via Serial e subir ao Firebase
-
-### Arduino Mega — responsabilidades
-- Controlar pinos GPIO (relés, servo motor)
-- Ler sensores (presença PIR, temperatura DHT, etc.)
-- Comunicar com ESP8266 via Serial com protocolo JSON simples
-
-### Protocolo Serial (JSON)
-```json
-// ESP8266 → Arduino (comando)
-{"cmd": "relay", "pin": 2, "state": 1}
-
-// Arduino → ESP8266 (evento de sensor)
-{"event": "presence", "sensor": "pir1", "value": 1}
-{"event": "temperature", "sensor": "dht1", "value": 29.5}
-```
+### Estratégia atual
+- Firmware único no NodeMCU ESP8266 (arquivo `.ino`)
+- Sincroniza com o backend via HTTP POST a cada 2 segundos (`/arduino/sync`)
+- Toda configuração (WiFi, UID, TOKEN) fica num bloco no topo do arquivo
+- Relés (Luz, Ventilador, Portão, Alarme) + PIR + DHT11 conectados diretamente ao NodeMCU
 
 ---
 
@@ -189,7 +170,7 @@ Funcionalidades obrigatórias para a apresentação:
 - [ ] Histórico de ativações com filtros
 - [ ] Pelo menos 1 dispositivo físico funcionando end-to-end (ex: luz via botão no site)
 - [ ] Pelo menos 1 automação por voz funcionando
-- [ ] Firmware genérico ESP8266 + Arduino Mega funcional
+- [ ] Firmware NodeMCU ESP8266 funcional (ver spec: `docs/superpowers/specs/2026-05-29-firmware-esp8266-design.md`)
 
 Dispositivos físicos a definir conforme hardware disponível.
 
@@ -198,6 +179,6 @@ Dispositivos físicos a definir conforme hardware disponível.
 ## 8. O que foi deixado em aberto
 
 - Lista definitiva de dispositivos físicos (depende do hardware adquirido)
-- Número de pinos/relés no Arduino Mega
+- Número de pinos/relés no NodeMCU (definido na spec do firmware)
 - Módulo de voz específico (Web Speech API no browser é a abordagem inicial)
 - Design visual final das telas (seguirá o tema roxo escuro do site existente)

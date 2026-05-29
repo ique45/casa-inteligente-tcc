@@ -121,7 +121,7 @@ readSensors():
   se !isnan(temp):
     currentTemp = temp
   se currentTemp > tempThreshold:
-    adiciona "tempAlta" em events[]
+    adiciona "temperatura" em events[]
 ```
 
 Sem debounce necessário — temperatura muda lentamente.
@@ -239,6 +239,12 @@ const threshold = userDoc.exists
 | `PIR_COOLDOWN_MS` | 10000ms | Intervalo entre eventos de presença |
 | `DEFAULT_TEMP_THRESHOLD` | 30°C | Limite de temperatura (fallback) |
 | `RELAY_ON` / `RELAY_OFF` | LOW / HIGH | Polaridade do módulo de relé |
+
+---
+
+## Funcionalidades fora do escopo desta versão
+
+- **Gatilho por horário (`horario`):** O frontend permite criar automações de horário e o backend aceita o trigger, mas nenhuma parte do sistema gera esse evento automaticamente. Não há scheduler no backend nem lógica de horário no firmware. Automações de horário criadas no site não dispararão nesta versão.
 
 ---
 

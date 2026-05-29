@@ -30,9 +30,11 @@ router.post('/sync', async (req, res) => {
     }
 
     // 3. Executa automações disparadas pelos eventos do sensor
+    const automationCommands = [];
     for (const event of events) {
       if (VALID_TRIGGERS.includes(event)) {
-        await executeAutomations(uid, event);
+        const results = await executeAutomations(uid, event);
+        automationCommands.push(...results);
       }
     }
 
@@ -40,14 +42,14 @@ router.post('/sync', async (req, res) => {
     const commandsSnap = await rtdb.ref(`commands/${uid}`).once('value');
     const rawCommands  = commandsSnap.val() || {};
 
-    const commands = Object.entries(rawCommands)
+    const siteCommands = Object.entries(rawCommands)
       .filter(([deviceId]) => VALID_DEVICES.includes(deviceId))
       .map(([deviceId, val]) => ({ device: deviceId, state: !!val.state }));
 
     // 5. Limpa a fila e registra no histórico como acionado pelo site
-    if (commands.length > 0) {
+    if (siteCommands.length > 0) {
       await rtdb.ref(`commands/${uid}`).remove();
-      for (const cmd of commands) {
+      for (const cmd of siteCommands) {
         await logHistory(uid, {
           deviceId: cmd.device,
           device:   cmd.device,
@@ -56,6 +58,9 @@ router.post('/sync', async (req, res) => {
         });
       }
     }
+
+    // Combina comandos do site + comandos de automações por sensor
+    const commands = [...siteCommands, ...automationCommands];
 
     res.json({ commands });
 

@@ -219,7 +219,7 @@ function initVoice() {
 
   voiceControl.onResult = async ({ command, deviceId, action }) => {
     if (deviceId && action !== null) {
-      await rtdb.ref(`devices/${currentUser.uid}/${deviceId}`).set({ state: action });
+      await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: action, ts: Date.now() });
       await logHistory(deviceId, 'voz', action);
       status.textContent = `Comando reconhecido: "${command}"`;
       setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 3000);
