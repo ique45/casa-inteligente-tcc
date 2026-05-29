@@ -12,12 +12,22 @@ const DEVICES = [
 
 let currentUser = null;
 let deviceStates = {};
-let automationNames = {}; // deviceId → primeiro nome de automação configurado
+let automationNames = {};
 let activeToggles = {};
 let _dashboardInitialized = false;
+let _rtdbDevicesRef = null;
+let _rtdbStatusRef  = null;
+let _automationNamesUnsubscribe = null;
+
+function _teardownListeners() {
+  if (_rtdbDevicesRef)  { _rtdbDevicesRef.off('value');  _rtdbDevicesRef  = null; }
+  if (_rtdbStatusRef)   { _rtdbStatusRef.off('value');   _rtdbStatusRef   = null; }
+  if (_automationNamesUnsubscribe) { _automationNamesUnsubscribe(); _automationNamesUnsubscribe = null; }
+  if (_historyUnsubscribe)         { _historyUnsubscribe();         _historyUnsubscribe         = null; }
+}
 
 auth.onAuthStateChanged(async user => {
-  if (!user) { _dashboardInitialized = false; window.location.href = 'login.html'; return; }
+  if (!user) { _dashboardInitialized = false; _teardownListeners(); window.location.href = 'login.html'; return; }
   if (_dashboardInitialized) return;
   _dashboardInitialized = true;
   currentUser = user;
@@ -81,7 +91,8 @@ function renderDevices() {
 }
 
 function listenDeviceStates() {
-  rtdb.ref(`devices/${currentUser.uid}`).on('value', snap => {
+  _rtdbDevicesRef = rtdb.ref(`devices/${currentUser.uid}`);
+  _rtdbDevicesRef.on('value', snap => {
     const data = snap.val() || {};
     DEVICES.forEach(d => {
       const isOn = data[d.id]?.state === true;
@@ -103,7 +114,8 @@ function updateDeviceUI(deviceId, isOn) {
 }
 
 function listenArduinoStatus() {
-  rtdb.ref(`arduino_status/${currentUser.uid}`).on('value', snap => {
+  _rtdbStatusRef = rtdb.ref(`arduino_status/${currentUser.uid}`);
+  _rtdbStatusRef.on('value', snap => {
     const data = snap.val() || {};
     const badge = document.getElementById('arduino-badge');
     const lastSeen = document.getElementById('last-seen');
@@ -137,6 +149,7 @@ async function toggleDevice(deviceId) {
     if (stateEl) stateEl.textContent = newState ? d.labelTransition.on : d.labelTransition.off;
     if (btn) btn.disabled = true;
     await new Promise(r => setTimeout(r, 1200));
+    if (!currentUser) { if (btn) btn.disabled = false; return; }
   }
 
   try {
@@ -151,7 +164,8 @@ async function toggleDevice(deviceId) {
 }
 
 function listenAutomationNames() {
-  db.collection('automations').doc(currentUser.uid)
+  if (_automationNamesUnsubscribe) _automationNamesUnsubscribe();
+  _automationNamesUnsubscribe = db.collection('automations').doc(currentUser.uid)
     .collection('items').onSnapshot(snap => {
       automationNames = {};
       snap.docs.forEach(doc => {
@@ -227,18 +241,19 @@ function initVoice() {
   };
 
   voiceControl.onResult = async ({ command, deviceId, action }) => {
-    _voiceResultHandled = true;
     if (deviceId && action !== null) {
       try {
         if (!currentUser) return;
+        _voiceResultHandled = true;
         await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: action, ts: Date.now() });
         await logHistory(deviceId, 'voz', action);
         status.textContent = `Comando reconhecido: "${command}"`;
+        setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 3000);
       } catch (err) {
         console.error('Erro ao enviar comando de voz:', err);
         status.textContent = 'Erro ao enviar comando. Verifique sua conexão.';
+        setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 5000);
       }
-      setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 3000);
     } else {
       status.textContent = `Não entendi: "${command}"`;
       setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 3000);

@@ -32,7 +32,7 @@ router.post('/sync', async (req, res) => {
     // 2. Grava estado real de cada dispositivo informado pelo Arduino
     for (const [deviceId, state] of Object.entries(devices)) {
       if (!VALID_DEVICES.includes(deviceId)) continue;
-      await rtdb.ref(`devices/${uid}/${deviceId}`).set({ state: !!state });
+      await rtdb.ref(`devices/${uid}/${deviceId}`).update({ state: !!state });
     }
 
     // 3. Executa automações disparadas pelos eventos do sensor
@@ -55,17 +55,11 @@ router.post('/sync', async (req, res) => {
         state: !!(val && typeof val === 'object' ? val.state : val)
       }));
 
-    // 5. Registra histórico (best-effort) e limpa a fila
+    // 5. Limpa apenas os commands que foram lidos (evita apagar novos commands enfileirados)
+    // O histórico dos site-commands já é gravado pelo dashboard.js no momento do clique
     if (siteCommands.length > 0) {
-      await Promise.allSettled(siteCommands.map(cmd =>
-        logHistory(uid, {
-          deviceId: cmd.device,
-          device:   DEVICE_NAMES[cmd.device] || cmd.device,
-          trigger:  'botao',
-          state:    cmd.state
-        })
-      ));
-      await rtdb.ref(`commands/${uid}`).remove();
+      const keysToRemove = Object.keys(rawCommands).filter(k => VALID_DEVICES.includes(k));
+      await Promise.all(keysToRemove.map(k => rtdb.ref(`commands/${uid}/${k}`).remove()));
     }
 
     // Combina comandos, site-commands têm prioridade — deduplica por dispositivo

@@ -6,6 +6,7 @@ process.env.FIREBASE_DATABASE_URL = 'https://test-default-rtdb.firebaseio.com';
 jest.mock('../firebase', () => {
   const mockRef = () => ({
     set:    jest.fn().mockResolvedValue(),
+    update: jest.fn().mockResolvedValue(),
     once:   jest.fn().mockResolvedValue({ val: () => null }),
     remove: jest.fn().mockResolvedValue()
   });
@@ -107,6 +108,29 @@ describe('POST /arduino/sync', () => {
     });
     expect(res.status).toBe(200);
     expect(res.body.commands).toContainEqual({ device: 'luz', state: true });
+  });
+
+  test('site-command tem prioridade sobre automationCommand para o mesmo device', async () => {
+    const { executeAutomations } = require('../services/automation');
+    executeAutomations.mockResolvedValueOnce([{ device: 'luz', state: true }]);
+    const { rtdb } = require('../firebase');
+    rtdb.ref.mockImplementation((path) => {
+      if (path.includes('commands/')) {
+        return {
+          once: jest.fn().mockResolvedValue({ val: () => ({ luz: { state: false, ts: 1 } }) }),
+          remove: jest.fn().mockResolvedValue()
+        };
+      }
+      return { set: jest.fn().mockResolvedValue(), once: jest.fn().mockResolvedValue({ val: () => null }), remove: jest.fn().mockResolvedValue(), update: jest.fn().mockResolvedValue() };
+    });
+    const res = await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret',
+      devices: {}, events: ['presenca'], online: true
+    });
+    expect(res.status).toBe(200);
+    const luzCmds = res.body.commands.filter(c => c.device === 'luz');
+    expect(luzCmds).toHaveLength(1);
+    expect(luzCmds[0].state).toBe(false); // site-command (false) vence automação (true)
   });
 
   test('ignora event inválido', async () => {

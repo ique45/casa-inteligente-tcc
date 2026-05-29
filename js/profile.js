@@ -161,7 +161,7 @@ document.getElementById('btn-save').addEventListener('click', async () => {
   try {
     await db.collection('users').doc(currentUser.uid).set({
       activeProfiles: [...selectedProfiles],
-      activeToggles: toggleStates
+      activeToggles: { ...toggleStates }
     }, { merge: true });
     window.location.href = 'dashboard.html';
   } catch (err) {

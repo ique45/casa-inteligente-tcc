@@ -59,9 +59,12 @@ const TRIGGER_ICONS = { voz:'🎤', botao:'🔘', presenca:'👁️', temperatur
 
 let currentUser = null;
 let form = { device: null, name: '', trigger: null, voiceCommand: '', action: null };
+let _autoInitialized = false;
 
 auth.onAuthStateChanged(user => {
-  if (!user) { window.location.href = 'login.html'; return; }
+  if (!user) { _autoInitialized = false; window.location.href = 'login.html'; return; }
+  if (_autoInitialized) return;
+  _autoInitialized = true;
   currentUser = user;
   renderDeviceChips();
   renderActionChips();
@@ -328,7 +331,7 @@ function loadAutomations() {
           ? `Voz: "${escapeHtml(d.voiceCommand || '')}"`
           : d.trigger === 'botao'
             ? ({ portao: 'Botão (abre/fecha)', alarme: 'Botão (arma/desarma)' })[d.deviceType] || 'Botão (alterna)'
-            : `${escapeHtml(tInfo.label || d.trigger)} → ${escapeHtml(actionLabel || '')}`;
+            : `${escapeHtml(tInfo.label || d.trigger || '?')} → ${escapeHtml(actionLabel || d.action || '?')}`;
         return `
           <div class="automation-card">
             <span class="auto-icon">${device?.icon || '⚙️'}</span>
