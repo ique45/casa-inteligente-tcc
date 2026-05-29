@@ -57,7 +57,12 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
 
 // ---- Carregamento ----
 
-async function loadHistory(reset) {
+async function loadHistory(reset, _depth = 0) {
+  if (_depth > 50) {
+    document.getElementById('history-table').innerHTML =
+      '<div class="empty-msg">Nenhuma ativação encontrada para esse filtro.</div>';
+    return;
+  }
   if (reset) {
     lastDoc = null;
     allLoaded = false;
@@ -99,7 +104,7 @@ async function loadHistory(reset) {
       if (snap.docs.length === PAGE_SIZE && activeFilters.trigger !== 'todos') {
         // Primeira página cheia mas sem resultados filtrados — avança para a próxima
         lastDoc = snap.docs[snap.docs.length - 1];
-        loadHistory(true);
+        loadHistory(false, _depth + 1);
         return;
       }
       const hasFilter = activeFilters.trigger !== 'todos' || activeFilters.period !== 'todos';
@@ -137,7 +142,7 @@ async function loadHistory(reset) {
       lastDoc = snap.docs[snap.docs.length - 1];
       if (docs.length === 0 && activeFilters.trigger !== 'todos') {
         // Página cheia mas nenhum doc passou o filtro de gatilho — avança automaticamente
-        loadHistory(false);
+        loadHistory(false, _depth + 1);
         return;
       }
       document.getElementById('btn-load-more').style.display = 'block';

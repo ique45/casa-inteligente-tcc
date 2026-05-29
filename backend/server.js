@@ -1,4 +1,10 @@
 require('dotenv').config();
+
+if (!process.env.ARDUINO_SECRET) {
+  console.error('FATAL: variável ARDUINO_SECRET não configurada');
+  process.exit(1);
+}
+
 const express      = require('express');
 const cors         = require('cors');
 const arduinoRoute = require('./routes/arduino');

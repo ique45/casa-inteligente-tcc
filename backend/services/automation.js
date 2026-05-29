@@ -30,18 +30,20 @@ async function executeAutomations(uid, trigger) {
 
   if (snap.empty) return [];
 
+  const devicesSnap = await rtdb.ref(`devices/${uid}`).once('value');
+  const devicesData = devicesSnap.val() || {};
+
   const results = [];
 
   for (const doc of snap.docs) {
-    const auto      = doc.data();
-    const deviceRef = rtdb.ref(`devices/${uid}/${auto.deviceType}`);
-    const deviceSnap = await deviceRef.once('value');
-    const currentState = (deviceSnap.val() || {}).state === true;
-    const newState = resolveAction(auto.action, currentState);
+    const auto         = doc.data();
+    const currentState = (devicesData[auto.deviceType] || {}).state === true;
+    const newState     = resolveAction(auto.action, currentState);
 
     if (newState === null) continue;
 
-    await deviceRef.set({ state: newState });
+    const deviceRef = rtdb.ref(`devices/${uid}/${auto.deviceType}`);
+    await deviceRef.update({ state: newState });
     await logHistory(uid, {
       deviceId: auto.deviceType,
       device:   auto.deviceName,
@@ -49,6 +51,7 @@ async function executeAutomations(uid, trigger) {
       state:    newState
     });
 
+    devicesData[auto.deviceType] = { ...devicesData[auto.deviceType], state: newState };
     results.push({ device: auto.deviceType, state: newState });
   }
 

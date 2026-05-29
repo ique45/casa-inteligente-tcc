@@ -51,17 +51,21 @@ auth.onAuthStateChanged(async user => {
   if (!user) { window.location.href = 'login.html'; return; }
   currentUser = user;
 
-  const snap = await db.collection('users').doc(user.uid).get();
-  if (snap.exists) {
-    const data = snap.data();
-    (data.activeProfiles || []).forEach(p => selectedProfiles.add(p));
-    toggleStates = data.activeToggles || {};
+  try {
+    const snap = await db.collection('users').doc(user.uid).get();
+    if (snap.exists) {
+      const data = snap.data();
+      (data.activeProfiles || []).forEach(p => selectedProfiles.add(p));
+      toggleStates = data.activeToggles || {};
+    }
+    renderProfiles();
+    renderToggles();
+    document.getElementById('loading-msg').style.display = 'none';
+    updateSaveBtn();
+  } catch (err) {
+    console.error('Erro ao carregar perfil:', err);
+    document.getElementById('loading-msg').textContent = 'Erro ao carregar. Recarregue a página.';
   }
-
-  renderProfiles();
-  renderToggles();
-  document.getElementById('loading-msg').style.display = 'none';
-  updateSaveBtn();
 });
 
 function renderProfiles() {

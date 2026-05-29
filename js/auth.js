@@ -1,11 +1,12 @@
-// Redireciona para dashboard se já logado (não interfere durante o cadastro)
+// Redireciona para dashboard se já logado (não interfere durante o cadastro ou login Google)
+let isSignup = false;
+let isPendingRedirect = false;
+
 auth.onAuthStateChanged(user => {
-  if (user && window.location.pathname.includes('login.html') && !isSignup) {
+  if (user && window.location.pathname.includes('login.html') && !isSignup && !isPendingRedirect) {
     window.location.href = 'dashboard.html';
   }
 });
-
-let isSignup = false;
 
 document.getElementById('toggle-link').addEventListener('click', () => {
   isSignup = !isSignup;
@@ -28,13 +29,18 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
   try {
     if (isSignup) {
       const cred = await auth.createUserWithEmailAndPassword(email, senha);
-      await db.collection('users').doc(cred.user.uid).set({
-        email,
-        name: email.split('@')[0],
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        activeProfiles: [],
-        activeToggles: {}
-      });
+      try {
+        await db.collection('users').doc(cred.user.uid).set({
+          email,
+          name: email.split('@')[0],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          activeProfiles: [],
+          activeToggles: {}
+        });
+      } catch (fsErr) {
+        await cred.user.delete().catch(() => {});
+        throw fsErr;
+      }
       window.location.href = 'profile.html';
     } else {
       await auth.signInWithEmailAndPassword(email, senha);
@@ -50,12 +56,14 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
 document.getElementById('btn-google').addEventListener('click', async () => {
   const btn = document.getElementById('btn-google');
   btn.disabled = true;
+  isPendingRedirect = true;
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
     const cred = await auth.signInWithPopup(provider);
     const userDoc = db.collection('users').doc(cred.user.uid);
     const snap = await userDoc.get();
-    if (!snap.exists) {
+    const isNewUser = !snap.exists;
+    if (isNewUser) {
       await userDoc.set({
         email: cred.user.email,
         name: cred.user.displayName,
@@ -64,8 +72,9 @@ document.getElementById('btn-google').addEventListener('click', async () => {
         activeToggles: {}
       });
     }
-    window.location.href = snap.exists ? 'dashboard.html' : 'profile.html';
+    window.location.href = isNewUser ? 'profile.html' : 'dashboard.html';
   } catch (err) {
+    isPendingRedirect = false;
     showError(translateError(err.code));
   } finally {
     btn.disabled = false;

@@ -7,11 +7,14 @@ const router = express.Router();
 
 const VALID_DEVICES  = ['luz', 'ventilador', 'portao', 'alarme'];
 const VALID_TRIGGERS = ['presenca', 'temperatura', 'horario'];
+const DEVICE_NAMES   = { luz: 'Luz', ventilador: 'Ventilador', portao: 'Portão', alarme: 'Alarme' };
 
 router.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 router.post('/sync', async (req, res) => {
-  const { uid, token, devices = {}, events = [], online = true } = req.body;
+  const { uid, token, online = true } = req.body;
+  const devices = (req.body.devices !== null && typeof req.body.devices === 'object') ? req.body.devices : {};
+  const events  = Array.isArray(req.body.events) ? req.body.events : [];
 
   if (!uid)                                return res.status(400).json({ error: 'uid obrigatório' });
   if (token !== process.env.ARDUINO_SECRET) return res.status(401).json({ error: 'token inválido' });
@@ -46,17 +49,17 @@ router.post('/sync', async (req, res) => {
       .filter(([deviceId]) => VALID_DEVICES.includes(deviceId))
       .map(([deviceId, val]) => ({ device: deviceId, state: !!val.state }));
 
-    // 5. Limpa a fila e registra no histórico como acionado pelo site
+    // 5. Registra histórico e só então limpa a fila
     if (siteCommands.length > 0) {
-      await rtdb.ref(`commands/${uid}`).remove();
       for (const cmd of siteCommands) {
         await logHistory(uid, {
           deviceId: cmd.device,
-          device:   cmd.device,
+          device:   DEVICE_NAMES[cmd.device] || cmd.device,
           trigger:  'botao',
           state:    cmd.state
         });
       }
+      await rtdb.ref(`commands/${uid}`).remove();
     }
 
     // Combina comandos do site + comandos de automações por sensor

@@ -14,9 +14,12 @@ let currentUser = null;
 let deviceStates = {};
 let automationNames = {}; // deviceId → primeiro nome de automação configurado
 let activeToggles = {};
+let _dashboardInitialized = false;
 
 auth.onAuthStateChanged(async user => {
   if (!user) { window.location.href = 'login.html'; return; }
+  if (_dashboardInitialized) return;
+  _dashboardInitialized = true;
   currentUser = user;
 
   try {
@@ -94,7 +97,9 @@ function updateDeviceUI(deviceId, isOn) {
   const stateEl = document.getElementById(`state-${deviceId}`);
   if (!btn || !stateEl || !d) return;
   btn.classList.toggle('on', isOn);
-  stateEl.textContent = isOn ? d.labelOn : d.labelOff;
+  if (!btn.disabled) {
+    stateEl.textContent = isOn ? d.labelOn : d.labelOff;
+  }
 }
 
 function listenArduinoStatus() {
