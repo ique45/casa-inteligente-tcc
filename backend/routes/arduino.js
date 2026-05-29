@@ -12,6 +12,9 @@ const DEVICE_NAMES   = { luz: 'Luz', ventilador: 'Ventilador', portao: 'Portão'
 router.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 router.post('/sync', async (req, res) => {
+  if (!req.body || typeof req.body !== 'object') {
+    return res.status(400).json({ error: 'body JSON obrigatório' });
+  }
   const { uid, token, online = true } = req.body;
   const devices = (req.body.devices !== null && typeof req.body.devices === 'object' && !Array.isArray(req.body.devices)) ? req.body.devices : {};
   const events  = Array.isArray(req.body.events) ? req.body.events : [];
@@ -47,7 +50,10 @@ router.post('/sync', async (req, res) => {
 
     const siteCommands = Object.entries(rawCommands)
       .filter(([deviceId]) => VALID_DEVICES.includes(deviceId))
-      .map(([deviceId, val]) => ({ device: deviceId, state: !!val.state }));
+      .map(([deviceId, val]) => ({
+        device: deviceId,
+        state: !!(val && typeof val === 'object' ? val.state : val)
+      }));
 
     // 5. Registra histórico (best-effort) e limpa a fila
     if (siteCommands.length > 0) {
@@ -62,8 +68,13 @@ router.post('/sync', async (req, res) => {
       await rtdb.ref(`commands/${uid}`).remove();
     }
 
-    // Combina comandos do site + comandos de automações por sensor
-    const commands = [...siteCommands, ...automationCommands];
+    // Combina comandos, site-commands têm prioridade — deduplica por dispositivo
+    const seen = new Set();
+    const commands = [...siteCommands, ...automationCommands].filter(cmd => {
+      if (seen.has(cmd.device)) return false;
+      seen.add(cmd.device);
+      return true;
+    });
 
     res.json({ commands });
 

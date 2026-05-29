@@ -177,7 +177,10 @@ function formatTime(date) {
 }
 
 document.getElementById('btn-load-more').addEventListener('click', () => {
-  if (!allLoaded) loadHistory(false);
+  if (!allLoaded) {
+    document.getElementById('btn-load-more').style.display = 'none';
+    loadHistory(false);
+  }
 });
 
 // ---- Navegação ----

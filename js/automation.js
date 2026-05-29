@@ -263,6 +263,7 @@ document.getElementById('input-voice').addEventListener('input', e => {
 document.getElementById('btn-save-auto').addEventListener('click', async () => {
   if (!currentUser) return;
   if (!form.device || !form.trigger || form.action == null || !form.name.trim()) return;
+  if (form.trigger === 'voz' && !form.voiceCommand.trim()) return;
   const btn = document.getElementById('btn-save-auto');
   btn.disabled = true;
   btn.textContent = 'Salvando…';
@@ -327,7 +328,7 @@ function loadAutomations() {
           ? `Voz: "${escapeHtml(d.voiceCommand || '')}"`
           : d.trigger === 'botao'
             ? ({ portao: 'Botão (abre/fecha)', alarme: 'Botão (arma/desarma)' })[d.deviceType] || 'Botão (alterna)'
-            : `${tInfo.label || d.trigger} → ${actionLabel}`;
+            : `${escapeHtml(tInfo.label || d.trigger)} → ${escapeHtml(actionLabel || '')}`;
         return `
           <div class="automation-card">
             <span class="auto-icon">${device?.icon || '⚙️'}</span>

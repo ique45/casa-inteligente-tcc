@@ -46,7 +46,7 @@ async function executeAutomations(uid, trigger) {
     await deviceRef.update({ state: newState });
     await logHistory(uid, {
       deviceId: auto.deviceType,
-      device:   auto.deviceName,
+      device:   auto.deviceName || auto.deviceType,
       trigger,
       state:    newState
     });

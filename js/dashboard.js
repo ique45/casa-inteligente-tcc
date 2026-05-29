@@ -175,8 +175,10 @@ async function logHistory(deviceId, trigger, state) {
     });
 }
 
+let _historyUnsubscribe = null;
 function loadHistory() {
-  db.collection('users').doc(currentUser.uid)
+  if (_historyUnsubscribe) _historyUnsubscribe();
+  _historyUnsubscribe = db.collection('users').doc(currentUser.uid)
     .collection('history')
     .orderBy('timestamp', 'desc')
     .limit(5)
@@ -256,7 +258,12 @@ function initVoice() {
     if (voiceControl.isListening()) {
       voiceControl.stop();
     } else {
-      voiceControl.start();
+      try {
+        voiceControl.start();
+      } catch (err) {
+        status.textContent = 'Erro ao iniciar o microfone. Tente novamente.';
+        return;
+      }
       btn.classList.add('listening');
       btn.textContent = '🎙️ Ouvindo...';
       status.textContent = 'Fale um comando (ex: "ligar luz", "abrir portão", "armar alarme")';

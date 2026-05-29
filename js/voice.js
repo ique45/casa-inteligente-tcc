@@ -51,15 +51,18 @@ const voiceControl = (() => {
         }
       };
 
+      let _hadError = false;
+
       recognition.onerror = (e) => {
         listening = false;
+        _hadError = true;
         if (api.onError) api.onError(e.error);
-        // onEnd não chamado aqui: onError já trata o reset da UI
       };
 
       recognition.onend = () => {
         listening = false;
-        if (api.onEnd) api.onEnd();
+        if (!_hadError && api.onEnd) api.onEnd();
+        _hadError = false;
       };
 
       recognition.start();
