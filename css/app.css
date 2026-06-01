@@ -209,7 +209,8 @@ body {
 }
 .device-card.on { background: var(--purple-glow); border-color: var(--border-active); }
 .device-card:hover:not(:disabled) { border-color: var(--purple-light); }
-.device-card:disabled { opacity: 0.7; cursor: wait; }
+.device-card:disabled { opacity: 0.7; cursor: not-allowed; }
+.device-card:focus-visible { outline: 2px solid var(--purple-light); outline-offset: 2px; }
 .device-card-icon { font-size: 26px; flex-shrink: 0; }
 .device-card-info { flex: 1; min-width: 0; }
 .device-card-name { font-size: 16px; font-weight: 700; color: #fff; }
@@ -230,6 +231,7 @@ body {
 }
 .profile-card:hover { border-color: var(--purple-light); }
 .profile-card.selected { background: var(--purple-glow); border-color: var(--border-active); }
+.profile-card:focus-visible { outline: 2px solid var(--purple-light); outline-offset: 2px; }
 .profile-card-icon {
   width: 44px; height: 44px;
   background: rgba(255,255,255,0.06); border-radius: 10px;
