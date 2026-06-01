@@ -336,26 +336,37 @@ function loadAutomations() {
       list.innerHTML = snap.docs.map(doc => {
         const d = doc.data();
         const device = DEVICES.find(x => x.id === d.deviceType);
-        const tInfo = TRIGGER_INFO[d.trigger] || {};
+        const isEnabled = d.enabled !== false;
+
+        // Texto "Quando:"
+        let whenText = '';
+        if (d.trigger === 'voz') whenText = `você falar <strong>"${escapeHtml(d.voiceCommand || '')}"</strong>`;
+        else if (d.trigger === 'botao') whenText = `você clicar no botão do dashboard`;
+        else if (d.trigger === 'presenca') whenText = `o sensor detectar presença`;
+        else if (d.trigger === 'temperatura') whenText = `o sensor de temperatura disparar`;
+        else if (d.trigger === 'horario') whenText = `chegar o horário programado`;
+        else whenText = escapeHtml(d.trigger);
+
+        // Texto "O sistema vai:"
         const actionObj = getActions(d.deviceType).find(a => a.id === d.action);
-        const actionLabel = actionObj ? actionObj.label : d.action;
-        const detail = d.trigger === 'voz'
-          ? `Voz: "${escapeHtml(d.voiceCommand || '')}"`
-          : d.trigger === 'botao'
-            ? ({ portao: 'Botão (abre/fecha)', alarme: 'Botão (arma/desarma)' })[d.deviceType] || 'Botão (alterna)'
-            : `${escapeHtml(tInfo.label || d.trigger || '?')} → ${escapeHtml(actionLabel || d.action || '?')}`;
+        const actionVerb = escapeHtml(actionObj ? actionObj.label.toLowerCase() : (d.action || '?'));
+        const thenText = `<span class="action-verb">${actionVerb}</span> o <strong>${escapeHtml(d.deviceName)}</strong> automaticamente`;
+
+        const badgeClass = isEnabled ? 'badge badge-active' : 'badge badge-disabled';
+        const badgeText = isEnabled ? '⚡ ATIVA' : '● DESLIGADA';
+
         return `
-          <div class="automation-card">
-            <span class="auto-icon">${device?.icon || '⚙️'}</span>
-            <div class="auto-info">
-              <div class="auto-name">${escapeHtml(d.deviceName)}</div>
-              <div class="auto-detail">${detail}</div>
-            </div>
-            <span class="auto-trigger">${tInfo.icon || ''} ${escapeHtml(tInfo.label || d.trigger)}</span>
-            <div class="auto-actions">
-              <div class="toggle-switch ${d.enabled ? 'on' : ''}" data-id="${doc.id}" role="switch" aria-checked="${d.enabled}" tabindex="0"></div>
-              <span class="auto-status ${d.enabled ? 'on' : ''}">${d.enabled ? 'Ativo' : 'Pausado'}</span>
+          <div class="automation-card ${isEnabled ? '' : 'disabled'}">
+            <div class="automation-card-header">
+              <span class="automation-card-icon">${device?.icon || '⚙️'}</span>
+              <div class="automation-card-name">${escapeHtml(d.deviceName)}</div>
+              <span class="${badgeClass}">${badgeText}</span>
+              <div class="toggle-switch ${isEnabled ? 'on' : ''}" data-id="${doc.id}" role="switch" aria-checked="${isEnabled}" tabindex="0"></div>
               <button class="btn-delete" data-id="${doc.id}" aria-label="Excluir automação" title="Excluir">🗑️</button>
+            </div>
+            <div class="automation-card-body">
+              <div class="automation-card-when"><span style="color:var(--text-muted);font-weight:600">Quando: </span>${whenText}</div>
+              <div class="automation-card-then"><span style="color:var(--text-muted);font-weight:600">O sistema vai: </span>${thenText}</div>
             </div>
           </div>
         `;
@@ -427,13 +438,4 @@ document.getElementById('btn-new-auto').addEventListener('click', () => {
 
 document.getElementById('btn-logout').addEventListener('click', () => {
   auth.signOut().then(() => window.location.href = 'login.html');
-});
-document.getElementById('btn-dashboard').addEventListener('click', () => {
-  window.location.href = 'dashboard.html';
-});
-document.getElementById('btn-profile').addEventListener('click', () => {
-  window.location.href = 'profile.html';
-});
-document.getElementById('btn-history-page').addEventListener('click', () => {
-  window.location.href = 'history.html';
 });
