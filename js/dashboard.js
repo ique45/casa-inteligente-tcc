@@ -74,7 +74,7 @@ auth.onAuthStateChanged(async user => {
 function renderDevices() {
   const grid = document.getElementById('devices-grid');
   if (activeToggles.botao === false) {
-    grid.innerHTML = `<p style="color:var(--text-muted);font-size:0.9rem">
+    grid.innerHTML = `<p style="color:var(--text-muted);font-size:14px">
       Controle por botão desativado.
       <span style="color:var(--purple-light);cursor:pointer" onclick="window.location.href='profile.html'">
         Ativar nas configurações de perfil →
@@ -83,14 +83,19 @@ function renderDevices() {
     return;
   }
   grid.innerHTML = DEVICES.map(d => `
-    <button class="device-btn" id="btn-${d.id}" data-id="${d.id}">
-      <span class="device-icon">${d.icon}</span>
-      <span class="device-name">${escapeHtml(d.name)}</span>
-      <span class="device-state" id="state-${d.id}">${d.labelOff}</span>
+    <button class="device-card" id="btn-${d.id}" data-id="${d.id}">
+      <span class="device-card-icon">${d.icon}</span>
+      <div class="device-card-info">
+        <div class="device-card-name">${escapeHtml(d.name)}</div>
+        <div class="device-card-status" id="state-${d.id}">${d.labelOff.toUpperCase()}</div>
+      </div>
+      <div class="device-toggle" id="toggle-${d.id}">
+        <div class="toggle-thumb"></div>
+      </div>
     </button>
   `).join('');
 
-  grid.querySelectorAll('.device-btn').forEach(btn => {
+  grid.querySelectorAll('.device-card').forEach(btn => {
     btn.addEventListener('click', () => toggleDevice(btn.dataset.id));
   });
 }
@@ -111,10 +116,12 @@ function updateDeviceUI(deviceId, isOn) {
   const d = DEVICES.find(x => x.id === deviceId);
   const btn = document.getElementById(`btn-${deviceId}`);
   const stateEl = document.getElementById(`state-${deviceId}`);
+  const toggleEl = document.getElementById(`toggle-${deviceId}`);
   if (!btn || !stateEl || !d) return;
   if (!btn.disabled) {
     btn.classList.toggle('on', isOn);
-    stateEl.textContent = isOn ? d.labelOn : d.labelOff;
+    if (toggleEl) toggleEl.classList.toggle('on', isOn);
+    stateEl.textContent = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
   }
 }
 
@@ -122,19 +129,16 @@ function listenArduinoStatus() {
   _rtdbStatusRef = rtdb.ref(`arduino_status/${currentUser.uid}`);
   _rtdbStatusRef.on('value', snap => {
     const data = snap.val() || {};
-    const badge = document.getElementById('arduino-badge');
-    const lastSeen = document.getElementById('last-seen');
+    const sidebar = document.getElementById('arduino-sidebar');
+    const statusText = document.getElementById('arduino-status-text');
     const offlineHint = document.getElementById('offline-hint');
     if (data.online) {
-      badge.className = 'badge badge-online';
-      badge.textContent = 'Online';
-      lastSeen.textContent = '';
+      if (sidebar) sidebar.className = 'sidebar-footer';
+      if (statusText) statusText.textContent = 'Online';
       if (offlineHint) offlineHint.style.display = 'none';
     } else {
-      badge.className = 'badge badge-offline';
-      badge.textContent = 'Offline';
-      const ts = data.lastSeen ? `Última vez: ${new Date(data.lastSeen).toLocaleString('pt-BR')} · ` : '';
-      lastSeen.textContent = `${ts}Dispositivos físicos não estão respondendo no momento.`;
+      if (sidebar) sidebar.className = 'sidebar-footer offline';
+      if (statusText) statusText.textContent = 'Offline';
       if (offlineHint) offlineHint.style.display = 'block';
     }
   });
@@ -213,15 +217,19 @@ function loadHistory() {
         const ts = d.timestamp ? formatRelativeTime(new Date(d.timestamp.toMillis())) : '—';
         const stateLabels = { portao: ['Aberto','Fechado'], alarme: ['Armado','Desarmado'] };
         const [labelOn, labelOff] = stateLabels[d.deviceId] || ['Ligado','Desligado'];
-        const stateLabel = d.state ? labelOn : labelOff;
-        const TRIGGER_ICONS  = { voz:'🎤', botao:'🔘', presenca:'👁️', horario:'⏰', temperatura:'🌡️' };
-        const TRIGGER_LABELS = { voz:'Voz', botao:'Botão', presenca:'Presença', horario:'Horário', temperatura:'Temperatura' };
+        const stateLabel = d.state ? labelOn.toUpperCase() : labelOff.toUpperCase();
+        const stateClass = d.state ? 'badge-state-on' : 'badge-state-off';
+        const TRIGGER_ICONS = { voz:'🎤', botao:'🔘', presenca:'👁️', horario:'⏰', temperatura:'🌡️' };
+        const DEVICE_ICONS = { luz:'💡', ventilador:'🌀', portao:'🚪', alarme:'🔔' };
+        const deviceIcon = DEVICE_ICONS[d.deviceId] || '⚙️';
         return `
-          <div class="history-item">
-            <span class="history-device">${escapeHtml(d.device)}</span>
-            <span class="history-trigger">${TRIGGER_ICONS[d.trigger] || ''} ${TRIGGER_LABELS[d.trigger] || escapeHtml(d.trigger)}</span>
-            <span class="history-state ${d.state ? 'on' : 'off'}">${stateLabel}</span>
-            <span class="history-time">${ts}</span>
+          <div class="history-card">
+            <div class="history-card-header">
+              <span class="history-card-icon">${deviceIcon}</span>
+              <div class="history-card-name">${escapeHtml(d.device)}</div>
+              <div class="history-card-time">${ts}</div>
+              <span class="badge ${stateClass}">${stateLabel}</span>
+            </div>
           </div>
         `;
       }).join('');
@@ -297,21 +305,13 @@ function formatRelativeTime(date) {
   const isToday = date.toDateString() === now.toDateString();
   const yesterday = new Date(now - 86400000);
   const isYesterday = date.toDateString() === yesterday.toDateString();
-  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  if (isToday) return `Hoje, ${time}`;
-  if (isYesterday) return `Ontem, ${time}`;
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + `, ${time}`;
+  const dayMonth = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+  if (isToday) return `Hoje, ${dayMonth} · ${time}`;
+  if (isYesterday) return `Ontem, ${dayMonth} · ${time}`;
+  return `${dayMonth} · ${time}`;
 }
 
 document.getElementById('btn-logout').addEventListener('click', () => {
   auth.signOut().then(() => window.location.href = 'login.html');
-});
-document.getElementById('btn-profile').addEventListener('click', () => {
-  window.location.href = 'profile.html';
-});
-document.getElementById('btn-automations').addEventListener('click', () => {
-  window.location.href = 'automation.html';
-});
-document.getElementById('btn-history-page').addEventListener('click', () => {
-  window.location.href = 'history.html';
 });

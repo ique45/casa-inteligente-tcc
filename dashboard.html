@@ -6,90 +6,101 @@
   <title>Casa Inteligente — Dashboard</title>
   <link rel="stylesheet" href="css/app.css"/>
   <style>
-    .status-bar {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 16px; background: var(--bg-card);
-      border: 1px solid var(--border); border-radius: var(--radius);
-      margin-bottom: 24px;
+    .devices-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+    .voice-btn {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 20px; background: rgba(255,255,255,0.04);
+      border: 2px solid var(--border); border-radius: var(--radius);
+      cursor: pointer; transition: all 0.2s; width: 100%;
+      font-family: inherit; color: var(--text); text-align: left;
+      margin-bottom: 8px;
     }
-    .status-bar .label { color: var(--text-muted); font-size: 0.85rem; }
-    .status-bar .last-seen { color: var(--text-muted); font-size: 0.78rem; margin-left: auto; }
-
-    .devices-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 32px; }
-
-    .btn-mic {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 12px 20px; background: var(--bg-card2);
-      border: 1px solid var(--border); border-radius: 8px;
-      cursor: pointer; transition: all 0.2s; font-size: 0.9rem;
-      color: var(--text); margin-bottom: 8px;
+    .voice-btn.listening { border-color: var(--purple); background: var(--purple-glow); }
+    .voice-btn-icon {
+      width: 42px; height: 42px; flex-shrink: 0;
+      background: rgba(124,58,237,0.3); border: 2px solid var(--purple);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;
     }
-    .btn-mic.listening { border-color: var(--purple); background: var(--purple-glow); color: var(--purple-light); }
-    .mic-status { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 32px; }
-
+    .voice-btn-title { font-size: 15px; font-weight: 700; }
+    .voice-btn-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .mic-status { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; display: block; }
     .history-list { display: flex; flex-direction: column; gap: 8px; }
-    .history-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 16px; background: var(--bg-card);
-      border: 1px solid var(--border); border-radius: 8px;
+    .offline-hint {
+      display: none; font-size: 13px; color: var(--danger);
+      margin-bottom: 12px; padding: 10px 14px;
+      background: rgba(239,68,68,0.08); border-radius: 8px;
+      border-left: 3px solid var(--danger);
     }
-    .history-device { font-weight: 600; font-size: 0.9rem; min-width: 90px; }
-    .history-trigger {
-      font-size: 0.78rem; padding: 2px 8px; border-radius: 99px;
-      background: var(--border); color: var(--text-muted);
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
     }
-    .history-state { font-size: 0.85rem; }
-    .history-state.on { color: var(--success); }
-    .history-state.off { color: var(--danger); }
-    .history-time { margin-left: auto; font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
-
-    .empty-msg { color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 24px 0; }
-
-    .nav-links { display: flex; gap: 4px; }
-    .nav-link {
-      font-size: 0.85rem; color: var(--text-muted); cursor: pointer;
-      padding: 6px 10px; border-radius: 6px; transition: all 0.15s;
+    .link-ver-mais {
+      font-size: 13px; color: var(--purple-light); cursor: pointer; font-weight: 600;
     }
-    .nav-link:hover { color: var(--purple-light); background: var(--purple-glow); }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="logo">Casa Inteligente</div>
-    <div class="nav-links">
-      <span class="nav-link" id="btn-automations">Automações</span>
-      <span class="nav-link" id="btn-history-page">Histórico</span>
-      <span class="nav-link" id="btn-profile">Perfil</span>
-      <span class="nav-link" id="btn-logout">Sair</span>
-    </div>
-  </header>
+  <div class="app-layout">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-dot"></div>
+        <span class="sidebar-logo-text">CASA<br>INTELIGENTE</span>
+      </div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-item active" id="btn-dashboard">
+          <span class="sidebar-item-icon">🏠</span><span>Dashboard</span>
+        </a>
+        <a href="automation.html" class="sidebar-item" id="btn-automations">
+          <span class="sidebar-item-icon">⚡</span><span>Automações</span>
+        </a>
+        <a href="history.html" class="sidebar-item" id="btn-history-page">
+          <span class="sidebar-item-icon">📋</span><span>Histórico</span>
+        </a>
+        <a href="profile.html" class="sidebar-item" id="btn-profile">
+          <span class="sidebar-item-icon">👤</span><span>Perfil</span>
+        </a>
+        <button class="sidebar-item sidebar-item-danger" id="btn-logout">
+          <span class="sidebar-item-icon">🚪</span><span>Sair</span>
+        </button>
+      </div>
+      <div class="sidebar-footer" id="arduino-sidebar">
+        <div class="sidebar-footer-label">● ARDUINO</div>
+        <div class="sidebar-footer-value" id="arduino-status-text">Verificando...</div>
+      </div>
+    </nav>
 
-  <div class="page-body">
-    <div class="status-bar">
-      <span class="label">Arduino</span>
-      <span class="badge badge-offline" id="arduino-badge">Offline</span>
-      <span class="last-seen" id="last-seen"></span>
-    </div>
+    <div class="page-body">
+      <h2 class="section-title">Seus dispositivos</h2>
+      <p class="section-subtitle">Toque para ligar ou desligar</p>
 
-    <h2 class="section-title">Seus dispositivos</h2>
-    <p id="offline-hint" style="display:none;font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;padding:8px 12px;background:var(--bg-card2);border-radius:6px;border-left:3px solid var(--danger)">
-      ⚠️ Arduino offline — o último estado definido aqui será aplicado aos dispositivos físicos assim que a conexão for restabelecida.
-    </p>
-    <div class="devices-grid" id="devices-grid">
-      <div class="empty-msg">Carregando dispositivos…</div>
-    </div>
+      <p class="offline-hint" id="offline-hint">
+        ⚠️ Arduino offline — o último estado definido aqui será aplicado assim que a conexão for restabelecida.
+      </p>
 
-    <div id="voice-section" style="display:none">
-      <h2 class="section-title">Controle por voz</h2>
-      <button class="btn-mic" id="btn-mic">🎤 Ativar voz</button>
-      <span class="mic-status" id="mic-status">Clique para falar um comando</span>
-    </div>
+      <div class="devices-list" id="devices-grid">
+        <div class="empty-msg">Carregando dispositivos…</div>
+      </div>
 
-    <h2 class="section-title">Ativações recentes</h2>
-    <div class="history-list" id="history-list">
-      <div class="empty-msg">Nenhuma ativação ainda.</div>
+      <div id="voice-section" style="display:none">
+        <h2 class="section-title">Controle por voz</h2>
+        <button class="voice-btn" id="btn-mic">
+          <div class="voice-btn-icon">🎤</div>
+          <div>
+            <div class="voice-btn-title">Ativar microfone</div>
+            <div class="voice-btn-sub">Clique e fale um comando</div>
+          </div>
+        </button>
+        <span class="mic-status" id="mic-status">Clique para falar um comando</span>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title" style="margin:0">Ativações recentes</h2>
+        <a class="link-ver-mais" onclick="window.location.href='history.html'">Ver histórico completo →</a>
+      </div>
+      <div class="history-list" id="history-list">
+        <div class="empty-msg">Nenhuma ativação ainda.</div>
+      </div>
     </div>
-    <a onclick="window.location.href='history.html'" style="display:block;margin-top:12px;font-size:0.85rem;color:var(--purple-light);cursor:pointer;text-align:right">Ver histórico completo →</a>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
