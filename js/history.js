@@ -61,6 +61,28 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
 
 // ---- Carregamento ----
 
+const DEVICE_ICONS = { luz: '💡', ventilador: '🌀', portao: '🚪', alarme: '🔔' };
+
+function buildActivatedBy(d) {
+  if (d.trigger === 'voz')         return `🎤 Comando de voz`;
+  if (d.trigger === 'botao')       return `🔘 Botão no dashboard`;
+  if (d.trigger === 'presenca')    return `👁️ Sensor de presença detectou movimento`;
+  if (d.trigger === 'horario')     return `⏰ Agendamento de horário programado`;
+  if (d.trigger === 'temperatura') return `🌡️ Sensor de temperatura disparou`;
+  return `⚙️ ${escapeHtml(d.trigger)}`;
+}
+
+const ACTION_LABELS = {
+  portao: { on: 'ABRIU',    off: 'FECHOU'    },
+  alarme: { on: 'ARMOU',    off: 'DESARMOU'  }
+};
+
+function actionText(deviceId, state) {
+  const labels = ACTION_LABELS[deviceId];
+  if (labels) return state ? labels.on : labels.off;
+  return state ? 'LIGOU' : 'DESLIGOU';
+}
+
 async function loadHistory(reset, _depth = 0) {
   if (!currentUser) return;
   const myGen = reset ? ++_historyGen : _historyGen;
@@ -131,21 +153,23 @@ async function loadHistory(reset, _depth = 0) {
 
     docs.forEach(doc => {
       const d = doc.data();
-      const icon = TRIGGER_ICONS[d.trigger] || '⚙️';
-      const triggerLabel = TRIGGER_LABELS[d.trigger] || d.trigger;
-      const ts = d.timestamp ? new Date(d.timestamp.toMillis()) : null;
-      const timeStr = ts ? formatTime(ts) : '—';
-      const stateLabel = stateText(d.deviceId, d.state);
-      const stateClass = d.state ? 'state-on' : 'state-off';
+      const ts = d.timestamp ? formatTime(new Date(d.timestamp.toMillis())) : '—';
+      const deviceIcon = DEVICE_ICONS[d.deviceId] || '⚙️';
+      const label = actionText(d.deviceId, d.state);
+      const stateClass = d.state ? 'badge-state-on' : 'badge-state-off';
+      const activatedBy = buildActivatedBy(d);
 
       table.insertAdjacentHTML('beforeend', `
-        <div class="history-row">
-          <div class="history-info">
-            <div class="history-device-name">${escapeHtml(d.device)}</div>
-            <div class="history-sub">${icon} ${escapeHtml(triggerLabel)}</div>
+        <div class="history-card">
+          <div class="history-card-header">
+            <span class="history-card-icon">${deviceIcon}</span>
+            <div class="history-card-name">${escapeHtml(d.device)}</div>
+            <div class="history-card-time">${ts}</div>
+            <span class="badge ${stateClass}">${label}</span>
           </div>
-          <span class="history-state-badge ${stateClass}">${stateLabel}</span>
-          <span class="history-time">${timeStr}</span>
+          <div class="history-card-body">
+            <span class="activated-label">Ativado por: </span>${activatedBy}
+          </div>
         </div>
       `);
     });
@@ -175,11 +199,11 @@ function formatTime(date) {
   const isToday = date.toDateString() === now.toDateString();
   const yesterday = new Date(now - 86400000);
   const isYesterday = date.toDateString() === yesterday.toDateString();
-
-  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  if (isToday) return `Hoje, ${time}`;
-  if (isYesterday) return `Ontem, ${time}`;
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + `, ${time}`;
+  const dayMonth = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+  if (isToday) return `Hoje, ${dayMonth} · ${time}`;
+  if (isYesterday) return `Ontem, ${dayMonth} · ${time}`;
+  return `${dayMonth} · ${time}`;
 }
 
 document.getElementById('btn-load-more').addEventListener('click', () => {
@@ -193,13 +217,4 @@ document.getElementById('btn-load-more').addEventListener('click', () => {
 
 document.getElementById('btn-logout').addEventListener('click', () => {
   auth.signOut().then(() => window.location.href = 'login.html');
-});
-document.getElementById('btn-dashboard').addEventListener('click', () => {
-  window.location.href = 'dashboard.html';
-});
-document.getElementById('btn-automations').addEventListener('click', () => {
-  window.location.href = 'automation.html';
-});
-document.getElementById('btn-profile').addEventListener('click', () => {
-  window.location.href = 'profile.html';
 });
