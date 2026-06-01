@@ -8,22 +8,19 @@ const PROFILES = [
     id: 'mobilidade',
     name: 'Mobilidade Reduzida',
     icon: '♿',
-    desc: 'Controle por voz e botões acessíveis',
-    triggers: ['voz', 'botao']
+    desc: 'Dificuldade de movimento ou locomoção'
   },
   {
     id: 'visual',
     name: 'Deficiência Visual',
     icon: '👁️',
-    desc: 'Automação por sensor de presença e voz',
-    triggers: ['voz', 'presenca']
+    desc: 'Baixa visão ou dificuldade de leitura'
   },
   {
     id: 'idoso',
     name: 'Idoso',
     icon: '🏠',
-    desc: 'Automações por horário e temperatura',
-    triggers: ['botao', 'horario', 'temperatura']
+    desc: 'Prefere interface simples e clara'
   }
 ];
 
@@ -80,23 +77,24 @@ auth.onAuthStateChanged(async user => {
 });
 
 function renderProfiles() {
-  const grid = document.getElementById('profiles-grid');
-  grid.innerHTML = PROFILES.map(p => `
+  const list = document.getElementById('profiles-grid');
+  list.innerHTML = PROFILES.map(p => `
     <div class="profile-card ${selectedProfiles.has(p.id) ? 'selected' : ''}" data-id="${p.id}">
-      <div class="icon">${p.icon}</div>
-      <div class="name">${escapeHtml(p.name)}</div>
-      <div class="desc">${escapeHtml(p.desc)}</div>
-      <div class="triggers">${p.triggers.map(t => `<span class="trigger-tag">${TRIGGER_LABELS_PROFILE[t] || t}</span>`).join('')}</div>
+      <div class="profile-card-icon">${p.icon}</div>
+      <div class="profile-card-info">
+        <div class="profile-card-name">${escapeHtml(p.name)}</div>
+        <div class="profile-card-desc">${escapeHtml(p.desc)}</div>
+      </div>
+      <div class="profile-radio ${selectedProfiles.has(p.id) ? 'selected' : ''}"></div>
     </div>
   `).join('');
 
-  grid.querySelectorAll('.profile-card').forEach(card => {
+  list.querySelectorAll('.profile-card').forEach(card => {
     card.addEventListener('click', () => {
       const id = card.dataset.id;
       if (selectedProfiles.has(id)) { selectedProfiles.delete(id); }
       else { selectedProfiles.add(id); }
-      card.classList.toggle('selected');
-      updateTogglesFromProfiles();
+      renderProfiles();
       renderToggles();
       updateSaveBtn();
     });
@@ -116,16 +114,7 @@ function updateSaveBtn() {
 }
 
 function updateTogglesFromProfiles() {
-  const profileTriggers = new Set();
-  PROFILES.filter(p => selectedProfiles.has(p.id))
-    .forEach(p => p.triggers.forEach(t => profileTriggers.add(t)));
-  ALL_TOGGLES.forEach(t => {
-    if (profileTriggers.has(t.id)) {
-      if (toggleStates[t.id] === undefined) toggleStates[t.id] = true;
-    } else {
-      toggleStates[t.id] = false;
-    }
-  });
+  // Toggles são independentes do perfil — o usuário escolhe livremente.
 }
 
 function renderToggles() {
@@ -135,12 +124,8 @@ function renderToggles() {
   if (selectedProfiles.size === 0) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
-  const profileTriggers = new Set();
-  PROFILES.filter(p => selectedProfiles.has(p.id))
-    .forEach(p => p.triggers.forEach(t => profileTriggers.add(t)));
-
   ALL_TOGGLES.forEach(t => {
-    if (toggleStates[t.id] === undefined) toggleStates[t.id] = profileTriggers.has(t.id);
+    if (toggleStates[t.id] === undefined) toggleStates[t.id] = false;
   });
 
   list.innerHTML = ALL_TOGGLES.map(t => {
@@ -148,8 +133,8 @@ function renderToggles() {
     return `
       <div class="toggle-row">
         <div>
-          <span class="toggle-label">${t.label}</span>
-          ${t.hint ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">${t.hint}</div>` : ''}
+          <div class="toggle-label">${t.label}</div>
+          ${t.hint ? `<div class="toggle-hint">${t.hint}</div>` : ''}
         </div>
         <div class="toggle-switch ${isOn ? 'on' : ''}" role="switch" aria-checked="${isOn}" tabindex="0" data-id="${t.id}"></div>
       </div>

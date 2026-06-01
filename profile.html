@@ -6,57 +6,56 @@
   <title>Casa Inteligente — Perfil</title>
   <link rel="stylesheet" href="css/app.css"/>
   <style>
-    .profiles-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 16px; margin-bottom: 32px;
+    .profiles-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .toggles-container {
+      border: 2px solid var(--border); border-radius: var(--radius); overflow: hidden;
+      margin-bottom: 24px;
     }
-    .profile-card {
-      padding: 20px 16px; cursor: pointer; text-align: center;
-      border: 2px solid var(--border); border-radius: var(--radius);
-      background: var(--bg-card); transition: all 0.2s;
-    }
-    .profile-card:hover { border-color: var(--purple-light); }
-    .profile-card.selected { border-color: var(--purple); background: var(--purple-glow); }
-    .profile-card .icon { font-size: 2.2rem; margin-bottom: 10px; }
-    .profile-card .name { font-weight: 700; margin-bottom: 6px; }
-    .profile-card .desc { font-size: 0.78rem; color: var(--text-muted); }
-    .profile-card .triggers { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
-    .trigger-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; background: var(--border); color: var(--text-muted); }
-    .profile-card.selected .trigger-tag { background: rgba(124,58,237,0.3); color: var(--purple-light); }
-
-    .toggles-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .toggles-list .toggle-row { padding: 14px 16px; border-bottom: 1px solid var(--border); }
-    .toggles-list .toggle-row:last-child { border-bottom: none; }
-
-    #btn-save { margin-top: 24px; width: 100%; }
+    #btn-save { width: 100%; }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="logo">Casa Inteligente</div>
-    <div style="display:flex;gap:4px">
-      <span class="nav-link" id="btn-dashboard" style="font-size:0.85rem;color:var(--text-muted);cursor:pointer;padding:6px 10px;border-radius:6px">Dashboard</span>
-      <span class="nav-link" id="btn-logout" style="font-size:0.85rem;color:var(--text-muted);cursor:pointer;padding:6px 10px;border-radius:6px">Sair</span>
+  <div class="app-layout">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-dot"></div>
+        <span class="sidebar-logo-text">CASA<br>INTELIGENTE</span>
+      </div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-item" id="btn-dashboard">
+          <span class="sidebar-item-icon">🏠</span><span>Dashboard</span>
+        </a>
+        <a href="automation.html" class="sidebar-item" id="btn-automations">
+          <span class="sidebar-item-icon">⚡</span><span>Automações</span>
+        </a>
+        <a href="history.html" class="sidebar-item" id="btn-history-page">
+          <span class="sidebar-item-icon">📋</span><span>Histórico</span>
+        </a>
+        <a href="profile.html" class="sidebar-item active">
+          <span class="sidebar-item-icon">👤</span><span>Perfil</span>
+        </a>
+        <button class="sidebar-item sidebar-item-danger" id="btn-logout">
+          <span class="sidebar-item-icon">🚪</span><span>Sair</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="page-body">
+      <h2 class="section-title">Selecione seu perfil</h2>
+      <p class="section-subtitle">Escolha um ou mais que descrevem sua necessidade</p>
+
+      <div class="profiles-list" id="profiles-grid"></div>
+
+      <div id="toggles-section" style="display:none">
+        <h3 class="section-title" style="font-size:16px;margin-bottom:12px">O que você quer usar?</h3>
+        <div class="toggles-container" id="toggles-list"></div>
+      </div>
+
+      <p id="loading-msg" style="color:var(--text-muted);font-size:14px;margin-bottom:8px">Carregando suas configurações...</p>
+      <p id="profile-hint" style="color:var(--text-muted);font-size:13px;margin-bottom:8px;display:none">Selecione pelo menos um perfil para continuar.</p>
+      <p id="error-msg" class="error-msg" style="display:none"></p>
+      <button class="btn btn-primary" id="btn-save" disabled>Salvar configurações</button>
     </div>
-  </header>
-
-  <div class="page-body">
-    <h2 class="section-title">Selecione seus perfis</h2>
-    <p style="color:var(--text-muted);margin-bottom:20px;font-size:0.9rem">
-      Escolha um ou mais perfis que melhor descrevem sua necessidade. Isso define quais formas de controle ficam disponíveis no sistema.
-    </p>
-
-    <div class="profiles-grid" id="profiles-grid"></div>
-
-    <div id="toggles-section" style="display:none">
-      <h3 class="section-title">O que você quer usar?</h3>
-      <div class="toggles-list" id="toggles-list"></div>
-    </div>
-
-    <p id="loading-msg" style="color:var(--text-muted);font-size:0.85rem;margin-bottom:8px">Carregando suas configurações...</p>
-    <p id="profile-hint" style="color:var(--text-muted);font-size:0.82rem;margin-bottom:8px;display:none">Selecione pelo menos um perfil para continuar.</p>
-    <p id="error-msg" class="error-msg" style="display:none"></p>
-    <button class="btn btn-primary" id="btn-save" disabled>Salvar configurações</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
