@@ -11,10 +11,17 @@ auth.onAuthStateChanged(async user => {
   }
 });
 
-async function redirectAfterLogin(uid) {
-  const snap = await db.collection('users').doc(uid).get();
-  const hasProfiles = snap.exists && (snap.data()?.activeProfiles || []).length > 0;
+async function redirectAfterLogin(uid, snap = null) {
+  const data = snap ?? await db.collection('users').doc(uid).get();
+  const hasProfiles = data.exists && (data.data()?.activeProfiles || []).length > 0;
   window.location.href = hasProfiles ? 'dashboard.html' : 'profile.html';
+}
+
+function handleLoginError(err) {
+  const msg = (err.code && err.code.startsWith('auth/'))
+    ? translateError(err.code)
+    : 'Erro ao acessar dados da conta. Verifique sua conexão e tente novamente.';
+  showError(msg);
 }
 
 document.getElementById('toggle-link').addEventListener('click', () => {
@@ -35,6 +42,7 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
   btn.disabled = true;
   hideError();
 
+  let loginFailed = false;
   try {
     if (isSignup) {
       const cred = await auth.createUserWithEmailAndPassword(email, senha);
@@ -59,14 +67,11 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
       await redirectAfterLogin(cred.user.uid);
     }
   } catch (err) {
-    isPendingRedirect = false;
-    const msg = (err.code && err.code.startsWith('auth/'))
-      ? translateError(err.code)
-      : 'Erro ao acessar dados da conta. Verifique sua conexão e tente novamente.';
-    showError(msg);
+    loginFailed = true;
+    handleLoginError(err);
   } finally {
     btn.disabled = false;
-    isPendingRedirect = false;
+    if (loginFailed) isPendingRedirect = false;
   }
 });
 
@@ -74,6 +79,8 @@ document.getElementById('btn-google').addEventListener('click', async () => {
   const btn = document.getElementById('btn-google');
   btn.disabled = true;
   isPendingRedirect = true;
+
+  let loginFailed = false;
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
     const cred = await auth.signInWithPopup(provider);
@@ -94,17 +101,16 @@ document.getElementById('btn-google').addEventListener('click', async () => {
         showError('Erro ao criar conta. Verifique sua conexão e tente novamente.');
         return;
       }
+      window.location.href = 'profile.html';
+    } else {
+      await redirectAfterLogin(cred.user.uid, snap);
     }
-    await redirectAfterLogin(cred.user.uid);
   } catch (err) {
-    isPendingRedirect = false;
-    const msg = (err.code && err.code.startsWith('auth/'))
-      ? translateError(err.code)
-      : 'Erro ao acessar dados da conta. Verifique sua conexão e tente novamente.';
-    showError(msg);
+    loginFailed = true;
+    handleLoginError(err);
   } finally {
     btn.disabled = false;
-    isPendingRedirect = false;
+    if (loginFailed) isPendingRedirect = false;
   }
 });
 
