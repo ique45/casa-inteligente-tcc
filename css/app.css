@@ -387,10 +387,104 @@ body {
 }
 .tooltip-icon:hover .tooltip-text { display: block; }
 
+/* ─── MOBILE TOPBAR ──────────────────────── */
+
+.mobile-topbar { display: none; }
+
+/* ─── RESPONSIVE ─────────────────────────── */
+
 @media (max-width: 640px) {
-  .sidebar { width: 56px; }
-  .sidebar-item span:not(.sidebar-item-icon) { display: none; }
-  .sidebar-logo-text { display: none; }
+
+  /* Topbar (dashboard only) */
+  .mobile-topbar {
+    display: flex;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    background: #0a0a1e;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    padding: 0 16px;
+    z-index: 200;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #22c55e;
+  }
+  .mobile-topbar.offline { color: var(--danger); }
+
+  /* App layout */
+  .app-layout { flex-direction: column; }
+
+  /* Sidebar → barra de navegação inferior */
+  .sidebar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    top: auto;
+    width: 100%;
+    height: 58px;
+    flex-direction: row;
+    padding: 0;
+    border-right: none;
+    border-top: 2px solid var(--border);
+    z-index: 100;
+    align-items: stretch;
+  }
+
+  .sidebar-logo { display: none; }
   .sidebar-footer { display: none; }
-  .page-body { padding: 16px 12px; }
+  .sidebar-logo-text { display: none; }
+
+  .sidebar-nav {
+    flex-direction: row;
+    gap: 0;
+    flex: 1;
+    justify-content: space-around;
+    align-items: stretch;
+  }
+
+  .sidebar-item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 4px;
+    border-radius: 0;
+    font-size: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sidebar-item span:not(.sidebar-item-icon) {
+    display: block;
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .sidebar-item-icon { font-size: 20px; }
+
+  .sidebar-item.active {
+    background: var(--purple-glow);
+    color: var(--purple-light);
+    border-radius: 0;
+  }
+
+  .sidebar-item-danger {
+    margin-top: 0;
+    border: none;
+    border-left: 1px solid rgba(239, 68, 68, 0.15);
+  }
+
+  /* Page body — padding-bottom limpa a barra inferior */
+  .page-body { padding: 20px 16px 72px; }
+
+  /* Dashboard: padding-top extra para o topbar fixo */
+  body.has-mobile-topbar .page-body { padding-top: 60px; }
+
+  /* Automation: header não quebra antes de precisar */
+  .section-header { flex-wrap: wrap; gap: 10px; }
 }

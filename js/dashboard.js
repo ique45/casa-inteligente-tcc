@@ -132,14 +132,20 @@ function listenArduinoStatus() {
     const sidebar = document.getElementById('arduino-sidebar');
     const statusText = document.getElementById('arduino-status-text');
     const offlineHint = document.getElementById('offline-hint');
+    const mobileTopbar = document.getElementById('mobile-topbar');
+    const mobileText = document.getElementById('mobile-arduino-text');
     if (data.online) {
       if (sidebar) sidebar.className = 'sidebar-footer';
       if (statusText) statusText.textContent = 'Online';
       if (offlineHint) offlineHint.style.display = 'none';
+      if (mobileTopbar) mobileTopbar.className = 'mobile-topbar';
+      if (mobileText) mobileText.textContent = 'Online';
     } else {
       if (sidebar) sidebar.className = 'sidebar-footer offline';
       if (statusText) statusText.textContent = 'Offline';
       if (offlineHint) offlineHint.style.display = 'block';
+      if (mobileTopbar) mobileTopbar.className = 'mobile-topbar offline';
+      if (mobileText) mobileText.textContent = 'Offline';
     }
   });
 }
