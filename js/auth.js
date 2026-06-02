@@ -45,8 +45,10 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
       }
       window.location.href = 'profile.html';
     } else {
-      await auth.signInWithEmailAndPassword(email, senha);
-      window.location.href = 'dashboard.html';
+      const cred = await auth.signInWithEmailAndPassword(email, senha);
+      const snap = await db.collection('users').doc(cred.user.uid).get();
+      const hasProfiles = snap.exists && (snap.data().activeProfiles || []).length > 0;
+      window.location.href = hasProfiles ? 'dashboard.html' : 'profile.html';
     }
   } catch (err) {
     const msg = (err.code && err.code.startsWith('auth/'))
