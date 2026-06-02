@@ -3,12 +3,6 @@ function escapeHtml(str) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-const DEVICES = [
-  { id: 'luz',        name: 'Luz',        icon: '💡' },
-  { id: 'ventilador', name: 'Ventilador', icon: '🌀' },
-  { id: 'portao',     name: 'Portão',     icon: '🚪' },
-  { id: 'alarme',     name: 'Alarme',     icon: '🔔' }
-];
 
 const TRIGGERS_BY_DEVICE = {
   luz:        ['voz', 'botao', 'presenca'],

@@ -5,7 +5,8 @@ auth.onAuthStateChanged(async user => {
   if (user && window.location.pathname.includes('login.html') && !isSignup && !isPendingRedirect) {
     try {
       await redirectAfterLogin(user.uid);
-    } catch {
+    } catch (err) {
+      console.error('Erro ao verificar perfis, redirecionando para dashboard:', err);
       window.location.href = 'dashboard.html';
     }
   }
@@ -42,7 +43,6 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
   btn.disabled = true;
   hideError();
 
-  let loginSucceeded = false;
   try {
     if (isSignup) {
       const cred = await auth.createUserWithEmailAndPassword(email, senha);
@@ -66,12 +66,11 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
       const cred = await auth.signInWithEmailAndPassword(email, senha);
       await redirectAfterLogin(cred.user.uid);
     }
-    loginSucceeded = true;
   } catch (err) {
     handleLoginError(err);
   } finally {
     btn.disabled = false;
-    if (!loginSucceeded) isPendingRedirect = false;
+    isPendingRedirect = false;
   }
 });
 
@@ -80,7 +79,6 @@ document.getElementById('btn-google').addEventListener('click', async () => {
   btn.disabled = true;
   isPendingRedirect = true;
 
-  let loginSucceeded = false;
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
     const cred = await auth.signInWithPopup(provider);
@@ -105,12 +103,11 @@ document.getElementById('btn-google').addEventListener('click', async () => {
     } else {
       await redirectAfterLogin(cred.user.uid);
     }
-    loginSucceeded = true;
   } catch (err) {
     handleLoginError(err);
   } finally {
     btn.disabled = false;
-    if (!loginSucceeded) isPendingRedirect = false;
+    isPendingRedirect = false;
   }
 });
 
