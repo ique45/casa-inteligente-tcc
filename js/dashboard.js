@@ -10,10 +10,9 @@ const DEVICES = [
   { id: 'alarme',     name: 'Alarme',     icon: '🔔', labelOn: 'Armado',  labelOff: 'Desarmado', labelTransition: { on: 'Armando...',   off: 'Desarmando...' } }
 ];
 
-const DASHBOARD_STATE_LABELS = {
-  portao: ['Aberto', 'Fechado'],
-  alarme: ['Armado', 'Desarmado']
-};
+const DASHBOARD_STATE_LABELS = Object.fromEntries(
+  DEVICES.map(d => [d.id, [d.labelOn, d.labelOff]])
+);
 
 let currentUser = null;
 let deviceStates = {};
@@ -139,17 +138,18 @@ function listenArduinoStatus() {
     const offlineHint = document.getElementById('offline-hint');
     const mobileTopbar = document.getElementById('mobile-topbar');
     const mobileText = document.getElementById('mobile-arduino-text');
+    if (mobileTopbar) mobileTopbar.classList.remove('loading');
     if (data.online) {
       if (sidebar) sidebar.className = 'sidebar-footer';
       if (statusText) statusText.textContent = 'Online';
       if (offlineHint) offlineHint.style.display = 'none';
-      if (mobileTopbar) { mobileTopbar.classList.remove('loading'); mobileTopbar.classList.remove('offline'); }
+      if (mobileTopbar) mobileTopbar.classList.remove('offline');
       if (mobileText) mobileText.textContent = 'Online';
     } else {
       if (sidebar) sidebar.className = 'sidebar-footer offline';
       if (statusText) statusText.textContent = 'Offline';
       if (offlineHint) offlineHint.style.display = 'block';
-      if (mobileTopbar) { mobileTopbar.classList.remove('loading'); mobileTopbar.classList.add('offline'); }
+      if (mobileTopbar) mobileTopbar.classList.add('offline');
       if (mobileText) mobileText.textContent = 'Offline';
     }
   });

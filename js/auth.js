@@ -3,18 +3,18 @@ let isPendingRedirect = false;
 
 auth.onAuthStateChanged(async user => {
   if (user && window.location.pathname.includes('login.html') && !isSignup && !isPendingRedirect) {
-    await redirectAfterLogin(user.uid);
+    try {
+      await redirectAfterLogin(user.uid);
+    } catch {
+      window.location.href = 'dashboard.html';
+    }
   }
 });
 
 async function redirectAfterLogin(uid) {
-  try {
-    const snap = await db.collection('users').doc(uid).get();
-    const hasProfiles = snap.exists && (snap.data()?.activeProfiles || []).length > 0;
-    window.location.href = hasProfiles ? 'dashboard.html' : 'profile.html';
-  } catch {
-    window.location.href = 'dashboard.html';
-  }
+  const snap = await db.collection('users').doc(uid).get();
+  const hasProfiles = snap.exists && (snap.data()?.activeProfiles || []).length > 0;
+  window.location.href = hasProfiles ? 'dashboard.html' : 'profile.html';
 }
 
 document.getElementById('toggle-link').addEventListener('click', () => {
@@ -66,6 +66,7 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
     showError(msg);
   } finally {
     btn.disabled = false;
+    isPendingRedirect = false;
   }
 });
 
@@ -93,17 +94,17 @@ document.getElementById('btn-google').addEventListener('click', async () => {
         showError('Erro ao criar conta. Verifique sua conexão e tente novamente.');
         return;
       }
-      window.location.href = 'profile.html';
-    } else {
-      const hasProfiles = (snap.data()?.activeProfiles || []).length > 0;
-      window.location.href = hasProfiles ? 'dashboard.html' : 'profile.html';
     }
+    await redirectAfterLogin(cred.user.uid);
   } catch (err) {
     isPendingRedirect = false;
-    showError(translateError(err.code));
+    const msg = (err.code && err.code.startsWith('auth/'))
+      ? translateError(err.code)
+      : 'Erro ao acessar dados da conta. Verifique sua conexão e tente novamente.';
+    showError(msg);
   } finally {
-    isPendingRedirect = false;
     btn.disabled = false;
+    isPendingRedirect = false;
   }
 });
 
@@ -119,14 +120,14 @@ function hideError() {
 
 function translateError(code) {
   const msgs = {
-    'auth/user-not-found':     'Email não encontrado.',
-    'auth/wrong-password':     'Senha incorreta.',
-    'auth/invalid-credential': 'Email ou senha incorretos.',
+    'auth/user-not-found':       'Email não encontrado.',
+    'auth/wrong-password':       'Senha incorreta.',
+    'auth/invalid-credential':   'Email ou senha incorretos.',
     'auth/email-already-in-use': 'Email já cadastrado.',
-    'auth/weak-password':      'Senha muito fraca (mínimo 6 caracteres).',
-    'auth/invalid-email':      'Email inválido.',
+    'auth/weak-password':        'Senha muito fraca (mínimo 6 caracteres).',
+    'auth/invalid-email':        'Email inválido.',
     'auth/popup-closed-by-user': 'Login cancelado.',
-    'auth/popup-blocked':      'Popup bloqueado pelo navegador. Permita popups e tente novamente.'
+    'auth/popup-blocked':        'Popup bloqueado pelo navegador. Permita popups e tente novamente.'
   };
   return msgs[code] || 'Erro ao autenticar. Tente novamente.';
 }
