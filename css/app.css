@@ -413,6 +413,7 @@ body {
     color: #22c55e;
   }
   .mobile-topbar.offline { color: var(--danger); }
+  .mobile-topbar.loading { color: var(--text-muted); }
 
   /* App layout */
   .app-layout { flex-direction: column; }

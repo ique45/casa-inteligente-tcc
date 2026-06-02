@@ -61,8 +61,6 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
 
 // ---- Carregamento ----
 
-const DEVICE_ICONS = { luz: '💡', ventilador: '🌀', portao: '🚪', alarme: '🔔' };
-
 function buildActivatedBy(d) {
   if (d.trigger === 'voz')         return `🎤 Comando de voz`;
   if (d.trigger === 'botao')       return `🔘 Botão no dashboard`;

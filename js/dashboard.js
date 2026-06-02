@@ -10,6 +10,11 @@ const DEVICES = [
   { id: 'alarme',     name: 'Alarme',     icon: '🔔', labelOn: 'Armado',  labelOff: 'Desarmado', labelTransition: { on: 'Armando...',   off: 'Desarmando...' } }
 ];
 
+const DASHBOARD_STATE_LABELS = {
+  portao: ['Aberto', 'Fechado'],
+  alarme: ['Armado', 'Desarmado']
+};
+
 let currentUser = null;
 let deviceStates = {};
 let automationNames = {};
@@ -138,13 +143,13 @@ function listenArduinoStatus() {
       if (sidebar) sidebar.className = 'sidebar-footer';
       if (statusText) statusText.textContent = 'Online';
       if (offlineHint) offlineHint.style.display = 'none';
-      if (mobileTopbar) mobileTopbar.className = 'mobile-topbar';
+      if (mobileTopbar) { mobileTopbar.classList.remove('loading'); mobileTopbar.classList.remove('offline'); }
       if (mobileText) mobileText.textContent = 'Online';
     } else {
       if (sidebar) sidebar.className = 'sidebar-footer offline';
       if (statusText) statusText.textContent = 'Offline';
       if (offlineHint) offlineHint.style.display = 'block';
-      if (mobileTopbar) mobileTopbar.className = 'mobile-topbar offline';
+      if (mobileTopbar) { mobileTopbar.classList.remove('loading'); mobileTopbar.classList.add('offline'); }
       if (mobileText) mobileText.textContent = 'Offline';
     }
   });
@@ -221,12 +226,11 @@ function loadHistory() {
       list.innerHTML = snap.docs.map(doc => {
         const d = doc.data();
         const ts = d.timestamp ? formatRelativeTime(new Date(d.timestamp.toMillis())) : '—';
-        const stateLabels = { portao: ['Aberto','Fechado'], alarme: ['Armado','Desarmado'] };
-        const [labelOn, labelOff] = stateLabels[d.deviceId] || ['Ligado','Desligado'];
-        const stateLabel = d.state ? labelOn.toUpperCase() : labelOff.toUpperCase();
+        const stateEntry = DASHBOARD_STATE_LABELS[d.deviceId];
+        const stateLabel = stateEntry
+          ? (d.state ? stateEntry[0] : stateEntry[1]).toUpperCase()
+          : (d.state ? 'LIGADO' : 'DESLIGADO');
         const stateClass = d.state ? 'badge-state-on' : 'badge-state-off';
-        const TRIGGER_ICONS = { voz:'🎤', botao:'🔘', presenca:'👁️', horario:'⏰', temperatura:'🌡️' };
-        const DEVICE_ICONS = { luz:'💡', ventilador:'🌀', portao:'🚪', alarme:'🔔' };
         const deviceIcon = DEVICE_ICONS[d.deviceId] || '⚙️';
         return `
           <div class="history-card">

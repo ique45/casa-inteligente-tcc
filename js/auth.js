@@ -1,12 +1,21 @@
-// Redireciona para dashboard se já logado (não interfere durante o cadastro ou login Google)
 let isSignup = false;
 let isPendingRedirect = false;
 
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async user => {
   if (user && window.location.pathname.includes('login.html') && !isSignup && !isPendingRedirect) {
-    window.location.href = 'dashboard.html';
+    await redirectAfterLogin(user.uid);
   }
 });
+
+async function redirectAfterLogin(uid) {
+  try {
+    const snap = await db.collection('users').doc(uid).get();
+    const hasProfiles = snap.exists && (snap.data()?.activeProfiles || []).length > 0;
+    window.location.href = hasProfiles ? 'dashboard.html' : 'profile.html';
+  } catch {
+    window.location.href = 'dashboard.html';
+  }
+}
 
 document.getElementById('toggle-link').addEventListener('click', () => {
   isSignup = !isSignup;
@@ -45,15 +54,15 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
       }
       window.location.href = 'profile.html';
     } else {
+      isPendingRedirect = true;
       const cred = await auth.signInWithEmailAndPassword(email, senha);
-      const snap = await db.collection('users').doc(cred.user.uid).get();
-      const hasProfiles = snap.exists && (snap.data().activeProfiles || []).length > 0;
-      window.location.href = hasProfiles ? 'dashboard.html' : 'profile.html';
+      await redirectAfterLogin(cred.user.uid);
     }
   } catch (err) {
+    isPendingRedirect = false;
     const msg = (err.code && err.code.startsWith('auth/'))
       ? translateError(err.code)
-      : 'Erro ao salvar dados da conta. Verifique sua conexão e tente novamente.';
+      : 'Erro ao acessar dados da conta. Verifique sua conexão e tente novamente.';
     showError(msg);
   } finally {
     btn.disabled = false;
@@ -69,8 +78,7 @@ document.getElementById('btn-google').addEventListener('click', async () => {
     const cred = await auth.signInWithPopup(provider);
     const userDoc = db.collection('users').doc(cred.user.uid);
     const snap = await userDoc.get();
-    const isNewUser = !snap.exists;
-    if (isNewUser) {
+    if (!snap.exists) {
       try {
         await userDoc.set({
           email: cred.user.email,
@@ -85,8 +93,11 @@ document.getElementById('btn-google').addEventListener('click', async () => {
         showError('Erro ao criar conta. Verifique sua conexão e tente novamente.');
         return;
       }
+      window.location.href = 'profile.html';
+    } else {
+      const hasProfiles = (snap.data()?.activeProfiles || []).length > 0;
+      window.location.href = hasProfiles ? 'dashboard.html' : 'profile.html';
     }
-    window.location.href = isNewUser ? 'profile.html' : 'dashboard.html';
   } catch (err) {
     isPendingRedirect = false;
     showError(translateError(err.code));
@@ -108,14 +119,14 @@ function hideError() {
 
 function translateError(code) {
   const msgs = {
-    'auth/user-not-found': 'Email não encontrado.',
-    'auth/wrong-password': 'Senha incorreta.',
+    'auth/user-not-found':     'Email não encontrado.',
+    'auth/wrong-password':     'Senha incorreta.',
     'auth/invalid-credential': 'Email ou senha incorretos.',
     'auth/email-already-in-use': 'Email já cadastrado.',
-    'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres).',
-    'auth/invalid-email': 'Email inválido.',
+    'auth/weak-password':      'Senha muito fraca (mínimo 6 caracteres).',
+    'auth/invalid-email':      'Email inválido.',
     'auth/popup-closed-by-user': 'Login cancelado.',
-    'auth/popup-blocked': 'Popup bloqueado pelo navegador. Permita popups e tente novamente.'
+    'auth/popup-blocked':      'Popup bloqueado pelo navegador. Permita popups e tente novamente.'
   };
   return msgs[code] || 'Erro ao autenticar. Tente novamente.';
 }
