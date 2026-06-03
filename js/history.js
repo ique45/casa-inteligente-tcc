@@ -1,11 +1,3 @@
-const TRIGGER_LABELS = {
-  voz:         'Voz',
-  botao:       'Botão',
-  presenca:    'Presença',
-  horario:     'Horário',
-  temperatura: 'Temperatura'
-};
-
 const PAGE_SIZE = 20;
 
 let currentUser = null;
