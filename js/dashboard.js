@@ -1,13 +1,3 @@
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-
-const DASHBOARD_STATE_LABELS = Object.fromEntries(
-  DEVICES.map(d => [d.id, [d.labelOn, d.labelOff]])
-);
-
 let currentUser = null;
 let deviceStates = {};
 let automationNames = {};
@@ -220,12 +210,12 @@ function loadHistory() {
       list.innerHTML = snap.docs.map(doc => {
         const d = doc.data();
         const ts = d.timestamp ? formatRelativeTime(new Date(d.timestamp.toMillis())) : '—';
-        const stateEntry = DASHBOARD_STATE_LABELS[d.deviceId];
-        const stateLabel = stateEntry
-          ? (d.state ? stateEntry[0] : stateEntry[1]).toUpperCase()
+        const deviceEntry = DEVICES.find(x => x.id === d.deviceId);
+        const stateLabel = deviceEntry
+          ? (d.state ? deviceEntry.labelOn : deviceEntry.labelOff).toUpperCase()
           : (d.state ? 'LIGADO' : 'DESLIGADO');
         const stateClass = d.state ? 'badge-state-on' : 'badge-state-off';
-        const deviceIcon = DEVICE_ICONS[d.deviceId] || '⚙️';
+        const deviceIcon = deviceEntry?.icon || '⚙️';
         return `
           <div class="history-card">
             <div class="history-card-header">
@@ -302,18 +292,6 @@ function initVoice() {
       status.textContent = 'Fale um comando (ex: "ligar luz", "abrir portão", "armar alarme")';
     }
   });
-}
-
-function formatRelativeTime(date) {
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  const yesterday = new Date(now - 86400000);
-  const isYesterday = date.toDateString() === yesterday.toDateString();
-  const dayMonth = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
-  if (isToday) return `Hoje, ${dayMonth} · ${time}`;
-  if (isYesterday) return `Ontem, ${dayMonth} · ${time}`;
-  return `${dayMonth} · ${time}`;
 }
 
 document.getElementById('btn-logout').addEventListener('click', () => {

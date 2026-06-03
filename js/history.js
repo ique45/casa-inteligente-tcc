@@ -1,16 +1,3 @@
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-const TRIGGER_ICONS = {
-  voz:         '🎤',
-  botao:       '🔘',
-  presenca:    '👁️',
-  horario:     '⏰',
-  temperatura: '🌡️'
-};
-
 const TRIGGER_LABELS = {
   voz:         'Voz',
   botao:       'Botão',
@@ -151,8 +138,8 @@ async function loadHistory(reset, _depth = 0) {
 
     docs.forEach(doc => {
       const d = doc.data();
-      const ts = d.timestamp ? formatTime(new Date(d.timestamp.toMillis())) : '—';
-      const deviceIcon = DEVICE_ICONS[d.deviceId] || '⚙️';
+      const ts = d.timestamp ? formatRelativeTime(new Date(d.timestamp.toMillis())) : '—';
+      const deviceIcon = DEVICES.find(x => x.id === d.deviceId)?.icon || '⚙️';
       const label = actionText(d.deviceId, d.state);
       const stateClass = d.state ? 'badge-state-on' : 'badge-state-off';
       const activatedBy = buildActivatedBy(d);
@@ -190,18 +177,6 @@ async function loadHistory(reset, _depth = 0) {
       '<div class="empty-msg">Erro ao carregar o histórico. Verifique sua conexão e tente novamente.</div>';
     document.getElementById('btn-load-more').style.display = 'none';
   }
-}
-
-function formatTime(date) {
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  const yesterday = new Date(now - 86400000);
-  const isYesterday = date.toDateString() === yesterday.toDateString();
-  const dayMonth = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
-  if (isToday) return `Hoje, ${dayMonth} · ${time}`;
-  if (isYesterday) return `Ontem, ${dayMonth} · ${time}`;
-  return `${dayMonth} · ${time}`;
 }
 
 document.getElementById('btn-load-more').addEventListener('click', () => {

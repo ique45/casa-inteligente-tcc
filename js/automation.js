@@ -1,9 +1,3 @@
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-
 const TRIGGERS_BY_DEVICE = {
   luz:        ['voz', 'botao', 'presenca'],
   portao:     ['voz', 'botao', 'presenca'],
@@ -48,8 +42,6 @@ const ACTIONS_BY_DEVICE = {
 function getActions(deviceId) {
   return ACTIONS_BY_DEVICE[deviceId] || ACTIONS_DEFAULT;
 }
-
-const TRIGGER_ICONS = { voz:'🎤', botao:'🔘', presenca:'👁️', temperatura:'🌡️', horario:'⏰' };
 
 let currentUser = null;
 let form = { device: null, name: '', trigger: null, voiceCommand: '', action: null };

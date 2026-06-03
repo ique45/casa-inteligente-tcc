@@ -68,9 +68,9 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
     }
   } catch (err) {
     handleLoginError(err);
+    isPendingRedirect = false;
   } finally {
     btn.disabled = false;
-    isPendingRedirect = false;
   }
 });
 
@@ -105,9 +105,9 @@ document.getElementById('btn-google').addEventListener('click', async () => {
     }
   } catch (err) {
     handleLoginError(err);
+    isPendingRedirect = false;
   } finally {
     btn.disabled = false;
-    isPendingRedirect = false;
   }
 });
 
