@@ -95,6 +95,7 @@ document.getElementById('btn-google').addEventListener('click', async () => {
         });
       } catch (fsErr) {
         console.error('Erro ao criar doc do usuário Google:', fsErr);
+        isPendingRedirect = false;
         await auth.signOut().catch(() => {});
         showError('Erro ao criar conta. Verifique sua conexão e tente novamente.');
         return;

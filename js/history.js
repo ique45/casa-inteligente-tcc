@@ -6,17 +6,6 @@ const TRIGGER_LABELS = {
   temperatura: 'Temperatura'
 };
 
-const STATE_LABELS = {
-  portao: { on: 'Aberto',  off: 'Fechado'   },
-  alarme: { on: 'Armado',  off: 'Desarmado' }
-};
-
-function stateText(deviceId, state) {
-  const labels = STATE_LABELS[deviceId];
-  if (labels) return state ? labels.on : labels.off;
-  return state ? 'Ligado' : 'Desligado';
-}
-
 const PAGE_SIZE = 20;
 
 let currentUser = null;
