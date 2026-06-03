@@ -1,5 +1,5 @@
-const express  = require('express');
-const { rtdb } = require('../firebase');
+const express       = require('express');
+const { db, rtdb } = require('../firebase');
 const { executeAutomations } = require('../services/automation');
 const { logHistory }         = require('../services/history');
 
@@ -36,20 +36,28 @@ router.post('/sync', async (req, res) => {
 
     // Se offline, não processa commands (evita perda quando Arduino desliga)
     if (!online) {
-      res.json({ commands: [] });
+      res.json({ commands: [], tempThreshold: 30 });
       return;
     }
 
-    // 3. Executa automações disparadas pelos eventos do sensor
+    // 3. Lê configurações do usuário (activeToggles + tempThreshold)
+    const DEFAULT_TEMP_THRESHOLD = 30;
+    const userSnap      = await db.collection('users').doc(uid).get();
+    const userData      = userSnap.exists ? userSnap.data() : {};
+    const activeToggles = userData.activeToggles || {};
+    const tempThreshold = userData.tempThreshold ?? DEFAULT_TEMP_THRESHOLD;
+
+    // 4. Executa automações disparadas pelos eventos do sensor
+    //    Respeita activeToggles: pula se o usuário desativou aquele tipo de gatilho
     const automationCommands = [];
     for (const event of events) {
-      if (VALID_TRIGGERS.includes(event)) {
+      if (VALID_TRIGGERS.includes(event) && activeToggles[event] !== false) {
         const results = await executeAutomations(uid, event);
         automationCommands.push(...results);
       }
     }
 
-    // 4. Lê comandos pendentes que o site enfileirou (dashboard.js)
+    // 5. Lê comandos pendentes que o site enfileirou (dashboard.js)
     const commandsSnap = await rtdb.ref(`commands/${uid}`).once('value');
     const rawCommands  = commandsSnap.val() || {};
 
@@ -60,7 +68,7 @@ router.post('/sync', async (req, res) => {
         state: !!(val && typeof val === 'object' ? val.state : val)
       }));
 
-    // 5. Limpa todos os commands lidos (válidos e inválidos), preservando os adicionados após este snapshot
+    // 6. Limpa todos os commands lidos (válidos e inválidos), preservando os adicionados após este snapshot
     // O histórico já é gravado pelo dashboard.js no momento do clique
     const keysToRemove = Object.keys(rawCommands);
     if (keysToRemove.length > 0) {
@@ -75,7 +83,7 @@ router.post('/sync', async (req, res) => {
       return true;
     });
 
-    res.json({ commands });
+    res.json({ commands, tempThreshold });
 
   } catch (err) {
     console.error('[/arduino/sync] erro:', err);
