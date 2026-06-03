@@ -50,7 +50,6 @@ auth.onAuthStateChanged(async user => {
     }
 
     listenAutomationNames();
-    renderDevices();
     listenDeviceStates();
     listenArduinoStatus();
     loadHistory();
@@ -74,15 +73,17 @@ function renderDevices() {
   }
   grid.innerHTML = DEVICES.map(d => {
     const auto = buttonAutomations[d.id];
+    const isOn = deviceStates[d.id] === true;
+    const statusLabel = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
     if (auto) {
       return `
-        <button class="device-card" id="btn-${d.id}" data-id="${d.id}">
+        <button class="device-card${isOn ? ' on' : ''}" id="btn-${d.id}" data-id="${d.id}">
           <span class="device-card-icon">${d.icon}</span>
           <div class="device-card-info">
             <div class="device-card-name">${escapeHtml(d.name)}</div>
-            <div class="device-card-status" id="state-${d.id}">${d.labelOff.toUpperCase()}</div>
+            <div class="device-card-status" id="state-${d.id}">${statusLabel}</div>
           </div>
-          <div class="device-toggle" id="toggle-${d.id}">
+          <div class="device-toggle${isOn ? ' on' : ''}" id="toggle-${d.id}">
             <div class="toggle-thumb"></div>
           </div>
         </button>`;
@@ -92,7 +93,7 @@ function renderDevices() {
         <span class="device-card-icon">${d.icon}</span>
         <div class="device-card-info">
           <div class="device-card-name">${escapeHtml(d.name)}</div>
-          <div class="device-card-status" id="state-${d.id}">${d.labelOff.toUpperCase()}</div>
+          <div class="device-card-status" id="state-${d.id}">${statusLabel}</div>
         </div>
         <span class="device-card-hint">Sem automação</span>
       </div>`;
@@ -122,8 +123,10 @@ function updateDeviceUI(deviceId, isOn) {
   const toggleEl = document.getElementById(`toggle-${deviceId}`);
   if (!btn || !stateEl || !d) return;
   if (!btn.disabled) {
-    btn.classList.toggle('on', isOn);
-    if (toggleEl) toggleEl.classList.toggle('on', isOn);
+    if (btn.tagName === 'BUTTON') {
+      btn.classList.toggle('on', isOn);
+      if (toggleEl) toggleEl.classList.toggle('on', isOn);
+    }
     stateEl.textContent = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
   }
 }

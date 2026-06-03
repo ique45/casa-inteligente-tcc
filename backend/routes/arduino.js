@@ -1,12 +1,12 @@
 const express       = require('express');
 const { db, rtdb } = require('../firebase');
 const { executeAutomations } = require('../services/automation');
-const { logHistory }         = require('../services/history');
 
 const router = express.Router();
 
-const VALID_DEVICES  = ['luz', 'ventilador', 'portao', 'alarme'];
-const VALID_TRIGGERS = ['presenca', 'temperatura', 'horario'];
+const VALID_DEVICES          = ['luz', 'ventilador', 'portao', 'alarme'];
+const VALID_TRIGGERS         = ['presenca', 'temperatura', 'horario'];
+const DEFAULT_TEMP_THRESHOLD = 30;
 
 router.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
@@ -36,12 +36,11 @@ router.post('/sync', async (req, res) => {
 
     // Se offline, não processa commands (evita perda quando Arduino desliga)
     if (!online) {
-      res.json({ commands: [], tempThreshold: 30 });
+      res.json({ commands: [], tempThreshold: DEFAULT_TEMP_THRESHOLD });
       return;
     }
 
     // 3. Lê configurações do usuário (activeToggles + tempThreshold)
-    const DEFAULT_TEMP_THRESHOLD = 30;
     const userSnap      = await db.collection('users').doc(uid).get();
     const userData      = userSnap.exists ? userSnap.data() : {};
     const activeToggles = userData.activeToggles || {};
