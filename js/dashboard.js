@@ -1,6 +1,7 @@
 let currentUser = null;
 let deviceStates = {};
 let automationNames = {};
+let buttonAutomations = {};
 let activeToggles = {};
 let _dashboardInitialized = false;
 let _rtdbDevicesRef = null;
@@ -13,10 +14,11 @@ function _teardownListeners() {
   if (_rtdbStatusRef)   { _rtdbStatusRef.off('value');   _rtdbStatusRef   = null; }
   if (_automationNamesUnsubscribe) { _automationNamesUnsubscribe(); _automationNamesUnsubscribe = null; }
   if (_historyUnsubscribe)         { _historyUnsubscribe();         _historyUnsubscribe         = null; }
-  deviceStates    = {};
-  automationNames = {};
-  activeToggles   = {};
-  currentUser     = null;
+  deviceStates      = {};
+  automationNames   = {};
+  buttonAutomations = {};
+  activeToggles     = {};
+  currentUser       = null;
 }
 
 auth.onAuthStateChanged(async user => {
@@ -70,20 +72,33 @@ function renderDevices() {
     </p>`;
     return;
   }
-  grid.innerHTML = DEVICES.map(d => `
-    <button class="device-card" id="btn-${d.id}" data-id="${d.id}">
-      <span class="device-card-icon">${d.icon}</span>
-      <div class="device-card-info">
-        <div class="device-card-name">${escapeHtml(d.name)}</div>
-        <div class="device-card-status" id="state-${d.id}">${d.labelOff.toUpperCase()}</div>
-      </div>
-      <div class="device-toggle" id="toggle-${d.id}">
-        <div class="toggle-thumb"></div>
-      </div>
-    </button>
-  `).join('');
+  grid.innerHTML = DEVICES.map(d => {
+    const auto = buttonAutomations[d.id];
+    if (auto) {
+      return `
+        <button class="device-card" id="btn-${d.id}" data-id="${d.id}">
+          <span class="device-card-icon">${d.icon}</span>
+          <div class="device-card-info">
+            <div class="device-card-name">${escapeHtml(d.name)}</div>
+            <div class="device-card-status" id="state-${d.id}">${d.labelOff.toUpperCase()}</div>
+          </div>
+          <div class="device-toggle" id="toggle-${d.id}">
+            <div class="toggle-thumb"></div>
+          </div>
+        </button>`;
+    }
+    return `
+      <div class="device-card device-card--readonly" id="btn-${d.id}">
+        <span class="device-card-icon">${d.icon}</span>
+        <div class="device-card-info">
+          <div class="device-card-name">${escapeHtml(d.name)}</div>
+          <div class="device-card-status" id="state-${d.id}">${d.labelOff.toUpperCase()}</div>
+        </div>
+        <span class="device-card-hint">Sem automação</span>
+      </div>`;
+  }).join('');
 
-  grid.querySelectorAll('.device-card').forEach(btn => {
+  grid.querySelectorAll('button.device-card').forEach(btn => {
     btn.addEventListener('click', () => toggleDevice(btn.dataset.id));
   });
 }
@@ -144,7 +159,9 @@ async function toggleDevice(deviceId) {
   if (deviceStates[deviceId] === undefined) return;
   const d = DEVICES.find(x => x.id === deviceId);
   const prevState = deviceStates[deviceId];
-  const newState = !prevState;
+  const auto = buttonAutomations[deviceId];
+  const action = auto?.action || 'toggle';
+  const newState = action === 'on' ? true : action === 'off' ? false : !prevState;
 
   const btn = document.getElementById(`btn-${deviceId}`);
   const stateEl = document.getElementById(`state-${deviceId}`);
@@ -173,11 +190,16 @@ function listenAutomationNames() {
   if (_automationNamesUnsubscribe) _automationNamesUnsubscribe();
   _automationNamesUnsubscribe = db.collection('automations').doc(currentUser.uid)
     .collection('items').onSnapshot(snap => {
-      automationNames = {};
+      automationNames   = {};
+      buttonAutomations = {};
       snap.docs.forEach(doc => {
         const d = doc.data();
         if (!automationNames[d.deviceType]) automationNames[d.deviceType] = d.deviceName;
+        if (d.trigger === 'botao' && d.enabled !== false && !buttonAutomations[d.deviceType]) {
+          buttonAutomations[d.deviceType] = { action: d.action || 'toggle' };
+        }
       });
+      renderDevices();
     });
 }
 

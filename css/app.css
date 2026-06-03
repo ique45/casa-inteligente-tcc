@@ -219,6 +219,9 @@ body {
   color: #475569; margin-top: 3px;
 }
 .device-card.on .device-card-status { color: var(--purple-light); }
+.device-card--readonly { cursor: default; opacity: 0.45; }
+.device-card--readonly:hover { border-color: var(--border); }
+.device-card-hint { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: #475569; white-space: nowrap; }
 
 /* ─── PROFILE CARDS ──────────────────────── */
 
