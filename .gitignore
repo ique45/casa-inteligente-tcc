@@ -3,3 +3,13 @@ backend/.env
 .superpowers/
 *.docx
 *.pdf
+
+# Credenciais — nunca versionar
+*firebase-adminsdk*.json
+serviceAccountKey.json
+
+# Artefatos de ferramentas
+.playwright-mcp/
+
+# Screenshots soltos na raiz (os versionados ficam em docs/screenshots/)
+/*.png
