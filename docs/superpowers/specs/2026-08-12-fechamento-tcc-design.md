@@ -100,7 +100,7 @@ Arquivo novo: `firmware/esp8266/casa_inteligente.ino`, implementando o spec `202
 - Polaridade do relé isolada em `RELAY_ON` / `RELAY_OFF`, já que o modelo do módulo ainda é desconhecido
 - Sem hardware para testar: o critério de aceitação é conformidade com o spec e clareza de leitura, não execução
 
-**Remoção:** a pasta `firmware/arduino/` está vazia e não tem propósito no design atual (a decisão de arquitetura foi NodeMCU ESP8266, não Arduino Uno). Será removida.
+**`firmware/arduino/`:** a pasta está vazia e sem propósito no design atual (a decisão de arquitetura foi NodeMCU ESP8266, não Arduino Uno). A remoção foi proposta e **recusada pelo usuário** — a pasta permanece como está, sem alterações. Como o Git não versiona diretórios vazios, ela continua existindo apenas no disco local e não aparece no repositório.
 
 ---
 
