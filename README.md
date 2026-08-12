@@ -74,7 +74,7 @@ apenas no servidor local (`server.js`) e não expõe nem lê nenhum dado real.
 ### Backend
 
 O backend já está publicado e no ar:
-<https://casa-inteligente-tcc-production.up.railway.app>
+<x>
 
 Para rodar localmente, crie o arquivo `backend/.env` a partir de
 `backend/.env.example` e execute:
@@ -124,7 +124,7 @@ Adafruit Unified Sensor.
 ├── backend/                API Express publicada no Railway
 │   ├── routes/arduino.js   Endpoint POST /arduino/sync
 │   ├── services/           Automações e histórico
-│   └── __tests__/          17 testes automatizados
+│   └── __tests__/          18 testes automatizados
 ├── firmware/esp8266/       Firmware do NodeMCU
 └── docs/                   Specs, planos e capturas de tela
 ```
@@ -140,7 +140,7 @@ Adafruit Unified Sensor.
 | Automações | Concluído |
 | Histórico | Concluído |
 | Comandos de voz | Concluído |
-| Backend + deploy | Concluído — 17 testes passando |
+| Backend + deploy | Concluído — 18 testes passando |
 | Firmware ESP8266 | Escrito, **não testado em hardware** |
 | Montagem física | Pendente — o NodeMCU ainda não foi adquirido |
 
