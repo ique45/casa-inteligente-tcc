@@ -126,8 +126,22 @@ Adafruit Unified Sensor.
 │   ├── services/           Automações e histórico
 │   └── __tests__/          18 testes automatizados
 ├── firmware/esp8266/       Firmware do NodeMCU
+├── firestore.rules         Regras de segurança do Firestore
+├── database.rules.json     Regras de segurança do Realtime Database
 └── docs/                   Specs, planos e capturas de tela
 ```
+
+## Segurança dos dados
+
+O acesso aos bancos é controlado por regras publicadas no Firebase, versionadas
+em `firestore.rules` e `database.rules.json`. O princípio é simples: o UID vem do
+Firebase Authentication e não pode ser forjado pelo navegador, então cada pessoa
+só lê e escreve os próprios dados — qualquer tentativa de acessar dados de outra
+conta é recusada pelo servidor, não pela interface.
+
+Os caminhos `devices/` e `arduino_status/` são somente leitura para o navegador,
+porque quem escreve neles é o backend, que usa o Admin SDK e não passa pelas
+regras.
 
 ## Estado atual
 

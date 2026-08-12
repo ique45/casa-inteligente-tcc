@@ -1,0 +1,60 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────
+//  Casa Inteligente — regras de segurança do Cloud Firestore
+//
+//  Princípio: cada pessoa só enxerga e altera os próprios dados.
+//  O UID vem do Firebase Authentication e não pode ser forjado
+//  pelo navegador, então comparar o UID da requisição com o UID
+//  do caminho é o que garante o isolamento entre contas.
+//
+//  O backend (Railway) usa o Admin SDK, que roda com privilégio
+//  de administrador e não passa por estas regras — por isso os
+//  caminhos escritos apenas pelo backend podem ser somente
+//  leitura para o cliente.
+//
+//  Estas regras NÃO têm data de expiração. As regras anteriores
+//  eram as padrão do "modo de teste" e expiraram em 24/06/2026,
+//  o que derrubou o aplicativo inteiro.
+// ─────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Verdadeiro apenas se quem faz a requisição está autenticado
+    // e é o dono do caminho que está tentando acessar.
+    function ehDono(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Perfil da pessoa: nome, e-mail, perfis de acessibilidade
+    // ativos e o limite de temperatura.
+    match /users/{uid} {
+      allow read, write: if ehDono(uid);
+
+      // Histórico de acionamentos. Em rules_version 2 as
+      // subcoleções não herdam a regra do documento pai, então
+      // ela precisa ser declarada explicitamente aqui.
+      match /history/{registroId} {
+        allow read, write: if ehDono(uid);
+      }
+    }
+
+    // Automações criadas pela pessoa ("quando houver presença,
+    // ligar a luz").
+    match /automations/{uid} {
+      allow read, write: if ehDono(uid);
+
+      match /items/{automacaoId} {
+        allow read, write: if ehDono(uid);
+      }
+    }
+
+    // Qualquer outro caminho é negado. Regra de fechamento: se um
+    // dia alguém criar uma coleção nova e esquecer de escrever a
+    // regra dela, o padrão é negar em vez de expor.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
