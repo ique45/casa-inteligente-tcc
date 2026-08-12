@@ -55,6 +55,11 @@ const unsigned long SYNC_INTERVAL          = 2000;   // ms entre cada sync
 const int           WIFI_TIMEOUT_ATTEMPTS  = 20;     // 20 x 500ms = ~10s
 const unsigned long PIR_COOLDOWN_MS        = 10000;  // 10s entre eventos de presenca
 const float         DEFAULT_TEMP_THRESHOLD = 30.0;   // °C
+// Histerese do evento de temperatura: o gatilho so re-arma quando a
+// temperatura cai abaixo de (tempThreshold - TEMP_HISTERESE). Sem isso,
+// uma leitura oscilando 1 decimo de grau em torno do limite dispararia
+// o evento (e a automacao de "Alternar" nos reles) a cada 2s.
+const float         TEMP_HISTERESE         = 1.0;    // °C
 
 // ─── Estado global ───────────────────────────────────────────
 DHT dht(PIN_DHT, DHT11);
@@ -66,12 +71,21 @@ bool estadoAlarme     = false;
 
 float currentTemp    = 0.0;
 float tempThreshold  = DEFAULT_TEMP_THRESHOLD;  // atualizado pelo backend
+bool  tempAcimaLimite = false;  // estado do gatilho de temperatura (edge-trigger, ve Secao 4)
 
 unsigned long ultimaPresenca = 0;
 unsigned long ultimoSync     = 0;
 
 String events[4];
 int    eventCount = 0;
+
+// Cliente TLS unico e de longa duracao (fora de qualquer funcao).
+// Criar um WiFiClientSecure novo a cada ciclo de 2s forcaria um handshake
+// BearSSL completo (~20-30KB de RAM de pico e 1-4s) a cada sync, o que na
+// pratica inviabilizaria a cadencia pretendida. Reaproveitando a mesma
+// instancia (junto com http.setReuse(true) em syncWithBackend), a conexao
+// TLS pode ser mantida entre ciclos.
+WiFiClientSecure secureClient;
 
 // Tabela que liga o nome vindo do backend ao pino e a variavel de estado.
 // Para adicionar um dispositivo novo, basta acrescentar uma linha aqui.
@@ -115,8 +129,23 @@ void connectWiFi() {
 
 // ─── Sensores ────────────────────────────────────────────────
 
+// Verifica se um evento desse tipo ja esta no buffer aguardando envio.
+// Usado para nunca duplicar o mesmo evento enquanto um sync anterior
+// ainda nao foi confirmado (ve syncWithBackend) e para nunca escrever
+// alem dos limites do array events[].
+bool eventoJaPendente(const String& nome) {
+  for (int i = 0; i < eventCount; i++) {
+    if (events[i] == nome) return true;
+  }
+  return false;
+}
+
 void readSensors() {
-  eventCount = 0;
+  // IMPORTANTE: eventCount NAO e zerado aqui. Ele so e zerado em
+  // syncWithBackend() depois de uma confirmacao real do backend (HTTP 200
+  // com JSON valido). Se zerassemos aqui, um evento gerado neste ciclo mas
+  // perdido por falha de rede seria descartado sem nunca ter sido
+  // entregue (ve Secao 3 do spec / achado 3 da revisao).
 
   // Temperatura. O DHT11 as vezes devolve NaN numa leitura isolada;
   // nesse caso mantemos o ultimo valor valido.
@@ -124,17 +153,35 @@ void readSensors() {
   if (!isnan(temp)) {
     currentTemp = temp;
   }
-  if (currentTemp > tempThreshold && eventCount < 4) {
-    events[eventCount++] = "temperatura";
+
+  // Evento "temperatura" e edge-triggered (dispara so na transicao de
+  // abaixo para acima do limite), com histerese para re-armar. Isso evita
+  // que o evento seja gerado a cada ciclo de 2s enquanto a temperatura
+  // fica acima do limite, o que faria uma automacao de "Alternar" o rele
+  // ligar/desligar sem parar (ve achado 2 da revisao). tempThreshold pode
+  // mudar em tempo real (o backend devolve um novo valor a cada sync); a
+  // logica abaixo usa sempre o valor atual, entao um ajuste de limite se
+  // reflete no proximo ciclo sem precisar de estado adicional.
+  if (currentTemp > tempThreshold) {
+    if (!tempAcimaLimite) {
+      tempAcimaLimite = true;
+      if (!eventoJaPendente("temperatura") && eventCount < 4) {
+        events[eventCount++] = "temperatura";
+      }
+    }
+  } else if (currentTemp < tempThreshold - TEMP_HISTERESE) {
+    tempAcimaLimite = false;
   }
 
   // Presenca. O PIR oscila enquanto ha movimento, entao aplicamos um
   // cooldown para nao enviar dezenas de eventos por minuto.
   if (digitalRead(PIN_PIR) == HIGH) {
     unsigned long agora = millis();
-    if (agora - ultimaPresenca > PIR_COOLDOWN_MS && eventCount < 4) {
-      events[eventCount++] = "presenca";
-      ultimaPresenca = agora;
+    if (agora - ultimaPresenca > PIR_COOLDOWN_MS) {
+      if (!eventoJaPendente("presenca") && eventCount < 4) {
+        events[eventCount++] = "presenca";
+        ultimaPresenca = agora;
+      }
     }
   }
 }
@@ -160,17 +207,19 @@ void applyCommand(const char* device, bool state) {
 // ─── Sync com o backend ──────────────────────────────────────
 
 void syncWithBackend() {
-  WiFiClientSecure client;
-  // O ESP8266 nao guarda os certificados raiz do Railway. Para o escopo
-  // deste TCC aceitamos o certificado sem validar. Em producao real,
-  // o correto seria fixar a impressao digital do certificado.
-  client.setInsecure();
-
+  // secureClient e reaproveitado entre ciclos (declarado global la em cima).
+  // NAO chamar secureClient.setBufferSizes() aqui para "economizar RAM":
+  // reduzir os buffers do BearSSL pode quebrar o handshake com servidores
+  // que mandam registros TLS grandes, e nao ha hardware disponivel para
+  // testar esse cenario. Deixe no tamanho padrao.
   HTTPClient http;
-  if (!http.begin(client, BACKEND_URL)) {
+  if (!http.begin(secureClient, BACKEND_URL)) {
     Serial.println("Falha ao iniciar a conexao HTTP");
-    return;
+    return;  // eventCount preservado: nada foi enviado, nada se perde
   }
+  // Mantem a conexao TLS/TCP viva entre chamadas (ve comentario no global
+  // secureClient) em vez de renegociar um handshake completo a cada 2s.
+  http.setReuse(true);
   http.addHeader("Content-Type", "application/json");
 
   // Monta o corpo da requisicao
@@ -205,6 +254,9 @@ void syncWithBackend() {
     if (erro) {
       Serial.print("Resposta invalida do backend: ");
       Serial.println(erro.c_str());
+      // Nao zera eventCount aqui: o corpo veio corrompido, entao nao ha
+      // garantia de que o backend processou os eventos. Mantem no buffer
+      // para tentar de novo no proximo ciclo.
     } else {
       // Atualiza o limite de temperatura definido pelo usuario no site
       tempThreshold = resposta["tempThreshold"] | DEFAULT_TEMP_THRESHOLD;
@@ -217,16 +269,19 @@ void syncWithBackend() {
           applyCommand(device, state);
         }
       }
+
+      // So agora o sync foi de fato confirmado (HTTP 200 + JSON valido):
+      // e seguro descartar os eventos deste ciclo. Zerar em qualquer outro
+      // ponto arriscaria descartar um evento que o backend nunca recebeu.
+      eventCount = 0;
     }
   } else {
     Serial.print("Erro no sync. Codigo HTTP: ");
     Serial.println(status);
+    // eventCount preservado para reenviar no proximo ciclo
   }
 
   http.end();
-
-  // Os eventos ja foram enviados; zera para o proximo ciclo.
-  eventCount = 0;
 }
 
 // ─── setup / loop ────────────────────────────────────────────
@@ -248,6 +303,13 @@ void setup() {
   dht.begin();
 
   connectWiFi();
+
+  // O ESP8266 nao guarda os certificados raiz do Railway. Para o escopo
+  // deste TCC aceitamos o certificado sem validar. Em producao real,
+  // o correto seria fixar a impressao digital do certificado.
+  // Chamado uma unica vez aqui (nao a cada sync) porque secureClient
+  // agora e uma instancia global de longa duracao (ve declaracao acima).
+  secureClient.setInsecure();
 }
 
 void loop() {

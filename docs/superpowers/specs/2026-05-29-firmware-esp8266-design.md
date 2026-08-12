@@ -113,18 +113,33 @@ Quando o WiFi voltar, o sync retoma automaticamente.
 
 ## Seção 4 — Leitura de Sensores e Debouncing
 
-### DHT11 (temperatura)
+### DHT11 (temperatura) — edge-triggered com histerese
 
 ```
 readSensors():
   float temp = dht.readTemperature()
   se !isnan(temp):
     currentTemp = temp
+
   se currentTemp > tempThreshold:
-    adiciona "temperatura" em events[]
+    se !tempAcimaLimite:
+      tempAcimaLimite = true
+      adiciona "temperatura" em events[]   (se ainda não pendente)
+  senão se currentTemp < tempThreshold - TEMP_HISTERESE:
+    tempAcimaLimite = false
 ```
 
-Sem debounce necessário — temperatura muda lentamente.
+O evento dispara apenas na **transição** de abaixo para acima do limite
+(edge-triggered), não em todo ciclo em que a temperatura está acima dele.
+Sem isso, uma automação de "Alternar" ligada a esse gatilho ligaria e
+desligaria o relé a cada 2s enquanto a temperatura permanecesse alta.
+
+O re-armamento (`tempAcimaLimite = false`) só ocorre quando a temperatura
+cai abaixo de `tempThreshold - TEMP_HISTERESE`, não simplesmente abaixo de
+`tempThreshold`. Isso evita "flapping" do evento quando a leitura oscila
+poucos décimos de grau em torno do limite. `tempThreshold` pode ser
+alterado em tempo real pelo backend; a lógica usa sempre o valor atual, de
+modo que um novo limite passa a valer no ciclo seguinte sem estado extra.
 
 ### PIR (presença) — com cooldown
 
@@ -142,12 +157,22 @@ se digitalRead(PIN_PIR) == HIGH:
 
 ### Array `events[]`
 
-Montado a cada ciclo, enviado no POST, zerado após o sync:
-
 ```cpp
 String events[4];
 int eventCount = 0;
 ```
+
+`eventCount` **não** é zerado no início de `readSensors()`. Ele só é
+zerado dentro de `syncWithBackend()`, e somente depois de uma confirmação
+real do backend (HTTP 200 e corpo JSON parseado sem erro). Isso garante
+que um evento gerado num ciclo, mas perdido por falha de rede ou erro
+HTTP, permaneça no buffer e seja reenviado no próximo ciclo em vez de
+simplesmente desaparecer.
+
+Antes de inserir um novo evento no buffer, `readSensors()` verifica se
+aquele mesmo tipo já está pendente (função `eventoJaPendente`) — isso
+evita duplicar o mesmo evento enquanto um sync anterior ainda não foi
+confirmado, e mantém a escrita sempre dentro dos limites do array.
 
 ---
 
@@ -156,6 +181,11 @@ int eventCount = 0;
 ### `syncWithBackend()`
 
 ```
+usa o WiFiClientSecure global (secureClient), configurado com
+setInsecure() uma única vez em setup() — não recriado a cada ciclo
+http.begin(secureClient, BACKEND_URL)
+http.setReuse(true)   ← mantém a conexão TLS/TCP viva entre ciclos
+
 monta JsonDocument:
   uid, token, online=true, temperature=currentTemp
   devices: { luz, ventilador, portao, alarme } → estados locais
@@ -163,13 +193,26 @@ monta JsonDocument:
 
 POST BACKEND_URL com Content-Type: application/json
 
-parse response:
-  tempThreshold = doc["tempThreshold"] | DEFAULT_TEMP_THRESHOLD
-  para cada command em doc["commands"]:
-    applyCommand(command["device"], command["state"])
-
-zera events[]
+se status == 200:
+  parse response
+  se parse OK:
+    tempThreshold = doc["tempThreshold"] | DEFAULT_TEMP_THRESHOLD
+    para cada command em doc["commands"]:
+      applyCommand(command["device"], command["state"])
+    zera events[]        ← só aqui, sync confirmado com sucesso
+  senão:
+    mantém events[] (resposta corrompida, não há confirmação)
+senão:
+  mantém events[] (erro HTTP, tenta de novo no próximo ciclo)
 ```
+
+`secureClient` é uma instância global de `WiFiClientSecure`, criada uma
+única vez, não uma variável local recriada a cada chamada. Um handshake
+BearSSL completo custa ~20-30KB de RAM de pico e 1-4s no ESP8266;
+recriando o cliente a cada 2s essa cadência de sync seria inviável na
+prática. `setBufferSizes()` **não** é usado para reduzir esse consumo —
+isso arriscaria quebrar o handshake com servidores que enviam registros
+TLS grandes, e não há hardware disponível para validar esse cenário.
 
 ### `applyCommand(device, state)`
 
@@ -197,6 +240,15 @@ para cada d em devices:
 ## Seção 6 — Ajuste no Backend
 
 ### O que muda
+
+O firmware envia `temperature` em todo sync. O backend grava esse valor em
+`arduino_status/{uid}` (mesmo caminho do RTDB onde já grava `online` e
+`lastSeen`), junto com o update existente — não cria um caminho novo nem
+um documento novo no Firestore. Só grava o campo se o valor recebido for
+um número finito (`typeof === 'number' && Number.isFinite(...)`); se
+estiver ausente ou inválido, o campo `temperature` simplesmente não é
+escrito naquele update (nunca grava `null` nem `0` como se fosse uma
+leitura real).
 
 `POST /arduino/sync` passa a retornar `tempThreshold` no response:
 
@@ -238,6 +290,7 @@ const threshold = userDoc.exists
 | `WIFI_TIMEOUT_ATTEMPTS` | 20 | Tentativas no boot |
 | `PIR_COOLDOWN_MS` | 10000ms | Intervalo entre eventos de presença |
 | `DEFAULT_TEMP_THRESHOLD` | 30°C | Limite de temperatura (fallback) |
+| `TEMP_HISTERESE` | 1.0°C | Faixa de re-armamento do evento de temperatura (ve Seção 4) |
 | `RELAY_ON` / `RELAY_OFF` | LOW / HIGH | Polaridade do módulo de relé |
 
 ---
@@ -253,3 +306,39 @@ const threshold = userDoc.exists
 - Backend Railway já deployado: `https://casa-inteligente-tcc-production.up.railway.app`
 - Variável `ARDUINO_SECRET` já configurada no Railway
 - Hardware ainda não comprado — firmware escrito antes para validar a lógica
+
+---
+
+## Correções pós-revisão (2026-08-12)
+
+Um code review sobre a implementação da Task 3 encontrou quatro defeitos
+de **design** (não de transcrição). Os quatro foram corrigidos:
+
+1. **`temperature` era enviado mas nunca persistido.** O backend agora
+   grava `temperature` em `arduino_status/{uid}` (reaproveitando o update
+   já existente ali), validando que o valor é um número finito antes de
+   escrever. Ausente ou inválido → campo não é escrito. Ver Seção 6.
+
+2. **Evento `"temperatura"` era level-triggered, causando chattering no
+   relé.** Automações de "Alternar" ligadas a esse gatilho ligavam e
+   desligavam o relé a cada 2s enquanto a temperatura ficasse acima do
+   limite. Agora o evento é edge-triggered com histerese
+   (`TEMP_HISTERESE = 1.0°C`): dispara só na transição de abaixo para
+   acima do limite, e só re-arma quando a temperatura cai abaixo de
+   `tempThreshold - TEMP_HISTERESE`. Ver Seção 4.
+
+3. **Syncs com falha descartavam eventos silenciosamente, e a presença
+   ainda consumia o cooldown.** `eventCount` era zerado no início de todo
+   ciclo, então um evento gerado mas não confirmado pelo backend era
+   perdido. Agora `eventCount` só é zerado dentro de `syncWithBackend()`,
+   e somente após uma confirmação real (HTTP 200 + JSON válido). Um guard
+   (`eventoJaPendente`) evita duplicar o mesmo tipo de evento no buffer.
+   Ver Seções 4 e 5.
+
+4. **`WiFiClientSecure` era recriado a cada ciclo de 2s**, forçando um
+   handshake TLS completo (~20-30KB de RAM de pico, 1-4s) a cada sync —
+   inviabilizando a cadência pretendida. Agora `secureClient` é uma
+   instância global de longa duração, com `setInsecure()` chamado uma
+   única vez em `setup()` e `http.setReuse(true)` para manter a conexão
+   viva entre ciclos. `setBufferSizes()` deliberadamente não é usado. Ver
+   Seção 5.
