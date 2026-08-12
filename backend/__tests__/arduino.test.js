@@ -144,6 +144,54 @@ describe('POST /arduino/sync', () => {
     expect(luzCmds[0].state).toBe(false); // site-command (false) vence automação (true)
   });
 
+  test('persiste temperature válida em arduino_status', async () => {
+    const { rtdb } = require('../firebase');
+    const updateStatusMock = jest.fn().mockResolvedValue();
+    rtdb.ref.mockImplementation((path) => {
+      if (path === 'arduino_status/uid123') {
+        return { update: updateStatusMock };
+      }
+      return defaultMockRef();
+    });
+    const res = await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret',
+      devices: {}, events: [], online: true, temperature: 25.5
+    });
+    expect(res.status).toBe(200);
+    expect(updateStatusMock).toHaveBeenCalledWith(
+      expect.objectContaining({ temperature: 25.5 })
+    );
+  });
+
+  test('não persiste temperature ausente ou inválida', async () => {
+    const { rtdb } = require('../firebase');
+    const updateStatusMock = jest.fn().mockResolvedValue();
+    rtdb.ref.mockImplementation((path) => {
+      if (path === 'arduino_status/uid123') {
+        return { update: updateStatusMock };
+      }
+      return defaultMockRef();
+    });
+
+    // Ausente
+    const res1 = await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret',
+      devices: {}, events: [], online: true
+    });
+    expect(res1.status).toBe(200);
+    expect(updateStatusMock).toHaveBeenCalledTimes(1);
+    expect(updateStatusMock.mock.calls[0][0]).not.toHaveProperty('temperature');
+
+    // Inválida (string, NaN)
+    const res2 = await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret',
+      devices: {}, events: [], online: true, temperature: 'quente'
+    });
+    expect(res2.status).toBe(200);
+    expect(updateStatusMock).toHaveBeenCalledTimes(2);
+    expect(updateStatusMock.mock.calls[1][0]).not.toHaveProperty('temperature');
+  });
+
   test('ignora event inválido', async () => {
     const { executeAutomations } = require('../services/automation');
     executeAutomations.mockClear();

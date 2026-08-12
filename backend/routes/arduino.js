@@ -23,10 +23,15 @@ router.post('/sync', async (req, res) => {
 
   try {
     // 1. Atualiza status do Arduino no RTDB
-    await rtdb.ref(`arduino_status/${uid}`).update({
-      online,
-      lastSeen: Date.now()
-    });
+    const statusUpdate = { online, lastSeen: Date.now() };
+    // Só grava temperature se vier um número finito válido do firmware.
+    // Ausente ou inválido (NaN, string, etc.) não escreve o campo — nunca
+    // grava null nem 0, que seriam lidos como uma leitura real de sensor.
+    const { temperature } = req.body;
+    if (typeof temperature === 'number' && Number.isFinite(temperature)) {
+      statusUpdate.temperature = temperature;
+    }
+    await rtdb.ref(`arduino_status/${uid}`).update(statusUpdate);
 
     // 2. Grava estado real de cada dispositivo informado pelo Arduino
     for (const [deviceId, state] of Object.entries(devices)) {
