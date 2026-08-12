@@ -26,10 +26,10 @@
     .mic-status { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; display: block; }
     .history-list { display: flex; flex-direction: column; gap: 8px; }
     .offline-hint {
-      display: none; font-size: 13px; color: var(--danger);
+      display: none; font-size: 13px; color: var(--purple-light);
       margin-bottom: 12px; padding: 10px 14px;
-      background: rgba(239,68,68,0.08); border-radius: 8px;
-      border-left: 3px solid var(--danger);
+      background: var(--purple-glow); border-radius: 8px;
+      border-left: 3px solid var(--purple);
     }
     .section-header {
       display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
@@ -79,7 +79,7 @@
       <p class="section-subtitle">Toque para ligar ou desligar</p>
 
       <p class="offline-hint" id="offline-hint">
-        ⚠️ Arduino offline — o último estado definido aqui será aplicado assim que a conexão for restabelecida.
+        Hardware ainda não conectado — os comandos ficam salvos e serão aplicados quando o ESP8266 for integrado.
       </p>
 
       <div class="devices-list" id="devices-grid">
