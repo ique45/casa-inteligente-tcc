@@ -12,7 +12,7 @@
 
 - **Idioma:** todo texto voltado ao usuário, comentário de código e mensagem de commit em português do Brasil.
 - **Não alterar `backend/`.** Está deployado e com 15 testes passando. A Seção 6 do spec do firmware (retornar `tempThreshold`) **já foi implementada** no commit `9d07b87` — ver `backend/routes/arduino.js:85`. Não reimplementar.
-- **Não alterar a lógica do frontend.** As únicas mudanças permitidas em arquivos existentes do app são a copy e o CSS do aviso de offline (Task 4) e os links novos no `index.html` (Task 5).
+- **Não alterar a lógica do frontend.** Nenhum arquivo em `js/` é modificado. As únicas mudanças permitidas em arquivos existentes são: a copy e o CSS do aviso de offline em `dashboard.html` (Task 4), e os links novos em `index.html` mais a classe `.nav-cta` em `styles.css` (Task 5).
 - **Não remover `firmware/arduino/`.** Decisão explícita do usuário.
 - **Acessibilidade:** o público-alvo são idosos e pessoas com baixa visão. Todo texto novo mantém alto contraste sobre o fundo `--bg` (#050510).
 - **Backend em produção:** `https://casa-inteligente-tcc-production.up.railway.app`
@@ -536,7 +536,7 @@ por:
     }
 ```
 
-`--purple-light` é `#a78bfa`; sobre o fundo `--bg` (`#050510`) o contraste passa de 7:1, atendendo ao requisito de alto contraste do projeto.
+`--purple-light` é `#a78bfa`. Sobre o fundo efetivo (o `--purple-glow` composto sobre `--bg` `#050510`) o contraste medido é ≈6,2:1 — acima do mínimo WCAG AA para texto corrido (4,5:1), abaixo do AAA (7:1). Atende ao requisito de alto contraste do projeto.
 
 - [ ] **Step 2: Trocar o texto do aviso**
 
