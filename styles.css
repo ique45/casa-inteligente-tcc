@@ -109,6 +109,21 @@ body {
 }
 .nav-user:hover { border-color: var(--purple); }
 
+.nav-cta {
+  background: var(--purple);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  margin-right: 1rem;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.nav-cta:hover { background: var(--purple-dark); }
+
 /* ── SECTIONS ── */
 .section {
   min-height: 100vh;
