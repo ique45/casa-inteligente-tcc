@@ -12,6 +12,7 @@
 
 - **Idioma:** todo texto voltado ao usuário, comentário de código e mensagem de commit em português do Brasil.
 - **Não alterar `backend/`.** Está deployado e com 15 testes passando. A Seção 6 do spec do firmware (retornar `tempThreshold`) **já foi implementada** no commit `9d07b87` — ver `backend/routes/arduino.js:85`. Não reimplementar.
+  - **Exceção autorizada:** a Task 3 (revisão de código) alterou `backend/routes/arduino.js` e `backend/__tests__/arduino.test.js` para persistir `temperature` em `arduino_status/{uid}`, com aprovação explícita do usuário.
 - **Não alterar a lógica do frontend.** Nenhum arquivo em `js/` é modificado. As únicas mudanças permitidas em arquivos existentes são: a copy e o CSS do aviso de offline em `dashboard.html` (Task 4), e os links novos em `index.html` mais a classe `.nav-cta` em `styles.css` (Task 5).
 - **Não remover `firmware/arduino/`.** Decisão explícita do usuário.
 - **Acessibilidade:** o público-alvo são idosos e pessoas com baixa visão. Todo texto novo mantém alto contraste sobre o fundo `--bg` (#050510).

@@ -182,7 +182,7 @@ describe('POST /arduino/sync', () => {
     expect(updateStatusMock).toHaveBeenCalledTimes(1);
     expect(updateStatusMock.mock.calls[0][0]).not.toHaveProperty('temperature');
 
-    // Inválida (string, NaN)
+    // Inválida (string)
     const res2 = await request(app).post('/arduino/sync').send({
       uid: 'uid123', token: 'test-secret',
       devices: {}, events: [], online: true, temperature: 'quente'
@@ -190,6 +190,29 @@ describe('POST /arduino/sync', () => {
     expect(res2.status).toBe(200);
     expect(updateStatusMock).toHaveBeenCalledTimes(2);
     expect(updateStatusMock.mock.calls[1][0]).not.toHaveProperty('temperature');
+  });
+
+  test('não persiste temperature: null', async () => {
+    // Caso à parte do teste acima: null é o valor que de fato pode chegar
+    // pela rede quando o campo é enviado explicitamente como nulo — é
+    // exatamente o que o `typeof temperature === 'number'` do guard existe
+    // para barrar (`typeof null === 'object'`, não passa no guard).
+    const { rtdb } = require('../firebase');
+    const updateStatusMock = jest.fn().mockResolvedValue();
+    rtdb.ref.mockImplementation((path) => {
+      if (path === 'arduino_status/uid123') {
+        return { update: updateStatusMock };
+      }
+      return defaultMockRef();
+    });
+
+    const res = await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret',
+      devices: {}, events: [], online: true, temperature: null
+    });
+    expect(res.status).toBe(200);
+    expect(updateStatusMock).toHaveBeenCalledTimes(1);
+    expect(updateStatusMock.mock.calls[0][0]).not.toHaveProperty('temperature');
   });
 
   test('ignora event inválido', async () => {

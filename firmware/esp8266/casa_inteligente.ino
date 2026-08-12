@@ -41,6 +41,12 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 #define PIN_RELE_LUZ        14   // D5
 #define PIN_RELE_VENTILADOR 12   // D6
 #define PIN_RELE_PORTAO     13   // D7
+// ATENCAO GPIO15 (D8): esse pino precisa estar em LOW no momento do reset
+// para o ESP8266 conseguir dar boot. Como RELAY_ON = LOW, o rele fica
+// energizado desde o power-on ate o setup() rodar e forcar RELAY_OFF — e,
+// dependendo do modulo de rele usado (alguns puxam o pino via resistor),
+// isso pode ate impedir o boot. Nao ha hardware disponivel para validar
+// este cenario; testar com cuidado assim que a placa for montada.
 #define PIN_RELE_ALARME     15   // D8
 
 // Polaridade do modulo de rele.
@@ -70,6 +76,13 @@ bool estadoPortao     = false;
 bool estadoAlarme     = false;
 
 float currentTemp    = 0.0;
+// So fica true depois da primeira leitura valida (nao-NaN) do DHT11. Enquanto
+// for false, o campo "temperature" nem entra no JSON do sync — sem isso, um
+// sensor ausente ou mal conectado faria o firmware enviar 0.0 como se fosse
+// uma leitura real, e o backend gravaria esse 0 no Realtime Database (o guard
+// em backend/routes/arduino.js so filtra valor ausente/invalido, nao um 0
+// "de verdade" vindo do firmware).
+bool  tempValida     = false;
 float tempThreshold  = DEFAULT_TEMP_THRESHOLD;  // atualizado pelo backend
 bool  tempAcimaLimite = false;  // estado do gatilho de temperatura (edge-trigger, ve Secao 4)
 
@@ -152,6 +165,7 @@ void readSensors() {
   float temp = dht.readTemperature();
   if (!isnan(temp)) {
     currentTemp = temp;
+    tempValida  = true;
   }
 
   // Evento "temperatura" e edge-triggered (dispara so na transicao de
@@ -227,7 +241,12 @@ void syncWithBackend() {
   doc["uid"]         = UID;
   doc["token"]       = TOKEN;
   doc["online"]      = true;
-  doc["temperature"] = currentTemp;
+  // So envia "temperature" depois de uma leitura valida do DHT11 (ve
+  // declaracao de tempValida). Sem essa checagem, um sensor ausente ou
+  // mal conectado mandaria 0.0 como se fosse uma leitura real.
+  if (tempValida) {
+    doc["temperature"] = currentTemp;
+  }
 
   JsonObject devices     = doc["devices"].to<JsonObject>();
   devices["luz"]         = estadoLuz;
@@ -258,7 +277,11 @@ void syncWithBackend() {
       // garantia de que o backend processou os eventos. Mantem no buffer
       // para tentar de novo no proximo ciclo.
     } else {
-      // Atualiza o limite de temperatura definido pelo usuario no site
+      // Atualiza o limite de temperatura devolvido pelo backend a cada sync
+      // (users/{uid}.tempThreshold, se o documento existir); se o campo nao
+      // vier na resposta, usa o padrao local (DEFAULT_TEMP_THRESHOLD). Hoje
+      // nenhuma tela do site escreve esse campo, entao na pratica o default
+      // sempre se aplica (ve js/automation.js: "O limite e definido no codigo").
       tempThreshold = resposta["tempThreshold"] | DEFAULT_TEMP_THRESHOLD;
 
       // Executa os comandos enviados pelo site e pelas automacoes

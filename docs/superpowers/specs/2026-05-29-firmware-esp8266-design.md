@@ -342,3 +342,14 @@ de **design** (não de transcrição). Os quatro foram corrigidos:
    única vez em `setup()` e `http.setReuse(true)` para manter a conexão
    viva entre ciclos. `setBufferSizes()` deliberadamente não é usado. Ver
    Seção 5.
+
+5. **`currentTemp` era inicializado em `0.0` e enviado em todo sync, mesmo
+   sem uma leitura válida do DHT11.** Um sensor ausente, mal conectado ou
+   que ainda não tivesse produzido uma leitura válida fazia o firmware
+   postar `temperature: 0`, e o backend gravava isso como se fosse uma
+   leitura real — contradizendo a garantia de `backend/routes/arduino.js`
+   de nunca persistir 0/null como leitura de sensor. Agora existe uma flag
+   global `tempValida` (inicia `false`), que só vira `true` junto com
+   `currentTemp` quando `dht.readTemperature()` retorna um valor não-NaN;
+   o campo `"temperature"` só é adicionado ao JSON do sync quando
+   `tempValida` é `true`. Ver Seção 5.

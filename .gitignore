@@ -7,6 +7,9 @@ backend/.env
 # Credenciais — nunca versionar
 *firebase-adminsdk*.json
 serviceAccountKey.json
+*.pem
+*.key
+/.env
 
 # Artefatos de ferramentas
 .playwright-mcp/

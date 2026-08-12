@@ -13,7 +13,7 @@ O projeto está funcionalmente completo nas camadas de software (frontend redese
 - Não existe README — não há porta de entrada no repositório
 - A credencial de service account do Firebase está na raiz do projeto, fora do `.gitignore`
 - O site institucional (`index.html`) não tem nenhum link para o sistema (`login.html`)
-- 24 screenshots soltos na raiz enterram o código
+- 23 screenshots soltos na raiz enterram o código
 - O último commit foi em 2026-06-03
 
 ## Restrições e decisões tomadas
@@ -33,6 +33,11 @@ O projeto está funcionalmente completo nas camadas de software (frontend redese
 Sem ESP8266 e sem simulador, a cadeia de comandos não fecha durante a demo:
 
 - `arduino_status/{uid}` nunca é escrito, então o dashboard exibe estado offline (`js/dashboard.js:144-155`)
+  *(nota pós-revisão: a Task 3 do fechamento passou a gravar `temperature` nesse
+  mesmo caminho quando o backend recebe um valor válido do Arduino — ver
+  `backend/routes/arduino.js`. O texto acima descreve o cenário sem hardware, que
+  continua valendo para `online`/`lastSeen`; só a afirmação de que o caminho
+  "nunca é escrito" foi superada por essa mudança.)*
 - Comandos enfileirados em `commands/{uid}` nunca são consumidos (`backend/routes/arduino.js:60-75`)
 - `devices/{uid}/{id}.state` nunca é confirmado pelo hardware
 
@@ -53,7 +58,7 @@ O usuário optou por explicar isso verbalmente na apresentação. A Seção 5 mi
    - `backend/package-lock.json` — garante instalação reproduzível das dependências
    - `docs/superpowers/plans/2026-05-27-backend-railway.md` — plano do backend
 
-3. Mover os 24 screenshots da raiz para `docs/screenshots/`.
+3. Mover os 23 screenshots da raiz para `docs/screenshots/`.
 
 **Verificação:** `git check-ignore -v <arquivo-credencial>` deve retornar a regra que o ignora. A credencial nunca foi commitada (histórico verificado), então não há necessidade de reescrever histórico.
 

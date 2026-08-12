@@ -11,7 +11,7 @@ voz ou automaticamente, a partir de sensores de presença e temperatura.
 
 ```
 ┌──────────────┐     ┌──────────────────┐     ┌──────────────┐     ┌───────────┐
-│     Site     │────▶│     Firebase     │◀───▶│    Backend   │◀───▶│  ESP8266  │
+│     Site     │◀───▶│     Firebase     │◀───▶│    Backend   │◀───▶│  ESP8266  │
 │ HTML/CSS/JS  │     │ Auth · Firestore │     │   Express    │     │  NodeMCU  │
 │              │     │       RTDB       │     │  (Railway)   │     │  + reles  │
 └──────────────┘     └──────────────────┘     └──────────────┘     └───────────┘
@@ -22,7 +22,7 @@ voz ou automaticamente, a partir de sensores de presença e temperatura.
    e o estado atual dos relés.
 3. O backend responde com os comandos pendentes — do site e das automações — e o
    ESP8266 aciona os relés. A temperatura recebida é gravada no Realtime Database
-   (`arduino_status/{uid}`), para o dashboard exibir a leitura mais recente.
+   (`arduino_status/{uid}`).
 4. Cada ação é registrada no histórico, no Firestore.
 
 ## Tecnologias
@@ -48,16 +48,28 @@ voz ou automaticamente, a partir de sensores de presença e temperatura.
 node server.js
 ```
 
-Depois abra <http://127.0.0.1:8080> no navegador.
+Depois abra <http://localhost:8080> no navegador.
 
 > O site **precisa** ser aberto por esse servidor. Abrir os arquivos `.html`
 > com duplo clique não funciona: o Firebase Authentication não opera sob o
 > protocolo `file://`.
 
+> Use `localhost`, não `127.0.0.1`. O login com Google (`signInWithPopup`)
+> só funciona em domínios autorizados no Firebase, e `localhost` é
+> autorizado por padrão — `127.0.0.1` é um domínio distinto e normalmente
+> não está na lista. O login por e-mail/senha funciona nos dois, o que
+> pode mascarar o problema.
+
 O `server.js` só serve os arquivos do próprio site: páginas HTML e arquivos
 `.css`/`.js`/`.png`/`.jpg`/`.svg`/`.ico` na raiz do projeto, além do conteúdo
 das pastas `css/` e `js/`. Qualquer outro caminho — incluindo `backend/.env`
 e a chave de serviço do Firebase — recebe `403 Forbidden`.
+
+**Modo de preview.** Abrir qualquer página com `?preview=1` na URL (ex.:
+`http://localhost:8080/dashboard.html?preview=1`) injeta um mock do Firebase
+que simula um usuário autenticado com dados vazios, sem precisar de login
+real. Existe só para permitir testes visuais rápidos das telas; funciona
+apenas no servidor local (`server.js`) e não expõe nem lê nenhum dado real.
 
 ### Backend
 
@@ -102,6 +114,8 @@ Adafruit Unified Sensor.
 ├── styles.css              Estilos do site de apresentação
 ├── js/                     Lógica do frontend
 │   ├── auth.js             Login, cadastro e sessão
+│   ├── firebase-config.js  Inicialização do Firebase (Auth, Firestore, RTDB)
+│   ├── profile.js          Seleção de perfil de acessibilidade
 │   ├── dashboard.js        Controle dos dispositivos em tempo real
 │   ├── automation.js       Editor de automações
 │   ├── history.js          Listagem do histórico
@@ -141,6 +155,13 @@ Adafruit Unified Sensor.
   backend nem relógio no firmware. Apenas os gatilhos de presença e temperatura
   funcionam de ponta a ponta. Documentado em
   `docs/superpowers/specs/2026-05-29-firmware-esp8266-design.md`.
+- **Temperatura gravada, mas não exibida.** O backend persiste a leitura em
+  `arduino_status/{uid}`, mas nenhuma tela do site lê ou mostra esse valor hoje.
+- **Relé do alarme no GPIO15 (D8) não validado em hardware.** Esse pino precisa
+  estar em LOW no boot do ESP8266, e como `RELAY_ON = LOW`, o relé fica energizado
+  desde o power-on até o `setup()` rodar; dependendo do módulo de relé usado, isso
+  também pode impedir o boot. Precisa ser validado assim que o hardware for
+  montado — ver comentário em `firmware/esp8266/casa_inteligente.ino`.
 
 ## Roteiro de demonstração
 

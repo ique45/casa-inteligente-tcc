@@ -6,7 +6,8 @@ const MIME = {
   '.html': 'text/html',
   '.css': 'text/css',
   '.js': 'application/javascript',
-  '.json': 'application/json',
+  // '.json' fica de fora de propósito: .json não está na allowlist (é o que
+  // bloqueia a chave de service account do Firebase), então nunca chegaria aqui.
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
@@ -110,7 +111,11 @@ http.createServer((req, res) => {
   if (filePath === ROOT || filePath === ROOT + path.sep) filePath = path.join(ROOT, 'index.html');
 
   // Branch por extensao: cada ramo checa allowlist antes de fs.readFile
-  const ext = path.extname(filePath);
+  // Lowercase aqui (uma unica vez) para que a busca no MIME e o teste
+  // === '.html' abaixo enxerguem o mesmo valor que isPathAllowed usa
+  // internamente — sem isso, /index.HTML passava na allowlist mas caia
+  // no branch generico (application/octet-stream) e pulava o serveHtml.
+  const ext = path.extname(filePath).toLowerCase();
 
   if (ext) {
     // Arquivo com extensao: deve estar na allowlist, ou nao eh servido
@@ -139,4 +144,4 @@ http.createServer((req, res) => {
       serveHtml(res, data, isPreview);
     });
   }
-}).listen(8080, '127.0.0.1', () => console.log('Serving at http://127.0.0.1:8080'));
+}).listen(8080, '127.0.0.1', () => console.log('Serving at http://localhost:8080'));
