@@ -64,9 +64,14 @@ function serveHtml(res, data, isPreview) {
   res.end(html);
 }
 
-// Verifica se um caminho pode ser servido (seguranca: bloqueia arquivos sensiveis e path traversal)
+// Verifica se um caminho pode ser servido usando ALLOWLIST, nao DENYLIST.
+// Allowlist eh muito mais seguro porque:
+// 1. Nao requer enumerar todos os nomes perigosos possiveis
+// 2. Windows eh case-insensitive, entao uppercase bypasses denylist
+// 3. Nao perde com 8.3 short names (ex: CASA-I~1.JSON bypassa firebase-adminsdk check)
+// 4. Novos arquivos secretos adicionados ao projeto serao automaticamente bloqueados
+// A estrategia: servir APENAS css/, js/, e arquivos HTML/media na raiz. Tudo mais eh 403.
 function isPathAllowed(filePath) {
-  // Resolve para path absoluto
   const resolvedPath = path.resolve(filePath);
   const resolvedRoot = path.resolve(ROOT);
 
@@ -75,35 +80,27 @@ function isPathAllowed(filePath) {
     return false;
   }
 
-  // Denylist: arquivos sensiveis nao devem ser servidos
-  const relativePath = path.relative(ROOT, resolvedPath);
-  const basename = path.basename(relativePath);
+  // Allowlist: especificar exatamente o que pode ser servido
+  const relativePath = path.relative(ROOT, resolvedPath).toLowerCase();
+  const pathParts = relativePath.split(path.sep);
+  const firstSegment = pathParts[0];
 
-  // Bloqueia .env e variantes (exceto .env.example que eh seguro)
-  if (basename === '.env' || (basename.startsWith('.env.') && basename !== '.env.example')) {
-    return false;
-  }
 
-  // Bloqueia chaves de Firebase
-  if (basename.includes('firebase-adminsdk') && basename.endsWith('.json')) {
-    return false;
-  }
-  if (basename === 'serviceAccountKey.json') {
-    return false;
+  // Permite arquivos em diretorios css/ e js/
+  if (firstSegment === 'css' || firstSegment === 'js') {
+    return true;
   }
 
-  // Bloqueia diretorios sensiveis
-  if (relativePath.startsWith('.git' + path.sep) || relativePath === '.git') {
-    return false;
-  }
-  if (relativePath.startsWith('node_modules' + path.sep) || relativePath === 'node_modules') {
-    return false;
-  }
-  if (relativePath.startsWith('.superpowers' + path.sep) || relativePath === '.superpowers') {
-    return false;
+  // Permite arquivos na raiz com extensoes seguras (HTML, media, stylesheets, scripts)
+  if (pathParts.length === 1) {
+    const ext = path.extname(relativePath);
+    const allowedExts = ['.html', '.css', '.js', '.png', '.jpg', '.svg', '.ico'];
+    if (allowedExts.includes(ext)) {
+      return true;
+    }
   }
 
-  return true;
+  return false;
 }
 
 http.createServer((req, res) => {
@@ -112,11 +109,20 @@ http.createServer((req, res) => {
   let filePath = path.join(ROOT, req.url.split('?')[0]);
   if (filePath === ROOT || filePath === ROOT + path.sep) filePath = path.join(ROOT, 'index.html');
 
-  // Verifica seguranca antes de tentar ler
-  if (!isPathAllowed(filePath)) {
-    res.writeHead(403);
-    res.end('Forbidden');
-    return;
+  // Verifica seguranca antes de tentar ler (mas nao bloqueia extensionless antes de tentar fallback)
+  const pathAllowed = isPathAllowed(filePath);
+  if (!pathAllowed) {
+    const basename = path.basename(filePath);
+    const relativePath = path.relative(ROOT, filePath).toLowerCase();
+    const ext = path.extname(filePath);
+    // Se eh dotfile (.env, .git, etc), arquivo em subdir de dot (/.git/), ou tem extensao, bloqueia
+    // Se eh extensionless sem dot em raiz (dashboard), deixa passar pro fallback .html
+    const hasDotInPath = relativePath.split(path.sep).some(part => part.startsWith('.'));
+    if (hasDotInPath || basename.startsWith('.') || ext) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
   }
 
   const ext = path.extname(filePath);
@@ -124,7 +130,7 @@ http.createServer((req, res) => {
   fs.readFile(filePath, (err, data) => {
     if (err && !ext) {
       const fallbackPath = filePath + '.html';
-      // Verifica seguranca para a fallback path tambem
+      // Verifica seguranca para a fallback path
       if (!isPathAllowed(fallbackPath)) {
         res.writeHead(403);
         res.end('Forbidden');
