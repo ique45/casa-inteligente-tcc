@@ -64,16 +64,73 @@ function serveHtml(res, data, isPreview) {
   res.end(html);
 }
 
+// Verifica se um caminho pode ser servido (seguranca: bloqueia arquivos sensiveis e path traversal)
+function isPathAllowed(filePath) {
+  // Resolve para path absoluto
+  const resolvedPath = path.resolve(filePath);
+  const resolvedRoot = path.resolve(ROOT);
+
+  // Containment check: garantir que o arquivo esta dentro de ROOT
+  if (!resolvedPath.startsWith(resolvedRoot + path.sep) && resolvedPath !== resolvedRoot) {
+    return false;
+  }
+
+  // Denylist: arquivos sensiveis nao devem ser servidos
+  const relativePath = path.relative(ROOT, resolvedPath);
+  const basename = path.basename(relativePath);
+
+  // Bloqueia .env e variantes (exceto .env.example que eh seguro)
+  if (basename === '.env' || (basename.startsWith('.env.') && basename !== '.env.example')) {
+    return false;
+  }
+
+  // Bloqueia chaves de Firebase
+  if (basename.includes('firebase-adminsdk') && basename.endsWith('.json')) {
+    return false;
+  }
+  if (basename === 'serviceAccountKey.json') {
+    return false;
+  }
+
+  // Bloqueia diretorios sensiveis
+  if (relativePath.startsWith('.git' + path.sep) || relativePath === '.git') {
+    return false;
+  }
+  if (relativePath.startsWith('node_modules' + path.sep) || relativePath === 'node_modules') {
+    return false;
+  }
+  if (relativePath.startsWith('.superpowers' + path.sep) || relativePath === '.superpowers') {
+    return false;
+  }
+
+  return true;
+}
+
 http.createServer((req, res) => {
   const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
   const isPreview = qs.includes('preview=1');
   let filePath = path.join(ROOT, req.url.split('?')[0]);
   if (filePath === ROOT || filePath === ROOT + path.sep) filePath = path.join(ROOT, 'index.html');
+
+  // Verifica seguranca antes de tentar ler
+  if (!isPathAllowed(filePath)) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
+
   const ext = path.extname(filePath);
   const mime = MIME[ext] || 'application/octet-stream';
   fs.readFile(filePath, (err, data) => {
     if (err && !ext) {
-      fs.readFile(filePath + '.html', (err2, data2) => {
+      const fallbackPath = filePath + '.html';
+      // Verifica seguranca para a fallback path tambem
+      if (!isPathAllowed(fallbackPath)) {
+        res.writeHead(403);
+        res.end('Forbidden');
+        return;
+      }
+      fs.readFile(fallbackPath, (err2, data2) => {
         if (err2) { res.writeHead(404); res.end('Not found'); return; }
         serveHtml(res, data2, isPreview);
       });
