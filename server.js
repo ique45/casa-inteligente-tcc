@@ -109,42 +109,34 @@ http.createServer((req, res) => {
   let filePath = path.join(ROOT, req.url.split('?')[0]);
   if (filePath === ROOT || filePath === ROOT + path.sep) filePath = path.join(ROOT, 'index.html');
 
-  // Verifica seguranca antes de tentar ler (mas nao bloqueia extensionless antes de tentar fallback)
-  const pathAllowed = isPathAllowed(filePath);
-  if (!pathAllowed) {
-    const basename = path.basename(filePath);
-    const relativePath = path.relative(ROOT, filePath).toLowerCase();
-    const ext = path.extname(filePath);
-    // Se eh dotfile (.env, .git, etc), arquivo em subdir de dot (/.git/), ou tem extensao, bloqueia
-    // Se eh extensionless sem dot em raiz (dashboard), deixa passar pro fallback .html
-    const hasDotInPath = relativePath.split(path.sep).some(part => part.startsWith('.'));
-    if (hasDotInPath || basename.startsWith('.') || ext) {
+  // Branch por extensao: cada ramo checa allowlist antes de fs.readFile
+  const ext = path.extname(filePath);
+
+  if (ext) {
+    // Arquivo com extensao: deve estar na allowlist, ou nao eh servido
+    if (!isPathAllowed(filePath)) {
       res.writeHead(403);
       res.end('Forbidden');
       return;
     }
-  }
-
-  const ext = path.extname(filePath);
-  const mime = MIME[ext] || 'application/octet-stream';
-  fs.readFile(filePath, (err, data) => {
-    if (err && !ext) {
-      const fallbackPath = filePath + '.html';
-      // Verifica seguranca para a fallback path
-      if (!isPathAllowed(fallbackPath)) {
-        res.writeHead(403);
-        res.end('Forbidden');
-        return;
-      }
-      fs.readFile(fallbackPath, (err2, data2) => {
-        if (err2) { res.writeHead(404); res.end('Not found'); return; }
-        serveHtml(res, data2, isPreview);
-      });
+    const mime = MIME[ext] || 'application/octet-stream';
+    fs.readFile(filePath, (err, data) => {
+      if (err) { res.writeHead(404); res.end('Not found'); return; }
+      if (ext === '.html') { serveHtml(res, data, isPreview); return; }
+      res.writeHead(200, { 'Content-Type': mime });
+      res.end(data);
+    });
+  } else {
+    // Sem extensao: UNICA coisa servida eh a pagina .html com esse nome
+    const fallbackPath = filePath + '.html';
+    if (!isPathAllowed(fallbackPath)) {
+      res.writeHead(403);
+      res.end('Forbidden');
       return;
     }
-    if (err) { res.writeHead(404); res.end('Not found'); return; }
-    if (ext === '.html') { serveHtml(res, data, isPreview); return; }
-    res.writeHead(200, { 'Content-Type': mime });
-    res.end(data);
-  });
+    fs.readFile(fallbackPath, (err, data) => {
+      if (err) { res.writeHead(404); res.end('Not found'); return; }
+      serveHtml(res, data, isPreview);
+    });
+  }
 }).listen(8080, '127.0.0.1', () => console.log('Serving at http://127.0.0.1:8080'));
