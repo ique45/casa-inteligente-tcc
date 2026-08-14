@@ -74,7 +74,7 @@ apenas no servidor local (`server.js`) e não expõe nem lê nenhum dado real.
 ### Backend
 
 O backend já está publicado e no ar:
-<x>
+<https://casa-inteligente-tcc-production.up.railway.app>
 
 Para rodar localmente, crie o arquivo `backend/.env` a partir de
 `backend/.env.example` e execute:
