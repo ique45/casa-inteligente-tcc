@@ -94,11 +94,34 @@ npm test
 
 ### Firmware
 
-Abra `firmware/esp8266/casa_inteligente.ino` na IDE do Arduino, preencha o bloco
-`EDITE AQUI` no topo (rede WiFi, UID do Firebase e token) e envie para a placa.
+Abra `firmware/esp8266/casa_inteligente/casa_inteligente.ino` na IDE do Arduino,
+preencha o bloco `EDITE AQUI` no topo (rede WiFi, UID do Firebase e token) e
+envie para a placa.
 
-Bibliotecas necessárias: ArduinoJson, DHT sensor library (Adafruit) e
-Adafruit Unified Sensor.
+**Placa:** NodeMCU 1.0 (ESP-12E Module) — instale o pacote ESP8266 pelo
+Gerenciador de Placas, usando esta URL adicional:
+
+```
+https://arduino.esp8266.com/stable/package_esp8266com_index.json
+```
+
+**Bibliotecas** (Gerenciador de Bibliotecas):
+
+| Biblioteca | Versão testada |
+|---|---|
+| ArduinoJson | **7.x** — a v6 não compila com `JsonDocument` |
+| DHT sensor library (Adafruit) | 1.4.7 |
+| Adafruit Unified Sensor | 1.1.15 |
+
+O `TOKEN` do bloco `EDITE AQUI` precisa ser o mesmo valor da variável
+`ARDUINO_SECRET` configurada **no Railway** — não a do `.env` local. Se os dois
+não baterem, todo sync recebe `401` e nada funciona.
+
+Para compilar pela linha de comando, sem abrir a IDE:
+
+```bash
+arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2 firmware/esp8266/casa_inteligente
+```
 
 ## Estrutura de pastas
 
@@ -125,7 +148,8 @@ Adafruit Unified Sensor.
 │   ├── routes/arduino.js   Endpoint POST /arduino/sync
 │   ├── services/           Automações e histórico
 │   └── __tests__/          18 testes automatizados
-├── firmware/esp8266/       Firmware do NodeMCU
+├── firmware/esp8266/casa_inteligente/
+│                           Firmware do NodeMCU (sketch da IDE Arduino)
 ├── firestore.rules         Regras de segurança do Firestore
 ├── database.rules.json     Regras de segurança do Realtime Database
 └── docs/                   Specs, planos e capturas de tela
@@ -155,7 +179,7 @@ regras.
 | Histórico | Concluído |
 | Comandos de voz | Concluído |
 | Backend + deploy | Concluído — 18 testes passando |
-| Firmware ESP8266 | Escrito, **não testado em hardware** |
+| Firmware ESP8266 | Escrito, **compila sem erros nem avisos**, não testado em hardware |
 | Montagem física | Pendente — o NodeMCU ainda não foi adquirido |
 
 ## Limitações conhecidas
@@ -175,7 +199,8 @@ regras.
   estar em LOW no boot do ESP8266, e como `RELAY_ON = LOW`, o relé fica energizado
   desde o power-on até o `setup()` rodar; dependendo do módulo de relé usado, isso
   também pode impedir o boot. Precisa ser validado assim que o hardware for
-  montado — ver comentário em `firmware/esp8266/casa_inteligente.ino`.
+  montado — ver comentário em
+  `firmware/esp8266/casa_inteligente/casa_inteligente.ino`.
 
 ## Roteiro de demonstração
 
