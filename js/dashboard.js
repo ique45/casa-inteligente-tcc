@@ -9,9 +9,22 @@ let _rtdbStatusRef  = null;
 let _automationNamesUnsubscribe = null;
 let _historyUnsubscribe = null;
 
+// Sem isto o status ficaria "Online" para sempre depois que o aparelho
+// parasse, porque quem para de sincronizar não avisa que parou — só some.
+//
+// O firmware espera 2s entre ciclos, mas o ciclo inteiro custa bem mais:
+// o handshake TLS domina o tempo. Medido em simulação, a cadência real
+// ficou em ~10s por sync. Um limite apertado faria o status piscar entre
+// Online e Offline o tempo todo, então damos folga de cerca de 3x.
+const ARDUINO_TIMEOUT_MS = 30000;
+let _arduinoStatus = null;   // último valor lido de arduino_status/{uid}
+let _arduinoStatusTimer = null;
+
 function _teardownListeners() {
   if (_rtdbDevicesRef)  { _rtdbDevicesRef.off('value');  _rtdbDevicesRef  = null; }
   if (_rtdbStatusRef)   { _rtdbStatusRef.off('value');   _rtdbStatusRef   = null; }
+  if (_arduinoStatusTimer) { clearInterval(_arduinoStatusTimer); _arduinoStatusTimer = null; }
+  _arduinoStatus = null;
   if (_automationNamesUnsubscribe) { _automationNamesUnsubscribe(); _automationNamesUnsubscribe = null; }
   if (_historyUnsubscribe)         { _historyUnsubscribe();         _historyUnsubscribe         = null; }
   deviceStates      = {};
@@ -134,14 +147,32 @@ function updateDeviceUI(deviceId, isOn) {
 function listenArduinoStatus() {
   _rtdbStatusRef = rtdb.ref(`arduino_status/${currentUser.uid}`);
   _rtdbStatusRef.on('value', snap => {
-    const data = snap.val() || {};
+    _arduinoStatus = snap.val() || {};
+    renderArduinoStatus();
+  });
+
+  // O listener acima só dispara quando o valor muda no banco. Um aparelho
+  // que trava ou perde a rede não escreve nada, então precisamos reavaliar
+  // sozinhos de tempos em tempos para o status não ficar preso em "Online".
+  if (_arduinoStatusTimer) clearInterval(_arduinoStatusTimer);
+  _arduinoStatusTimer = setInterval(renderArduinoStatus, 3000);
+}
+
+function renderArduinoStatus() {
+    const data = _arduinoStatus || {};
     const sidebar = document.getElementById('arduino-sidebar');
     const statusText = document.getElementById('arduino-status-text');
     const offlineHint = document.getElementById('offline-hint');
     const mobileTopbar = document.getElementById('mobile-topbar');
     const mobileText = document.getElementById('mobile-arduino-text');
     if (mobileTopbar) mobileTopbar.classList.remove('loading');
-    if (data.online) {
+
+    // Idade negativa acontece se o relógio do computador estiver atrasado
+    // em relação ao servidor; nesse caso tratamos como contato recente.
+    const idade  = Date.now() - (data.lastSeen || 0);
+    const recente = !!data.lastSeen && idade < ARDUINO_TIMEOUT_MS;
+
+    if (data.online && recente) {
       if (sidebar) sidebar.className = 'sidebar-footer';
       if (statusText) statusText.textContent = 'Online';
       if (offlineHint) offlineHint.style.display = 'none';
@@ -154,7 +185,6 @@ function listenArduinoStatus() {
       if (mobileTopbar) mobileTopbar.classList.add('offline');
       if (mobileText) mobileText.textContent = 'Offline';
     }
-  });
 }
 
 async function toggleDevice(deviceId) {

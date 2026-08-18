@@ -92,12 +92,15 @@ unsigned long ultimoSync     = 0;
 String events[4];
 int    eventCount = 0;
 
-// Cliente TLS unico e de longa duracao (fora de qualquer funcao).
-// Criar um WiFiClientSecure novo a cada ciclo de 2s forcaria um handshake
-// BearSSL completo (~20-30KB de RAM de pico e 1-4s) a cada sync, o que na
-// pratica inviabilizaria a cadencia pretendida. Reaproveitando a mesma
-// instancia (junto com http.setReuse(true) em syncWithBackend), a conexao
-// TLS pode ser mantida entre ciclos.
+// Cliente TLS unico e de longa duracao (fora de qualquer funcao), para nao
+// realocar o objeto a cada ciclo.
+//
+// ATENCAO: nao tente manter a conexao TLS aberta entre ciclos com
+// http.setReuse(true). Isso foi testado em simulacao (2026-08-18) e falhou:
+// o servidor fecha a conexao ociosa, o POST seguinte trava ate estourar o
+// timeout e volta "HTTP -1", e so o ciclo seguinte reconecta. O resultado
+// era um sync bem-sucedido a cada ~10s em vez de 2s, com metade das
+// tentativas falhando. Cada ciclo abre e fecha sua propria conexao.
 WiFiClientSecure secureClient;
 
 // Tabela que liga o nome vindo do backend ao pino e a variavel de estado.
@@ -226,14 +229,15 @@ void syncWithBackend() {
   // reduzir os buffers do BearSSL pode quebrar o handshake com servidores
   // que mandam registros TLS grandes, e nao ha hardware disponivel para
   // testar esse cenario. Deixe no tamanho padrao.
+  // Garante que nao sobrou socket da chamada anterior. Sem isso, uma
+  // conexao que o servidor ja fechou seria reutilizada e o POST travaria.
+  secureClient.stop();
+
   HTTPClient http;
   if (!http.begin(secureClient, BACKEND_URL)) {
     Serial.println("Falha ao iniciar a conexao HTTP");
     return;  // eventCount preservado: nada foi enviado, nada se perde
   }
-  // Mantem a conexao TLS/TCP viva entre chamadas (ve comentario no global
-  // secureClient) em vez de renegociar um handshake completo a cada 2s.
-  http.setReuse(true);
   http.addHeader("Content-Type", "application/json");
 
   // Monta o corpo da requisicao
