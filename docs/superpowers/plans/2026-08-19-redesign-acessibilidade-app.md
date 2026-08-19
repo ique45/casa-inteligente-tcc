@@ -123,7 +123,7 @@ test('findStrayColors acusa rgba fora dos blocos', () => {
 
 - [ ] **Step 2: Rodar e confirmar que falha**
 
-Run: `node --test tools/`
+Run: `node --test tools/*.test.js`
 Expected: FAIL — `Cannot find module './check-contrast.js'`
 
 - [ ] **Step 3: Implementar o script**
@@ -248,7 +248,7 @@ if (require.main === module) {
 
 - [ ] **Step 4: Rodar os testes e confirmar que passam**
 
-Run: `node --test tools/`
+Run: `node --test tools/*.test.js`
 Expected: PASS — 11 testes
 
 - [ ] **Step 5: Commit**
@@ -1005,7 +1005,7 @@ test('dispositivo desconhecido nao explode', () => {
 
 - [ ] **Step 2: Rodar e confirmar que falha**
 
-Run: `node --test tools/`
+Run: `node --test tools/*.test.js`
 Expected: FAIL — `frasePara is not a function`
 
 - [ ] **Step 3: Adicionar os particípios e `frasePara` a `js/devices.js`**
@@ -1037,7 +1037,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 - [ ] **Step 4: Rodar os testes e confirmar que passam**
 
-Run: `node --test tools/`
+Run: `node --test tools/*.test.js`
 Expected: PASS — os 11 da Task 1 mais os 6 desta
 
 - [ ] **Step 5: Implementar `js/speech.js`**
@@ -1246,9 +1246,11 @@ git commit -m "style: site institucional herda a paleta clara do app"
 
 ```bash
 node tools/check-contrast.js
-node --test tools/
+node --test tools/*.test.js
 cd backend && npm test
 ```
+
+O padrão `tools/*.test.js` é obrigatório: `node --test tools/` executa **todo** `.js` da pasta como arquivo de teste, inclusive o próprio `check-contrast.js`, cujo bloco de CLI encerra com código 1.
 Expected: contraste OK; 17 testes de `tools/`; **18 testes de backend** — o backend não foi tocado, qualquer quebra ali indica alteração indevida.
 
 - [ ] **Step 2: Varredura das 6 telas em claro/normal**
@@ -1280,8 +1282,8 @@ Expected: o LED correspondente acende na simulação e o status volta para "Onli
 Acrescentar à seção de comandos:
 
 ```bash
-node tools/check-contrast.js   # verifica contraste dos temas
-node --test tools/             # testes das ferramentas
+node tools/check-contrast.js       # verifica contraste dos temas
+node --test tools/*.test.js        # testes das ferramentas
 ```
 
 E, na seção de limitações, registrar: **não houve teste com leitor de tela real (NVDA/VoiceOver) nem com pessoa do público-alvo.** Os atributos `aria-*` são boa prática aplicada com cuidado, não comportamento medido.
