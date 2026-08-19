@@ -283,7 +283,7 @@ O seletor do tema claro precisa ser exatamente `:root {` (com espaço antes da c
   --border: #70708a;
   --border-strong: #5b21b6;
   --text: #14141f;
-  --text-muted: #4b5563;
+  --text-muted: #464e5c;
   --text-on-accent: #ffffff;
   --accent: #5b21b6;
   --accent-hover: #4c1d95;
@@ -312,7 +312,7 @@ O seletor do tema claro precisa ser exatamente `:root {` (com espaço antes da c
   --accent-weak: #241a3f;
   --success: #4ade80;
   --success-weak: #10281a;
-  --danger: #f87171;
+  --danger: #fa8f8f;
   --danger-weak: #2e1414;
   --focus-ring: #a78bfa;
 }
@@ -323,6 +323,7 @@ Notas sobre valores que parecem arbitrários e não são:
 - `--accent` e `--accent-text` são cores diferentes de propósito. `--accent` é preenchimento, com `--text-on-accent` por cima; `--accent-text` é texto sobre a página. No tema escuro os dois divergem (`#6d28d9` vs `#a78bfa`) porque o mesmo roxo não atinge 7:1 nas duas situações.
 - `--border` no escuro sobe de `#2a2a50` para `#5a5a92`: o valor antigo dá **1.49:1** contra o fundo, e contorno de componente exige 3:1.
 - `--accent`/`--success`/`--danger` no escuro são usados como preenchimento e como texto respectivamente; os `-weak` são fundos escuros sólidos (não `rgba`) para que o verificador consiga medi-los.
+- **`--text-muted` claro é `#464e5c`, não `#4b5563`, e `--danger` escuro é `#fa8f8f`, não `#f87171`.** Os valores mais claros passam sobre `--bg` mas reprovam sobre `--surface-2` (6.71:1) e `--surface` (6.94:1) — a lista de pares checa os três fundos, não só o da página. Não "restaurar" os valores anteriores: eles foram calculados contra o fundo errado.
 
 - [ ] **Step 2: Rodar o verificador e ver a lista do que falta converter**
 

@@ -40,7 +40,7 @@ Foco         --focus-ring
 | `--bg` | `#f8f8fb` | — | branco puro reflete; fundo levemente cinza |
 | `--surface` | `#ffffff` | — | cards saltam por serem mais claros que o fundo |
 | `--text` | `#14141f` | **16.5:1** | |
-| `--text-muted` | `#4b5563` | **7.6:1** | |
+| `--text-muted` | `#464e5c` | **7.9:1** | medido sobre `--bg`; sobre `--surface-2` ainda dá 7.5:1 |
 | `--accent` | `#5b21b6` | **9.0:1** | o `#7c3aed` atual dá 5.7:1 — passa em AA, reprova em AAA |
 | `--success` | `#14532d` | **9.1:1** | o `#22c55e` atual dá 2.3:1 sobre branco |
 | `--danger` | `#7f1d1d` | **10.1:1** | |
@@ -58,6 +58,8 @@ Mantém a identidade atual, que já mede 7.5:1 para texto secundário. Única ex
 ### Alvo de contraste
 
 **AAA (7:1)**, não o mínimo AA de 4.5:1. O nível AAA existe justamente para o público deste projeto.
+
+Medido contra **os três fundos** (`--bg`, `--surface`, `--surface-2`), não apenas o da página: um texto secundário legível sobre o corpo pode reprovar dentro de um card. É a restrição mais apertada dos três que vale.
 
 ### Decisões deliberadas
 
