@@ -42,10 +42,14 @@ Foco         --focus-ring
 | `--text` | `#14141f` | **16.5:1** | |
 | `--text-muted` | `#4b5563` | **7.6:1** | |
 | `--accent` | `#5b21b6` | **9.0:1** | o `#7c3aed` atual dá 5.7:1 — passa em AA, reprova em AAA |
-| `--success` | `#166534` | **7.1:1** | o `#22c55e` atual dá 2.3:1 sobre branco |
-| `--danger` | `#991b1b` | **8.4:1** | |
+| `--success` | `#14532d` | **9.1:1** | o `#22c55e` atual dá 2.3:1 sobre branco |
+| `--danger` | `#7f1d1d` | **10.1:1** | |
 
 `--text-on-accent` é `#ffffff`. Sobre `--accent` (`#5b21b6`) mede **9.0:1** — é o par usado em botão primário, onde o texto fica sobre o preenchimento e não sobre o fundo da página.
+
+**`--accent` e `--accent-text` são tokens distintos.** `--accent` é preenchimento, com `--text-on-accent` por cima; `--accent-text` é destaque em texto sobre a página. No tema claro coincidem (`#5b21b6`); no escuro divergem (`#6d28d9` para preenchimento, `#a78bfa` para texto), porque o mesmo roxo não atinge 7:1 nas duas situações.
+
+Os valores de `--success` e `--danger` acima são mais escuros do que o mínimo exigido pelo fundo da página. O motivo é que eles também precisam atingir 7:1 sobre seus próprios preenchimentos fracos (`--success-weak`, `--danger-weak`), que é a restrição mais apertada das duas.
 
 ### Paleta escura (alternativa)
 
