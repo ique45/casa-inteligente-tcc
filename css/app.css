@@ -262,11 +262,12 @@ body {
 .profile-card:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .profile-card-icon {
   width: 44px; height: 44px;
-  background: var(--surface-2); border-radius: 10px;
+  background: var(--surface); border-radius: 10px;
+  border: 2px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   font-size: 24px; flex-shrink: 0;
 }
-.profile-card.selected .profile-card-icon { background: var(--accent-weak); }
+.profile-card.selected .profile-card-icon { background: var(--accent-weak); border-color: var(--accent); }
 .profile-card-info { flex: 1; }
 .profile-card-name { font-size: 15px; font-weight: 700; color: var(--text); }
 .profile-card-desc { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
