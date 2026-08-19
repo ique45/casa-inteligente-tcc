@@ -6,14 +6,14 @@
   <title>Casa Inteligente — Automações</title>
   <link rel="stylesheet" href="css/app.css"/>
   <style>
-    .automations-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .automations-list { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 1.75rem; }
     .form-card {
       background: var(--bg-card); border: 2px solid var(--border);
-      border-radius: var(--radius); padding: 24px;
+      border-radius: var(--radius); padding: 1.5rem;
     }
-    .form-step { margin-bottom: 20px; }
+    .form-step { margin-bottom: 1.25rem; }
     .section-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;
     }
   </style>
 </head>
@@ -47,7 +47,7 @@
       <div class="section-header">
         <div>
           <h2 class="section-title" style="margin:0">Minhas automações</h2>
-          <p class="section-subtitle" style="margin:4px 0 0">Regras automáticas para seus dispositivos</p>
+          <p class="section-subtitle" style="margin:0.25rem 0 0">Regras automáticas para seus dispositivos</p>
         </div>
         <button class="btn btn-primary" id="btn-new-auto">+ Nova automação</button>
       </div>
@@ -87,7 +87,7 @@
                 <span class="step-num">4</span> Comando de voz
                 <span class="tooltip-icon" tabindex="0">ⓘ<span class="tooltip-text">A frase exata que você vai falar para ativar essa automação.</span></span>
               </label>
-              <div class="chip-group" id="voice-suggestions" style="margin-bottom:10px"></div>
+              <div class="chip-group" id="voice-suggestions" style="margin-bottom:0.625rem"></div>
               <input type="text" id="input-voice" class="form-input" placeholder="Ex: Ligar luz da sala" maxlength="60"/>
             </div>
           </div>
@@ -102,8 +102,8 @@
             <div class="preview-box" id="preview-box">—</div>
           </div>
 
-          <p id="auto-error-msg" class="error-msg" style="display:none;margin-top:12px"></p>
-          <button class="btn btn-primary" id="btn-save-auto" style="display:none;margin-top:16px">Salvar automação</button>
+          <p id="auto-error-msg" class="error-msg" style="display:none;margin-top:0.75rem"></p>
+          <button class="btn btn-primary" id="btn-save-auto" style="display:none;margin-top:1rem">Salvar automação</button>
         </div>
       </div>
     </div>

@@ -6,10 +6,10 @@
   <title>Casa Inteligente — Perfil</title>
   <link rel="stylesheet" href="css/app.css"/>
   <style>
-    .profiles-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .profiles-list { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 1.75rem; }
     .toggles-container {
       border: 2px solid var(--border); border-radius: var(--radius); overflow: hidden;
-      margin-bottom: 24px;
+      margin-bottom: 1.5rem;
     }
     #btn-save { width: 100%; }
   </style>
@@ -47,12 +47,12 @@
       <div class="profiles-list" id="profiles-grid"></div>
 
       <div id="toggles-section" style="display:none">
-        <h3 class="section-title" style="font-size:16px;margin-bottom:12px">O que você quer usar?</h3>
+        <h3 class="section-title" style="font-size:var(--fs-lg);margin-bottom:0.75rem">O que você quer usar?</h3>
         <div class="toggles-container" id="toggles-list"></div>
       </div>
 
-      <p id="loading-msg" style="color:var(--text-muted);font-size:14px;margin-bottom:8px">Carregando suas configurações...</p>
-      <p id="profile-hint" style="color:var(--text-muted);font-size:13px;margin-bottom:8px;display:none">Selecione pelo menos um perfil para continuar.</p>
+      <p id="loading-msg" style="color:var(--text-muted);font-size:var(--fs-base);margin-bottom:0.5rem">Carregando suas configurações...</p>
+      <p id="profile-hint" style="color:var(--text-muted);font-size:var(--fs-base);margin-bottom:0.5rem;display:none">Selecione pelo menos um perfil para continuar.</p>
       <p id="error-msg" class="error-msg" style="display:none"></p>
       <button class="btn btn-primary" id="btn-save" disabled>Salvar configurações</button>
     </div>
