@@ -19,18 +19,18 @@
     .login-logo-icon {
       display: inline-flex; align-items: center; justify-content: center;
       width: 3.5rem; height: 3.5rem;
-      background: rgba(124,58,237,0.2); border: 2px solid var(--purple);
+      background: var(--accent-weak); border: 2px solid var(--accent);
       border-radius: 16px; font-size: var(--fs-2xl); margin-bottom: 0.75rem;
     }
     .login-logo-title {
       display: block; font-size: var(--fs-lg); font-weight: 800;
-      letter-spacing: 0.5px; color: #fff;
+      letter-spacing: 0.5px; color: var(--text);
     }
     .login-logo-sub {
       display: block; font-size: var(--fs-base); color: var(--text-muted); margin-top: 0.25rem;
     }
     .login-box {
-      background: var(--bg-card); border: 2px solid var(--border);
+      background: var(--surface); border: 2px solid var(--border);
       border-radius: 14px; padding: 1.75rem 1.5rem;
     }
     .divider {
@@ -41,17 +41,17 @@
       content: ''; flex: 1; height: 1px; background: var(--border);
     }
     .btn-google {
-      width: 100%; padding: 0.8125rem; background: #fff; color: #333;
-      border-radius: 10px; border: none; font-size: var(--fs-base); font-weight: 600;
+      width: 100%; padding: 0.8125rem; background: var(--surface); color: var(--text);
+      border-radius: 10px; border: 2px solid var(--border); font-size: var(--fs-base); font-weight: 600;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       gap: 0.5rem; font-family: inherit;
     }
-    .btn-google:hover { background: #f1f1f1; }
+    .btn-google:hover { background: var(--surface-2); }
     .toggle-mode {
       text-align: center; margin-top: 1.25rem;
       font-size: var(--fs-base); color: var(--text-muted);
     }
-    .toggle-mode a { color: var(--purple-light); cursor: pointer; font-weight: 700; text-decoration: underline; }
+    .toggle-mode a { color: var(--accent-text); cursor: pointer; font-weight: 700; text-decoration: underline; }
     #btn-submit { width: 100%; margin-top: 0.25rem; }
   </style>
 </head>
