@@ -64,3 +64,16 @@ test('findStrayColors acusa rgba fora dos blocos', () => {
   const css = ':root {\n  --bg: #ffffff;\n}\n.card {\n  background: rgba(255,255,255,0.03);\n}\n';
   assert.strictEqual(findStrayColors(css).length, 1);
 });
+
+test('findStrayColors acusa cor literal apos blocodetema fechado na mesma linha', () => {
+  const css = ':root { --bg: #ffffff; } .card { color: #ff0000; }\n';
+  const strays = findStrayColors(css);
+  assert.strictEqual(strays.length, 1);
+  assert.match(strays[0], /#ff0000/);
+});
+
+test('findStrayColors ignora blocodetema completo em uma linha', () => {
+  const css = ':root { --bg: #ffffff; }\n';
+  const strays = findStrayColors(css);
+  assert.strictEqual(strays.length, 0);
+});

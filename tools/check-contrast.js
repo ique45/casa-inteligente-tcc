@@ -74,17 +74,43 @@ function checkPairs(themeName, tokens, pairs, min, kind) {
 function findStrayColors(css) {
   const lines = css.split(/\r?\n/);
   const stray = [];
-  let depth = 0;
-  let inTheme = false;
+  let globalInTheme = false;
+  let globalBraceDepth = 0;
+
   lines.forEach((line, i) => {
-    if (/^:root(\s*\{|\[data-theme)/.test(line.trim())) inTheme = true;
-    if (!inTheme && /#[0-9a-fA-F]{3,8}\b|\brgba?\(/.test(line)) {
+    let accumulated = '';
+    let inTheme = globalInTheme;
+    let braceDepth = globalBraceDepth;
+
+    // Check if this line starts a theme block (if we're not already in one)
+    if (!inTheme && /^:root(\s*\{|\[data-theme)/.test(line.trim())) {
+      inTheme = true;
+    }
+
+    // Process line character by character to track when theme closes
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+
+      if (inTheme) {
+        if (char === '{') braceDepth++;
+        if (char === '}') {
+          braceDepth--;
+          if (braceDepth === 0) inTheme = false;
+        }
+      } else {
+        accumulated += char;
+      }
+    }
+
+    // Check accumulated for colors outside theme blocks
+    if (/#[0-9a-fA-F]{3,8}\b|\brgba?\(/.test(accumulated)) {
       stray.push(`css/app.css:${i + 1}: ${line.trim()}`);
     }
-    depth += (line.match(/\{/g) || []).length;
-    depth -= (line.match(/\}/g) || []).length;
-    if (inTheme && depth === 0) inTheme = false;
+
+    globalInTheme = inTheme;
+    globalBraceDepth = braceDepth;
   });
+
   return stray;
 }
 
