@@ -195,11 +195,11 @@ regras.
   `docs/superpowers/specs/2026-05-29-firmware-esp8266-design.md`.
 - **Temperatura gravada, mas não exibida.** O backend persiste a leitura em
   `arduino_status/{uid}`, mas nenhuma tela do site lê ou mostra esse valor hoje.
-- **Relé do alarme no GPIO15 (D8) não validado em hardware.** Esse pino precisa
-  estar em LOW no boot do ESP8266, e como `RELAY_ON = LOW`, o relé fica energizado
-  desde o power-on até o `setup()` rodar; dependendo do módulo de relé usado, isso
-  também pode impedir o boot. Precisa ser validado assim que o hardware for
-  montado — ver comentário em
+- **Relé do alarme movido do D8 para o D4.** O GPIO15 (D8) precisa estar em LOW no
+  boot do ESP8266, e os pinos IN dos módulos de relé são puxados para cima por
+  resistor — com o módulo ligado, a placa não iniciaria. O GPIO2 (D4) tem a regra
+  inversa e funciona a favor da polaridade `RELAY_OFF = HIGH`. Ainda não validado
+  em hardware. Ver comentário em
   `firmware/esp8266/casa_inteligente/casa_inteligente.ino`.
 
 ## Roteiro de demonstração

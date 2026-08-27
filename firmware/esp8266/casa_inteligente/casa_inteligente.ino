@@ -41,13 +41,15 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 #define PIN_RELE_LUZ        14   // D5
 #define PIN_RELE_VENTILADOR 12   // D6
 #define PIN_RELE_PORTAO     13   // D7
-// ATENCAO GPIO15 (D8): esse pino precisa estar em LOW no momento do reset
-// para o ESP8266 conseguir dar boot. Como RELAY_ON = LOW, o rele fica
-// energizado desde o power-on ate o setup() rodar e forcar RELAY_OFF — e,
-// dependendo do modulo de rele usado (alguns puxam o pino via resistor),
-// isso pode ate impedir o boot. Nao ha hardware disponivel para validar
-// este cenario; testar com cuidado assim que a placa for montada.
-#define PIN_RELE_ALARME     15   // D8
+// O alarme ficava no GPIO15 (D8) e foi movido para o GPIO2 (D4) em 2026-08-27.
+// Motivo: o GPIO15 precisa estar em LOW no momento do reset para o ESP8266 dar
+// boot, e os pinos IN dos modulos de rele sao puxados para cima por resistor.
+// Com o modulo ligado, o D8 fica em HIGH no reset e a placa nao inicia.
+// O GPIO2 tem a regra inversa (precisa estar em HIGH no reset), e como
+// RELAY_OFF = HIGH o pull-up do modulo joga a favor: no boot o rele ja nasce
+// desligado. Efeito colateral inofensivo: o GPIO2 tambem comanda o LED azul
+// embutido no modulo ESP-12E, entao ele acende junto com o rele do alarme.
+#define PIN_RELE_ALARME      2   // D4
 
 // Polaridade do modulo de rele.
 // A maioria dos modulos vendidos no Brasil e "ativo em LOW":
