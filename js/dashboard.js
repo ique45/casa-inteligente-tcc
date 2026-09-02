@@ -90,8 +90,8 @@ function renderDevices() {
     const statusLabel = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
     if (auto) {
       return `
-        <button class="device-card${isOn ? ' on' : ''}" id="btn-${d.id}" data-id="${d.id}">
-          <span class="device-card-icon">${d.icon}</span>
+        <button class="device-card${isOn ? ' on' : ''}" id="btn-${d.id}" data-id="${d.id}" aria-pressed="${isOn ? 'true' : 'false'}">
+          <span class="device-card-icon" aria-hidden="true">${d.icon}</span>
           <div class="device-card-info">
             <div class="device-card-name">${escapeHtml(d.name)}</div>
             <div class="device-card-status" id="state-${d.id}">${statusLabel}</div>
@@ -103,7 +103,7 @@ function renderDevices() {
     }
     return `
       <div class="device-card device-card--readonly" id="btn-${d.id}">
-        <span class="device-card-icon">${d.icon}</span>
+        <span class="device-card-icon" aria-hidden="true">${d.icon}</span>
         <div class="device-card-info">
           <div class="device-card-name">${escapeHtml(d.name)}</div>
           <div class="device-card-status" id="state-${d.id}">${statusLabel}</div>
@@ -138,6 +138,8 @@ function updateDeviceUI(deviceId, isOn) {
   if (!btn.disabled) {
     if (btn.tagName === 'BUTTON') {
       btn.classList.toggle('on', isOn);
+      // O leitor de tela le o estado por aqui; a classe .on so pinta.
+      btn.setAttribute('aria-pressed', String(isOn));
       if (toggleEl) toggleEl.classList.toggle('on', isOn);
     }
     stateEl.textContent = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
@@ -269,7 +271,7 @@ function loadHistory() {
         return `
           <div class="history-card">
             <div class="history-card-header">
-              <span class="history-card-icon">${deviceIcon}</span>
+              <span class="history-card-icon" aria-hidden="true">${deviceIcon}</span>
               <div class="history-card-name">${escapeHtml(d.device)}</div>
               <div class="history-card-time">${ts}</div>
               <span class="badge ${stateClass}">${stateLabel}</span>

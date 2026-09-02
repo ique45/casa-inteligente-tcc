@@ -74,7 +74,7 @@ function renderDeviceChips() {
   const wrap = document.getElementById('device-chips');
   wrap.innerHTML = DEVICES.map(d => `
     <button type="button" class="chip" data-id="${d.id}" aria-pressed="false">
-      <span>${d.icon}</span> ${escapeHtml(d.name)}
+      <span aria-hidden="true">${d.icon}</span> ${escapeHtml(d.name)}
     </button>
   `).join('');
   wrap.querySelectorAll('.chip').forEach(c => {
@@ -359,10 +359,10 @@ function loadAutomations() {
         return `
           <div class="automation-card ${isEnabled ? '' : 'disabled'}">
             <div class="automation-card-header">
-              <span class="automation-card-icon">${device?.icon || '⚙️'}</span>
+              <span class="automation-card-icon" aria-hidden="true">${device?.icon || '⚙️'}</span>
               <div class="automation-card-name">${escapeHtml(d.deviceName)}</div>
               <span class="${badgeClass}">${badgeText}</span>
-              <div class="toggle-switch ${isEnabled ? 'on' : ''}" data-id="${doc.id}" role="switch" aria-checked="${isEnabled}" tabindex="0"></div>
+              <button type="button" class="toggle-switch ${isEnabled ? 'on' : ''}" data-id="${doc.id}" role="switch" aria-checked="${isEnabled}"></button>
               <button class="btn-delete" data-id="${doc.id}" aria-label="Excluir automação" title="Excluir">🗑️</button>
             </div>
             <div class="automation-card-body">

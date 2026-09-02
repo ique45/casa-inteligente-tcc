@@ -75,7 +75,7 @@ function renderProfiles() {
   const list = document.getElementById('profiles-grid');
   list.innerHTML = PROFILES.map(p => `
     <div class="profile-card ${selectedProfiles.has(p.id) ? 'selected' : ''}" data-id="${p.id}">
-      <div class="profile-card-icon">${p.icon}</div>
+      <div class="profile-card-icon" aria-hidden="true">${p.icon}</div>
       <div class="profile-card-info">
         <div class="profile-card-name">${escapeHtml(p.name)}</div>
         <div class="profile-card-desc">${escapeHtml(p.desc)}</div>
@@ -131,7 +131,7 @@ function renderToggles() {
           <div class="toggle-label">${t.label}</div>
           ${t.hint ? `<div class="toggle-hint">${t.hint}</div>` : ''}
         </div>
-        <div class="toggle-switch ${isOn ? 'on' : ''}" role="switch" aria-checked="${isOn}" tabindex="0" data-id="${t.id}"></div>
+        <button type="button" class="toggle-switch ${isOn ? 'on' : ''}" role="switch" aria-checked="${isOn}" data-id="${t.id}"></button>
       </div>
     `;
   }).join('');
