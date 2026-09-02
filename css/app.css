@@ -1,17 +1,17 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #f8f8fb;
+  --bg: #e9e5d4;
   --surface: #ffffff;
-  --surface-2: #f1f1f6;
+  --surface-2: #f3f0e6;
   --border: #966ea2;
   --border-strong: #663e72;
   --text: #14141f;
-  --text-muted: #464e5c;
+  --text-muted: #3d4350;
   --text-on-accent: #ffffff;
   --accent: #663e72;
   --accent-hover: #51315b;
-  --accent-text: #663e72;
+  --accent-text: #57345f;
   --accent-weak: #e2a9f1;
   --success: #14532d;
   --success-weak: #dcfce7;
