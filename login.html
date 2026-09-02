@@ -4,6 +4,16 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Casa Inteligente — Login</title>
+  <script>
+    /* Le a preferencia antes do CSS carregar, para a tela nao piscar no tema
+       errado. Curto de proposito: um arquivo externo reintroduziria o piscar. */
+    (function () {
+      var t = localStorage.getItem('ci-theme');
+      var s = localStorage.getItem('ci-textsize');
+      if (t === 'escuro') document.documentElement.setAttribute('data-theme', 'dark');
+      if (s && s !== 'normal') document.documentElement.setAttribute('data-textsize', s);
+    })();
+  </script>
   <link rel="stylesheet" href="css/app.css"/>
   <style>
     .login-container {
@@ -56,7 +66,23 @@
   </style>
 </head>
 <body>
-  <div class="login-container">
+  <a class="skip-link" href="#conteudo">Pular para o conte&uacute;do</a>
+
+  <div class="a11y-bar">
+    <div class="a11y-group" role="group" aria-label="Tamanho do texto">
+      <span class="a11y-group-label">Tamanho do texto:</span>
+      <button type="button" class="a11y-size" data-size="normal" aria-pressed="true" title="Texto normal">A</button>
+      <button type="button" class="a11y-size" data-size="grande" aria-pressed="false" title="Texto grande">A</button>
+      <button type="button" class="a11y-size" data-size="maior" aria-pressed="false" title="Texto muito grande">A</button>
+    </div>
+
+    <button type="button" class="a11y-theme" id="btn-theme">
+      <span aria-hidden="true">&#127769;</span> <span id="btn-theme-label">Tema escuro</span>
+    </button>
+
+    <span id="a11y-live" class="visually-hidden" aria-live="polite"></span>
+  </div>
+  <main class="login-container" id="conteudo">
     <div class="login-card">
       <div class="login-logo">
         <div class="login-logo-icon">🏠</div>
@@ -96,12 +122,13 @@
         </div>
       </div>
     </div>
-  </div>
+  </main>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="js/a11y.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
 </body>

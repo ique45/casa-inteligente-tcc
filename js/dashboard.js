@@ -160,12 +160,11 @@ function listenArduinoStatus() {
 
 function renderArduinoStatus() {
     const data = _arduinoStatus || {};
-    const sidebar = document.getElementById('arduino-sidebar');
+    // O status vive na barra de acessibilidade desde a Task 4; antes havia
+    // uma copia no rodape da sidebar e outra na topbar do celular.
+    const caixa = document.getElementById('arduino-status');
     const statusText = document.getElementById('arduino-status-text');
     const offlineHint = document.getElementById('offline-hint');
-    const mobileTopbar = document.getElementById('mobile-topbar');
-    const mobileText = document.getElementById('mobile-arduino-text');
-    if (mobileTopbar) mobileTopbar.classList.remove('loading');
 
     // Idade negativa acontece se o relógio do computador estiver atrasado
     // em relação ao servidor; nesse caso tratamos como contato recente.
@@ -173,17 +172,13 @@ function renderArduinoStatus() {
     const recente = !!data.lastSeen && idade < ARDUINO_TIMEOUT_MS;
 
     if (data.online && recente) {
-      if (sidebar) sidebar.className = 'sidebar-footer';
+      if (caixa) caixa.className = 'a11y-arduino';
       if (statusText) statusText.textContent = 'Online';
       if (offlineHint) offlineHint.style.display = 'none';
-      if (mobileTopbar) mobileTopbar.classList.remove('offline');
-      if (mobileText) mobileText.textContent = 'Online';
     } else {
-      if (sidebar) sidebar.className = 'sidebar-footer offline';
+      if (caixa) caixa.className = 'a11y-arduino offline';
       if (statusText) statusText.textContent = 'Offline';
       if (offlineHint) offlineHint.style.display = 'block';
-      if (mobileTopbar) mobileTopbar.classList.add('offline');
-      if (mobileText) mobileText.textContent = 'Offline';
     }
 }
 

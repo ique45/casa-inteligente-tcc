@@ -143,17 +143,67 @@ h1, h2, h3, .section-title { line-height: 1.3; }
 }
 .sidebar-item-danger:hover { background: var(--danger-weak); color: var(--text); }
 
-.sidebar-footer {
-  margin-top: 1rem; padding: 0.625rem 0.75rem;
-  background: var(--success-weak);
-  border: 1px solid var(--success);
-  border-radius: 8px;
+
+/* ─── BARRA DE ACESSIBILIDADE ────────────── */
+
+/* Fica no topo de todas as paginas, antes da sidebar, para ser a primeira
+   coisa que o teclado alcanca. As preferencias vivem em localStorage e sao
+   lidas por um script inline no <head> — ver js/a11y.js. */
+
+.skip-link {
+  position: absolute; left: -9999px;
+  background: var(--accent); color: var(--text-on-accent);
+  padding: 0.75rem 1rem; border-radius: var(--radius);
+  z-index: 300; font-weight: 700;
 }
-.sidebar-footer-label { color: var(--text); font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.5px; }
-.sidebar-footer-value { color: var(--text); font-size: var(--fs-sm); font-weight: 600; margin-top: 0.125rem; }
-.sidebar-footer.offline { background: var(--danger-weak); border-color: var(--danger); }
-.sidebar-footer.offline .sidebar-footer-label,
-.sidebar-footer.offline .sidebar-footer-value { color: var(--text); }
+.skip-link:focus { left: 0.5rem; top: 0.5rem; }
+
+.a11y-bar {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  padding: 0.5rem 1rem;
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  position: sticky; top: 0; z-index: 200;
+}
+
+.a11y-arduino {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: var(--fs-sm); font-weight: 700; color: var(--success);
+}
+.a11y-arduino.offline { color: var(--danger); }
+.a11y-arduino.loading { color: var(--text-muted); }
+
+.a11y-group { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
+.a11y-group-label { font-size: var(--fs-sm); font-weight: 700; color: var(--text); }
+
+/* Cada botao e desenhado no tamanho que aplica, entao os tres A crescem da
+   esquerda para a direita e se explicam sem legenda. */
+.a11y-size {
+  min-width: var(--tap-min); min-height: var(--tap-min);
+  border: 2px solid var(--border); border-radius: 0.5rem;
+  background: var(--surface-2); color: var(--text);
+  font-family: inherit; font-weight: 700; cursor: pointer;
+}
+.a11y-size[data-size="normal"] { font-size: var(--fs-sm); }
+.a11y-size[data-size="grande"] { font-size: var(--fs-lg); }
+.a11y-size[data-size="maior"]  { font-size: var(--fs-xl); }
+.a11y-size[aria-pressed="true"] {
+  background: var(--accent); color: var(--text-on-accent); border-color: var(--border-strong);
+}
+
+.a11y-theme {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  min-height: var(--tap-min); padding: 0 1rem;
+  border: 2px solid var(--border); border-radius: 0.5rem;
+  background: var(--surface-2); color: var(--text);
+  font-family: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer;
+}
+.a11y-theme:hover { border-color: var(--border-strong); }
+
+.a11y-bar button:focus-visible {
+  outline: 3px solid var(--focus-ring); outline-offset: 2px;
+}
 
 /* ─── MAIN CONTENT ───────────────────────── */
 
@@ -473,33 +523,9 @@ h1, h2, h3, .section-title { line-height: 1.3; }
   padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
-/* ─── MOBILE TOPBAR ──────────────────────── */
-
-.mobile-topbar { display: none; }
-
 /* ─── RESPONSIVE ─────────────────────────── */
 
 @media (max-width: 40em) {
-
-  /* Topbar (dashboard only) */
-  .mobile-topbar {
-    display: flex;
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 3rem;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    align-items: center;
-    padding: 0 1rem;
-    z-index: 200;
-    gap: 0.5rem;
-    font-size: var(--fs-sm);
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    color: var(--success);
-  }
-  .mobile-topbar.offline { color: var(--danger); }
-  .mobile-topbar.loading { color: var(--text-muted); }
 
   /* App layout */
   .app-layout { flex-direction: column; }
@@ -520,7 +546,6 @@ h1, h2, h3, .section-title { line-height: 1.3; }
   }
 
   .sidebar-logo { display: none; }
-  .sidebar-footer { display: none; }
   .sidebar-logo-text { display: none; }
 
   .sidebar-nav {
@@ -570,8 +595,7 @@ h1, h2, h3, .section-title { line-height: 1.3; }
   /* Page body — padding-bottom limpa a barra inferior */
   .page-body { padding: 1.25rem 1rem 4.5rem; }
 
-  /* Dashboard: padding-top extra para o topbar fixo */
-  body.has-mobile-topbar .page-body { padding-top: 3.75rem; }
+  .a11y-group { margin-left: 0; }
 
   /* Automation: header não quebra antes de precisar */
   .section-header { flex-wrap: wrap; gap: 0.625rem; }
