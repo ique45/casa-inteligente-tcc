@@ -219,9 +219,9 @@ h1, h2, h3, .section-title { line-height: 1.3; }
 
 .toggle-switch {
   position: relative; width: 3rem; height: 1.625rem;
-  background: var(--border); border-radius: 13px;
-  cursor: pointer; transition: background 0.2s;
-  border: 2px solid transparent; flex-shrink: 0;
+  background: var(--surface-2); border-radius: 13px;
+  cursor: pointer; transition: background 0.2s, border-color 0.2s;
+  border: 2px solid var(--border); flex-shrink: 0;
 }
 .toggle-switch.on { background: var(--accent); border-color: var(--border-strong); }
 .toggle-switch::after {
