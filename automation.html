@@ -67,7 +67,7 @@
             <div class="form-group" style="margin:0">
               <label class="form-label" for="input-name">
                 <span class="step-num">2</span> Nome
-                <span class="tooltip-icon" tabindex="0">ⓘ<span class="tooltip-text">Nome para identificar essa automação. Aparece no histórico. Ex: "Luz Cozinha".</span></span>
+                <button type="button" class="tooltip-icon" aria-expanded="false"><span aria-hidden="true">ⓘ</span><span class="visually-hidden">Ajuda</span><span class="tooltip-text">Nome para identificar essa automação. Aparece no histórico. Ex: "Luz Cozinha".</span></button>
               </label>
               <input type="text" id="input-name" class="form-input" placeholder="Ex: Luz Cozinha" maxlength="40"/>
             </div>
@@ -76,7 +76,7 @@
           <div class="form-step" id="step-trigger" style="display:none">
             <div class="step-label">
               <span class="step-num">3</span> Gatilho
-              <span class="tooltip-icon" tabindex="0">ⓘ<span class="tooltip-text">O que vai acionar essa automação: sua voz, um botão no site, sensor de presença, temperatura ou horário programado.</span></span>
+              <button type="button" class="tooltip-icon" aria-expanded="false"><span aria-hidden="true">ⓘ</span><span class="visually-hidden">Ajuda</span><span class="tooltip-text">O que vai acionar essa automação: sua voz, um botão no site, sensor de presença, temperatura ou horário programado.</span></button>
             </div>
             <div class="chip-group" id="trigger-chips"></div>
           </div>
@@ -85,7 +85,7 @@
             <div class="form-group" style="margin:0">
               <label class="form-label" for="input-voice">
                 <span class="step-num">4</span> Comando de voz
-                <span class="tooltip-icon" tabindex="0">ⓘ<span class="tooltip-text">A frase exata que você vai falar para ativar essa automação.</span></span>
+                <button type="button" class="tooltip-icon" aria-expanded="false"><span aria-hidden="true">ⓘ</span><span class="visually-hidden">Ajuda</span><span class="tooltip-text">A frase exata que você vai falar para ativar essa automação.</span></button>
               </label>
               <div class="chip-group" id="voice-suggestions" style="margin-bottom:0.625rem"></div>
               <input type="text" id="input-voice" class="form-input" placeholder="Ex: Ligar luz da sala" maxlength="60"/>

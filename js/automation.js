@@ -440,3 +440,26 @@ document.getElementById('btn-new-auto').addEventListener('click', () => {
 document.getElementById('btn-logout').addEventListener('click', () => {
   auth.signOut().then(() => window.location.href = 'login.html');
 });
+
+// ---- Tooltips ----
+// Abrem no clique e nao no hover: quem usa teclado consegue abrir, e quem
+// usa toque nao precisa passar o cursor por cima. Esc fecha e devolve o foco.
+
+document.addEventListener('click', (e) => {
+  const alvo = e.target.closest('.tooltip-icon');
+  document.querySelectorAll('.tooltip-icon[aria-expanded="true"]').forEach(t => {
+    if (t !== alvo) t.setAttribute('aria-expanded', 'false');
+  });
+  if (alvo) {
+    const aberto = alvo.getAttribute('aria-expanded') === 'true';
+    alvo.setAttribute('aria-expanded', aberto ? 'false' : 'true');
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  document.querySelectorAll('.tooltip-icon[aria-expanded="true"]').forEach(t => {
+    t.setAttribute('aria-expanded', 'false');
+    t.focus();
+  });
+});
