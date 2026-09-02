@@ -73,9 +73,9 @@ auth.onAuthStateChanged(user => {
 function renderDeviceChips() {
   const wrap = document.getElementById('device-chips');
   wrap.innerHTML = DEVICES.map(d => `
-    <div class="chip" data-id="${d.id}">
+    <button type="button" class="chip" data-id="${d.id}" aria-pressed="false">
       <span>${d.icon}</span> ${escapeHtml(d.name)}
-    </div>
+    </button>
   `).join('');
   wrap.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => selectDevice(c.dataset.id));
@@ -85,7 +85,9 @@ function renderDeviceChips() {
 function selectDevice(id) {
   form = { device: id, name: '', trigger: null, voiceCommand: '', action: null };
   document.querySelectorAll('#device-chips .chip').forEach(c => {
-    c.classList.toggle('selected', c.dataset.id === id);
+    const escolhido = c.dataset.id === id;
+    c.classList.toggle('selected', escolhido);
+    c.setAttribute('aria-pressed', String(escolhido));
   });
   document.getElementById('input-name').value = '';
   document.getElementById('step-name').style.display = 'block';
@@ -99,7 +101,8 @@ function renderTriggerChips() {
   const wrap = document.getElementById('trigger-chips');
   wrap.innerHTML = triggers.map(t => {
     const info = TRIGGER_INFO[t];
-    return `<div class="chip ${form.trigger === t ? 'selected' : ''}" data-id="${t}">${info.icon} ${escapeHtml(info.label)}</div>`;
+    const escolhido = form.trigger === t;
+    return `<button type="button" class="chip ${escolhido ? 'selected' : ''}" data-id="${t}" aria-pressed="${escolhido}">${info.icon} ${escapeHtml(info.label)}</button>`;
   }).join('');
   wrap.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => selectTrigger(c.dataset.id));
@@ -110,7 +113,9 @@ function selectTrigger(id) {
   form.trigger = id;
   form.voiceCommand = '';
   document.querySelectorAll('#trigger-chips .chip').forEach(c => {
-    c.classList.toggle('selected', c.dataset.id === id);
+    const escolhido = c.dataset.id === id;
+    c.classList.toggle('selected', escolhido);
+    c.setAttribute('aria-pressed', String(escolhido));
   });
 
   const TRIGGER_NOTES = {
@@ -148,7 +153,10 @@ function selectTrigger(id) {
     document.getElementById('step-action').style.display = 'none';
   } else {
     document.getElementById('step-action').style.display = 'block';
-    document.querySelectorAll('#action-chips .chip').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('#action-chips .chip').forEach(c => {
+      c.classList.remove('selected');
+      c.setAttribute('aria-pressed', 'false');
+    });
     form.action = null;
   }
   updatePreview();
@@ -158,7 +166,7 @@ function renderVoiceSuggestions() {
   const suggestions = VOICE_SUGGESTIONS[form.device] || [];
   const wrap = document.getElementById('voice-suggestions');
   wrap.innerHTML = suggestions.map(s =>
-    `<span class="suggestion-chip">${escapeHtml(s)}</span>`
+    `<button type="button" class="suggestion-chip">${escapeHtml(s)}</button>`
   ).join('');
   wrap.querySelectorAll('.suggestion-chip').forEach(chip => {
     chip.addEventListener('click', () => {
@@ -173,16 +181,20 @@ function renderActionChips() {
   const actions = getActions(form.device);
   const wrap = document.getElementById('action-chips');
   wrap.innerHTML = actions.map(a => `
-    <div class="chip chip-with-desc" data-id="${a.id}">
+    <button type="button" class="chip chip-with-desc" data-id="${a.id}" aria-pressed="false">
       <span class="chip-main">${a.icon} ${escapeHtml(a.label)}</span>
       <span class="chip-desc">${escapeHtml(a.desc)}</span>
-    </div>
+    </button>
   `).join('');
   wrap.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => {
       form.action = c.dataset.id;
-      document.querySelectorAll('#action-chips .chip').forEach(x => x.classList.remove('selected'));
+      document.querySelectorAll('#action-chips .chip').forEach(x => {
+        x.classList.remove('selected');
+        x.setAttribute('aria-pressed', 'false');
+      });
       c.classList.add('selected');
+      c.setAttribute('aria-pressed', 'true');
       updatePreview();
     });
   });
@@ -297,7 +309,10 @@ document.getElementById('btn-save-auto').addEventListener('click', async () => {
 
 function resetForm() {
   form = { device: null, name: '', trigger: null, voiceCommand: '', action: null };
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.chip').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-pressed', 'false');
+  });
   document.getElementById('input-name').value = '';
   document.getElementById('input-voice').value = '';
   document.getElementById('step-name').style.display = 'none';

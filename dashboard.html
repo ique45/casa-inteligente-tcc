@@ -36,7 +36,12 @@
     }
     .link-ver-mais {
       font-size: var(--fs-base); color: var(--accent-text); cursor: pointer; font-weight: 600;
+      /* alvo de toque de 44px: o texto tem 27px, o preenchimento completa o resto */
+      display: inline-flex; align-items: center; min-height: var(--tap-min);
+      padding: 0 0.5rem; border-radius: 8px; text-decoration: none;
     }
+    .link-ver-mais:hover { text-decoration: underline; }
+    .link-ver-mais:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
   </style>
 </head>
 <body class="has-mobile-topbar">
@@ -100,7 +105,7 @@
 
       <div class="section-header">
         <h2 class="section-title" style="margin:0">Ativações recentes</h2>
-        <a class="link-ver-mais" onclick="window.location.href='history.html'">Ver histórico completo →</a>
+        <a class="link-ver-mais" href="history.html">Ver histórico completo →</a>
       </div>
       <div class="history-list" id="history-list">
         <div class="empty-msg">Nenhuma ativação ainda.</div>
