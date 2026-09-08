@@ -9,6 +9,11 @@ let _rtdbStatusRef  = null;
 let _automationNamesUnsubscribe = null;
 let _historyUnsubscribe = null;
 
+// O primeiro snapshot do RTDB entrega o estado dos 4 dispositivos de uma vez
+// ao abrir a pagina. Sem esta trava, o app anunciaria os quatro em sequencia
+// a cada carregamento. So libera a fala depois de processar esse snapshot.
+let _falaLiberada = false;
+
 // Sem isto o status ficaria "Online" para sempre depois que o aparelho
 // parasse, porque quem para de sincronizar não avisa que parou — só some.
 //
@@ -126,6 +131,7 @@ function listenDeviceStates() {
       deviceStates[d.id] = isOn;
       updateDeviceUI(d.id, isOn);
     });
+    _falaLiberada = true;
   });
 }
 
@@ -144,6 +150,9 @@ function updateDeviceUI(deviceId, isOn) {
     }
     stateEl.textContent = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
   }
+  // Gancho unico: toda mudanca de estado confirmada pelo Firebase passa aqui,
+  // venha do botao, da voz ou do proprio ESP8266.
+  if (_falaLiberada) speech.falar(frasePara(deviceId, isOn));
 }
 
 function listenArduinoStatus() {
@@ -210,7 +219,10 @@ async function toggleDevice(deviceId) {
     await logHistory(deviceId, 'botao', newState);
   } catch (err) {
     console.error('Erro ao acionar dispositivo:', err);
-    if (!rtdbOk) updateDeviceUI(deviceId, prevState);
+    if (!rtdbOk) {
+      updateDeviceUI(deviceId, prevState);
+      speech.falar(`Não foi possível ${newState ? 'ligar' : 'desligar'} ${d ? d.name.toLowerCase() : 'o dispositivo'}`);
+    }
   } finally {
     if (btn) btn.disabled = false;
   }

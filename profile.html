@@ -77,6 +77,20 @@
         <div class="toggles-container" id="toggles-list"></div>
       </div>
 
+      <h3 class="section-title" style="font-size:var(--fs-lg);margin-bottom:0.75rem">Acessibilidade</h3>
+      <div class="toggles-container">
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">🔊 Confirmar ações em voz alta</div>
+            <div class="toggle-hint" id="fala-hint">O app fala o que aconteceu, ex.: "Luz ligada".</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <button type="button" class="btn btn-secondary" id="btn-testar-fala">Testar</button>
+            <button type="button" class="toggle-switch" id="toggle-fala" role="switch" aria-checked="false" aria-label="Confirmar ações em voz alta"></button>
+          </div>
+        </div>
+      </div>
+
       <p id="loading-msg" style="color:var(--text-muted);font-size:var(--fs-base);margin-bottom:0.5rem">Carregando suas configurações...</p>
       <p id="profile-hint" style="color:var(--text-muted);font-size:var(--fs-base);margin-bottom:0.5rem;display:none">Selecione pelo menos um perfil para continuar.</p>
       <p id="error-msg" class="error-msg" style="display:none"></p>
@@ -91,6 +105,7 @@
   <script src="js/a11y.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/devices.js"></script>
+  <script src="js/speech.js"></script>
   <script src="js/profile.js"></script>
 </body>
 </html>

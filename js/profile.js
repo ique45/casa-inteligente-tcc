@@ -176,3 +176,50 @@ document.getElementById('btn-dashboard').addEventListener('click', () => {
 document.getElementById('btn-logout').addEventListener('click', () => {
   auth.signOut().then(() => window.location.href = 'login.html');
 });
+
+// Confirmação falada — mora no localStorage como o tema e o tamanho do texto
+// (ci-theme, ci-textsize), não no Firestore: é ajuste de acessibilidade, não
+// de conta. Nasce desligada: som inesperado assusta, e o navegador bloqueia
+// fala antes da primeira interação do usuário.
+(function initFala() {
+  const toggleFala = document.getElementById('toggle-fala');
+  const btnTestar  = document.getElementById('btn-testar-fala');
+  const hint       = document.getElementById('fala-hint');
+  if (!toggleFala || !btnTestar) return;
+
+  function pintar() {
+    const on = localStorage.getItem('ci-fala') === 'on';
+    toggleFala.classList.toggle('on', on);
+    toggleFala.setAttribute('aria-checked', String(on));
+  }
+
+  function aplicarDisponibilidade() {
+    const ok = speech.disponivel();
+    toggleFala.disabled = !ok;
+    btnTestar.disabled  = !ok;
+    hint.textContent = ok
+      ? 'O app fala o que aconteceu, ex.: "Luz ligada".'
+      : 'Não disponível neste navegador (sem voz em português).';
+  }
+
+  toggleFala.addEventListener('click', () => {
+    if (toggleFala.disabled) return;
+    localStorage.setItem('ci-fala', localStorage.getItem('ci-fala') === 'on' ? 'off' : 'on');
+    pintar();
+  });
+
+  btnTestar.addEventListener('click', () => {
+    // Fala mesmo com o interruptor desligado, só para o usuário ouvir como é.
+    const anterior = localStorage.getItem('ci-fala');
+    localStorage.setItem('ci-fala', 'on');
+    speech.falar('Luz ligada');
+    localStorage.setItem('ci-fala', anterior || 'off');
+  });
+
+  pintar();
+  aplicarDisponibilidade();
+  // getVoices() volta vazio na 1ª chamada do Chrome; reavalia quando carregam.
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.addEventListener('voiceschanged', aplicarDisponibilidade);
+  }
+})();
