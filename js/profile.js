@@ -73,16 +73,19 @@ auth.onAuthStateChanged(async user => {
 
 function renderProfiles() {
   const list = document.getElementById('profiles-grid');
-  list.innerHTML = PROFILES.map(p => `
-    <div class="profile-card ${selectedProfiles.has(p.id) ? 'selected' : ''}" data-id="${p.id}">
+  list.innerHTML = PROFILES.map(p => {
+    const sel = selectedProfiles.has(p.id);
+    return `
+    <button type="button" class="profile-card ${sel ? 'selected' : ''}" data-id="${p.id}" aria-pressed="${sel}">
       <div class="profile-card-icon" aria-hidden="true">${p.icon}</div>
       <div class="profile-card-info">
         <div class="profile-card-name">${escapeHtml(p.name)}</div>
         <div class="profile-card-desc">${escapeHtml(p.desc)}</div>
       </div>
-      <div class="profile-radio ${selectedProfiles.has(p.id) ? 'selected' : ''}"></div>
-    </div>
-  `).join('');
+      <div class="profile-radio ${sel ? 'selected' : ''}" aria-hidden="true"></div>
+    </button>
+  `;
+  }).join('');
 
   list.querySelectorAll('.profile-card').forEach(card => {
     card.addEventListener('click', () => {

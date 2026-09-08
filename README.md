@@ -71,6 +71,17 @@ que simula um usuário autenticado com dados vazios, sem precisar de login
 real. Existe só para permitir testes visuais rápidos das telas; funciona
 apenas no servidor local (`server.js`) e não expõe nem lê nenhum dado real.
 
+### Verificação do front-end
+
+```bash
+node tools/check-contrast.js       # contraste dos dois temas (alvo 7:1 texto, 3:1 contorno)
+node --test tools/*.test.js         # testes das ferramentas (contraste + rótulos de fala)
+```
+
+O padrão `tools/*.test.js` é obrigatório: `node --test tools/` roda todo `.js` da
+pasta como teste, inclusive o próprio `check-contrast.js`, cujo bloco de CLI
+encerra com código 1.
+
 ### Backend
 
 O backend já está publicado e no ar:
@@ -195,6 +206,13 @@ regras.
   `docs/superpowers/specs/2026-05-29-firmware-esp8266-design.md`.
 - **Temperatura gravada, mas não exibida.** O backend persiste a leitura em
   `arduino_status/{uid}`, mas nenhuma tela do site lê ou mostra esse valor hoje.
+- **Acessibilidade não testada com usuários nem leitor de tela real.** O tema
+  claro de alto contraste, a escala de texto, a confirmação falada e os atributos
+  `aria-*` foram verificados no navegador (contraste calculado, navegação por
+  teclado, refluxo até 320 px), mas não houve teste com NVDA/VoiceOver nem com
+  pessoa do público-alvo. São boa prática aplicada com cuidado, não comportamento
+  medido. A confirmação falada depende de existir voz **pt-BR** instalada no
+  navegador; sem ela o recurso aparece desabilitado no perfil.
 - **Relé do alarme movido do D8 para o D4.** O GPIO15 (D8) precisa estar em LOW no
   boot do ESP8266, e os pinos IN dos módulos de relé são puxados para cima por
   resistor — com o módulo ligado, a placa não iniciaria. O GPIO2 (D4) tem a regra
