@@ -20,8 +20,12 @@ auth.onAuthStateChanged(user => {
 document.querySelectorAll('.filter-chip').forEach(chip => {
   chip.addEventListener('click', () => {
     const filter = chip.dataset.filter;
-    document.querySelectorAll(`.filter-chip[data-filter="${filter}"]`).forEach(c => c.classList.remove('active'));
+    document.querySelectorAll(`.filter-chip[data-filter="${filter}"]`).forEach(c => {
+      c.classList.remove('active');
+      c.setAttribute('aria-pressed', 'false');
+    });
     chip.classList.add('active');
+    chip.setAttribute('aria-pressed', 'true');
     activeFilters[filter] = chip.dataset.value;
     loadHistory(true);
   });
@@ -128,7 +132,7 @@ async function loadHistory(reset, _depth = 0) {
       table.insertAdjacentHTML('beforeend', `
         <div class="history-card">
           <div class="history-card-header">
-            <span class="history-card-icon">${deviceIcon}</span>
+            <span class="history-card-icon" aria-hidden="true">${deviceIcon}</span>
             <div class="history-card-name">${escapeHtml(d.device)}</div>
             <div class="history-card-time">${ts}</div>
             <span class="badge ${stateClass}">${label}</span>

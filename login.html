@@ -4,63 +4,89 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Casa Inteligente — Login</title>
+  <script>
+    /* Le a preferencia antes do CSS carregar, para a tela nao piscar no tema
+       errado. Curto de proposito: um arquivo externo reintroduziria o piscar. */
+    (function () {
+      var t = localStorage.getItem('ci-theme');
+      var s = localStorage.getItem('ci-textsize');
+      if (t === 'escuro') document.documentElement.setAttribute('data-theme', 'dark');
+      if (s && s !== 'normal') document.documentElement.setAttribute('data-textsize', s);
+    })();
+  </script>
   <link rel="stylesheet" href="css/app.css"/>
   <style>
     .login-container {
       display: flex; align-items: center; justify-content: center;
-      min-height: 100vh; padding: 24px;
+      min-height: 100vh; padding: 1.5rem;
     }
     .login-card {
-      width: 100%; max-width: 380px;
+      width: 100%; max-width: 23.75rem;
     }
     .login-logo {
-      text-align: center; margin-bottom: 32px;
+      text-align: center; margin-bottom: 2rem;
     }
     .login-logo-icon {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 56px; height: 56px;
-      background: rgba(124,58,237,0.2); border: 2px solid var(--purple);
-      border-radius: 16px; font-size: 28px; margin-bottom: 12px;
+      width: 3.5rem; height: 3.5rem;
+      background: var(--accent-weak); border: 2px solid var(--accent);
+      border-radius: 16px; font-size: var(--fs-2xl); margin-bottom: 0.75rem;
     }
     .login-logo-title {
-      display: block; font-size: 20px; font-weight: 800;
-      letter-spacing: 0.5px; color: #fff;
+      display: block; font-size: var(--fs-lg); font-weight: 800;
+      letter-spacing: 0.5px; color: var(--text);
     }
     .login-logo-sub {
-      display: block; font-size: 13px; color: var(--text-muted); margin-top: 4px;
+      display: block; font-size: var(--fs-base); color: var(--text-muted); margin-top: 0.25rem;
     }
     .login-box {
-      background: var(--bg-card); border: 2px solid var(--border);
-      border-radius: 14px; padding: 28px 24px;
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: 14px; padding: 1.75rem 1.5rem;
     }
     .divider {
-      display: flex; align-items: center; gap: 12px;
-      margin: 20px 0; color: var(--text-muted); font-size: 12px;
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 1.25rem 0; color: var(--text-muted); font-size: var(--fs-sm);
     }
     .divider::before, .divider::after {
       content: ''; flex: 1; height: 1px; background: var(--border);
     }
     .btn-google {
-      width: 100%; padding: 13px; background: #fff; color: #333;
-      border-radius: 10px; border: none; font-size: 14px; font-weight: 600;
+      width: 100%; padding: 0.8125rem; background: var(--surface); color: var(--text);
+      border-radius: 10px; border: 2px solid var(--border); font-size: var(--fs-base); font-weight: 600;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
-      gap: 8px; font-family: inherit;
+      gap: 0.5rem; font-family: inherit;
     }
-    .btn-google:hover { background: #f1f1f1; }
+    .btn-google:hover { background: var(--surface-2); }
     .toggle-mode {
-      text-align: center; margin-top: 20px;
-      font-size: 13px; color: var(--text-muted);
+      text-align: center; margin-top: 1.25rem;
+      font-size: var(--fs-base); color: var(--text-muted);
     }
-    .toggle-mode a { color: var(--purple-light); cursor: pointer; font-weight: 700; text-decoration: underline; }
-    #btn-submit { width: 100%; margin-top: 4px; }
+    .toggle-mode a { color: var(--accent-text); cursor: pointer; font-weight: 700; text-decoration: underline; }
+    #btn-submit { width: 100%; margin-top: 0.25rem; }
   </style>
 </head>
 <body>
-  <div class="login-container">
+  <a class="skip-link" href="#conteudo">Pular para o conte&uacute;do</a>
+
+  <div class="a11y-bar">
+    <div class="a11y-group" role="group" aria-label="Tamanho do texto">
+      <span class="a11y-group-label">Tamanho do texto:</span>
+      <button type="button" class="a11y-size" data-size="normal" aria-pressed="true" title="Texto normal">A</button>
+      <button type="button" class="a11y-size" data-size="grande" aria-pressed="false" title="Texto grande">A</button>
+      <button type="button" class="a11y-size" data-size="maior" aria-pressed="false" title="Texto muito grande">A</button>
+    </div>
+
+    <button type="button" class="a11y-theme" id="btn-theme">
+      <span aria-hidden="true">&#127769;</span> <span id="btn-theme-label">Tema escuro</span>
+    </button>
+
+    <span id="a11y-live" class="visually-hidden" aria-live="polite"></span>
+  </div>
+  <main class="login-container" id="conteudo">
     <div class="login-card">
       <div class="login-logo">
-        <div class="login-logo-icon">🏠</div>
-        <span class="login-logo-title">Casa Inteligente</span>
+        <div class="login-logo-icon" aria-hidden="true">🏠</div>
+        <h1 class="login-logo-title">Casa Inteligente</h1>
         <span class="login-logo-sub">Automação para acessibilidade</span>
       </div>
 
@@ -96,12 +122,13 @@
         </div>
       </div>
     </div>
-  </div>
+  </main>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="js/a11y.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
 </body>

@@ -22,36 +22,115 @@ const PREVIEW_SCRIPT = `
 <script>
 (function() {
   var fakeUser = { uid: 'preview-uid', email: 'preview@teste.com', displayName: 'Preview' };
-  var fakeSnap = { exists: true, data: () => ({ name: 'Preview', activeProfiles: [], activeToggles: {} }), forEach: function(){} };
-  var fakeDoc  = { get: () => Promise.resolve(fakeSnap), set: () => Promise.resolve(), update: () => Promise.resolve(), onSnapshot: (cb) => { cb(fakeSnap); return () => {}; } };
-  var fakeCol  = { doc: () => fakeDoc, add: () => Promise.resolve({ id: 'fake-id' }), where: function(){ return this; }, orderBy: function(){ return this; }, limit: function(){ return this; }, get: () => Promise.resolve({ forEach: function(){}, docs: [] }), onSnapshot: (cb) => { cb({ forEach: function(){}, docs: [] }); return () => {}; } };
-  var fakeRtdbRef = { on: function(ev, cb){ if(ev==='value') cb({ val: () => ({}) }); }, off: function(){}, set: () => Promise.resolve() };
+
+  // --- Dados de exemplo (só existem no modo preview) ---------------------
+  var now = Date.now();
+  var ts = function(ms) { return { toMillis: function(){ return ms; }, toDate: function(){ return new Date(ms); } }; };
+  var SEED = {
+    // db.collection('users').doc(uid).get()
+    users: [{ id: 'preview-uid', data: {
+      name: 'Dona Maria',
+      activeProfiles: ['idoso'],
+      activeToggles: { voz: true, botao: true, presenca: true, horario: false, temperatura: false }
+    } }],
+    // db.collection('users').doc(uid).collection('history')
+    history: [
+      { id: 'h1', data: { device: 'Luz da sala', deviceId: 'luz',        trigger: 'botao',       state: true,  timestamp: ts(now - 12 * 60 * 1000) } },
+      { id: 'h2', data: { device: 'Ventilador',   deviceId: 'ventilador', trigger: 'temperatura', state: true,  timestamp: ts(now - 55 * 60 * 1000) } },
+      { id: 'h3', data: { device: 'Portão',       deviceId: 'portao',     trigger: 'voz',         state: false, timestamp: ts(now - 3 * 60 * 60 * 1000) } },
+      { id: 'h4', data: { device: 'Alarme',       deviceId: 'alarme',     trigger: 'presenca',    state: true,  timestamp: ts(now - 26 * 60 * 60 * 1000) } },
+      { id: 'h5', data: { device: 'Luz da sala',  deviceId: 'luz',        trigger: 'botao',       state: false, timestamp: ts(now - 28 * 60 * 60 * 1000) } }
+    ],
+    // db.collection('automations').doc(uid).collection('items')
+    items: [
+      { id: 'a1', data: { deviceType: 'luz',        deviceName: 'Luz da sala',       trigger: 'presenca', action: 'on',     enabled: true,  voiceCommand: '', createdAt: ts(now - 4 * 86400000) } },
+      { id: 'a2', data: { deviceType: 'ventilador', deviceName: 'Ventilador',        trigger: 'botao',    action: 'toggle', enabled: true,  voiceCommand: '', createdAt: ts(now - 2 * 86400000) } },
+      { id: 'a3', data: { deviceType: 'alarme',     deviceName: 'Alarme da entrada', trigger: 'horario',  action: 'on',     enabled: false, voiceCommand: '', createdAt: ts(now - 1 * 86400000) } }
+    ]
+  };
+  var RTDB_SEED = {
+    devices: { luz: { state: true }, ventilador: { state: true }, portao: { state: false }, alarme: { state: false } },
+    arduino_status: { online: true, lastSeen: now, temperature: 24 }
+  };
+
+  // --- Firestore falso, encadeável -------------------------------------
+  function snapList(docs) {
+    var wrapped = (docs || []).map(function(d) { return { id: d.id, exists: true, data: function(){ return d.data; } }; });
+    return { empty: wrapped.length === 0, size: wrapped.length, docs: wrapped, forEach: function(fn){ wrapped.forEach(fn); } };
+  }
+  function fakeQuery(name) {
+    var q = {
+      where: function(){ return q; }, orderBy: function(){ return q; },
+      limit: function(){ return q; }, startAfter: function(){ return q; },
+      get: function(){ return Promise.resolve(snapList(SEED[name])); },
+      onSnapshot: function(cb){ cb(snapList(SEED[name])); return function(){}; },
+      add: function(){ return Promise.resolve({ id: 'novo-' + Date.now() }); },
+      doc: function(){ return fakeDoc(name); }
+    };
+    return q;
+  }
+  function fakeDoc(name) {
+    var first = (SEED[name] && SEED[name][0]) ? SEED[name][0].data : {};
+    return {
+      get: function(){ return Promise.resolve({ exists: true, data: function(){ return first; } }); },
+      set: function(){ return Promise.resolve(); },
+      update: function(){ return Promise.resolve(); },
+      delete: function(){ return Promise.resolve(); },
+      onSnapshot: function(cb){ cb({ exists: true, data: function(){ return first; } }); return function(){}; },
+      collection: function(sub){ return fakeQuery(sub); }
+    };
+  }
   window.__previewMode = true;
   window.__fakeFirebaseAuth = {
     onAuthStateChanged: function(cb) { setTimeout(() => cb(fakeUser), 0); return () => {}; },
     signInWithEmailAndPassword: () => Promise.resolve({ user: fakeUser }),
+    signInWithPopup: () => Promise.resolve({ user: fakeUser }),
+    createUserWithEmailAndPassword: () => Promise.resolve({ user: fakeUser }),
     signOut: () => Promise.resolve()
   };
-  window.__fakeFirebaseDb   = { collection: () => fakeCol };
-  window.__fakeFirebaseRtdb = { ref: () => fakeRtdbRef };
-  // Substitui firebase.auth/firestore/database antes de firebase-config.js rodar
-  var _origInit;
+  window.__fakeFirebaseDb = { collection: function(name){ return fakeQuery(name); } };
+  window.__fakeFirebaseRtdb = { ref: function(path){
+    var key = String(path).split('/')[0];
+    return {
+      on: function(ev, cb){ if (ev === 'value') cb({ val: function(){ return RTDB_SEED[key] || {}; } }); return cb; },
+      off: function(){},
+      set: () => Promise.resolve()
+    };
+  } };
+  // Substitui firebase.auth/firestore/database por mocks. O wrapping acontece no
+  // getter, não no setter: firebase-app-compat.js atribui window.firebase antes de
+  // auth/firestore/database-compat.js adicionarem seus métodos, então no momento do
+  // set só .auth (ou nem isso) existe. O getter re-tenta a cada acesso até os três
+  // estarem presentes, o que ocorre bem antes de dashboard.js rodar.
   Object.defineProperty(window, 'firebase', {
     configurable: true,
-    get: function() { return window.__realFirebase; },
-    set: function(v) {
-      window.__realFirebase = v;
-      var origAuth = v.auth.bind(v);
-      v.auth = function() {
-        var a = origAuth();
-        Object.assign(a, window.__fakeFirebaseAuth);
-        return a;
-      };
-      var origFirestore = v.firestore ? v.firestore.bind(v) : null;
-      if (origFirestore) v.firestore = function() { return window.__fakeFirebaseDb; };
-      var origDatabase = v.database ? v.database.bind(v) : null;
-      if (origDatabase) v.database = function() { return window.__fakeFirebaseRtdb; };
-    }
+    get: function() {
+      var real = window.__realFirebase;
+      if (!real || real.__previewDone) return real;
+      var done = true;
+      if (real.auth && !real.auth.__pw) {
+        var origAuth = real.auth.bind(real);
+        real.auth = function() {
+          var a = origAuth();
+          Object.assign(a, window.__fakeFirebaseAuth);
+          return a;
+        };
+        real.auth.__pw = true;
+      } else if (!real.auth) { done = false; }
+      if (real.firestore && !real.firestore.__pw) {
+        var fs = function() { return window.__fakeFirebaseDb; };
+        Object.assign(fs, real.firestore); // preserva FieldValue, Timestamp
+        fs.__pw = true;
+        real.firestore = fs;
+      } else if (!real.firestore) { done = false; }
+      if (real.database && !real.database.__pw) {
+        real.database = function() { return window.__fakeFirebaseRtdb; };
+        real.database.__pw = true;
+      } else if (!real.database) { done = false; }
+      if (done) real.__previewDone = true;
+      return real;
+    },
+    set: function(v) { window.__realFirebase = v; }
   });
 })();
 </script>`;

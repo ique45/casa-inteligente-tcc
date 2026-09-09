@@ -4,61 +4,87 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Casa Inteligente — Histórico</title>
+  <script>
+    /* Le a preferencia antes do CSS carregar, para a tela nao piscar no tema
+       errado. Curto de proposito: um arquivo externo reintroduziria o piscar. */
+    (function () {
+      var t = localStorage.getItem('ci-theme');
+      var s = localStorage.getItem('ci-textsize');
+      if (t === 'escuro') document.documentElement.setAttribute('data-theme', 'dark');
+      if (s && s !== 'normal') document.documentElement.setAttribute('data-textsize', s);
+    })();
+  </script>
   <link rel="stylesheet" href="css/app.css"/>
   <style>
-    .filters { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-    .filter-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .filter-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); min-width: 80px; text-transform: uppercase; }
-    .history-table { display: flex; flex-direction: column; gap: 8px; }
-    .btn-load-more { width: 100%; margin-top: 12px; }
+    .filters { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 1.5rem; }
+    .filter-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .filter-label { font-size: var(--fs-sm); font-weight: 700; letter-spacing: 1px; color: var(--text-muted); min-width: 5rem; text-transform: uppercase; }
+    .history-table { display: flex; flex-direction: column; gap: 0.5rem; }
+    .btn-load-more { width: 100%; margin-top: 0.75rem; }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#conteudo">Pular para o conte&uacute;do</a>
+
+  <div class="a11y-bar">
+    <div class="a11y-group" role="group" aria-label="Tamanho do texto">
+      <span class="a11y-group-label">Tamanho do texto:</span>
+      <button type="button" class="a11y-size" data-size="normal" aria-pressed="true" title="Texto normal">A</button>
+      <button type="button" class="a11y-size" data-size="grande" aria-pressed="false" title="Texto grande">A</button>
+      <button type="button" class="a11y-size" data-size="maior" aria-pressed="false" title="Texto muito grande">A</button>
+    </div>
+
+    <button type="button" class="a11y-theme" id="btn-theme">
+      <span aria-hidden="true">&#127769;</span> <span id="btn-theme-label">Tema escuro</span>
+    </button>
+
+    <span id="a11y-live" class="visually-hidden" aria-live="polite"></span>
+  </div>
   <div class="app-layout">
     <nav class="sidebar">
       <div class="sidebar-logo">
-        <div class="sidebar-logo-dot"></div>
+        <div class="sidebar-logo-dot" aria-hidden="true"></div>
         <span class="sidebar-logo-text">CASA<br>INTELIGENTE</span>
       </div>
       <div class="sidebar-nav">
         <a href="dashboard.html" class="sidebar-item" id="btn-dashboard">
-          <span class="sidebar-item-icon">🏠</span><span>Dashboard</span>
+          <span class="sidebar-item-icon" aria-hidden="true">🏠</span><span>Dashboard</span>
         </a>
         <a href="automation.html" class="sidebar-item" id="btn-automations">
-          <span class="sidebar-item-icon">⚡</span><span>Automações</span>
+          <span class="sidebar-item-icon" aria-hidden="true">⚡</span><span>Automações</span>
         </a>
         <a href="history.html" class="sidebar-item active" id="btn-history-page">
-          <span class="sidebar-item-icon">📋</span><span>Histórico</span>
+          <span class="sidebar-item-icon" aria-hidden="true">📋</span><span>Histórico</span>
         </a>
         <a href="profile.html" class="sidebar-item" id="btn-profile">
-          <span class="sidebar-item-icon">👤</span><span>Perfil</span>
+          <span class="sidebar-item-icon" aria-hidden="true">👤</span><span>Perfil</span>
         </a>
         <button class="sidebar-item sidebar-item-danger" id="btn-logout">
-          <span class="sidebar-item-icon">🚪</span><span>Sair</span>
+          <span class="sidebar-item-icon" aria-hidden="true">🚪</span><span>Sair</span>
         </button>
       </div>
     </nav>
 
-    <div class="page-body">
-      <h2 class="section-title">Histórico de ativações</h2>
+    <main class="page-body" id="conteudo">
+      <h1 class="section-title">Histórico de ativações</h1>
       <p class="section-subtitle">Tudo que aconteceu nos seus dispositivos</p>
 
       <div class="filters">
         <div class="filter-row">
           <span class="filter-label">Gatilho</span>
-          <span class="filter-chip active" data-filter="trigger" data-value="todos">Todos</span>
-          <span class="filter-chip" data-filter="trigger" data-value="voz">🎤 Voz</span>
-          <span class="filter-chip" data-filter="trigger" data-value="botao">🔘 Botão</span>
-          <span class="filter-chip" data-filter="trigger" data-value="presenca">👁️ Presença</span>
-          <span class="filter-chip" data-filter="trigger" data-value="horario">⏰ Horário</span>
-          <span class="filter-chip" data-filter="trigger" data-value="temperatura">🌡️ Temperatura</span>
+          <button type="button" class="filter-chip active" data-filter="trigger" data-value="todos" aria-pressed="true">Todos</button>
+          <button type="button" class="filter-chip" data-filter="trigger" data-value="voz" aria-pressed="false">🎤 Voz</button>
+          <button type="button" class="filter-chip" data-filter="trigger" data-value="botao" aria-pressed="false">🔘 Botão</button>
+          <button type="button" class="filter-chip" data-filter="trigger" data-value="presenca" aria-pressed="false">👁️ Presença</button>
+          <button type="button" class="filter-chip" data-filter="trigger" data-value="horario" aria-pressed="false">⏰ Horário</button>
+          <button type="button" class="filter-chip" data-filter="trigger" data-value="temperatura" aria-pressed="false">🌡️ Temperatura</button>
         </div>
         <div class="filter-row">
           <span class="filter-label">Período</span>
-          <span class="filter-chip active" data-filter="period" data-value="todos">Todos os dias</span>
-          <span class="filter-chip" data-filter="period" data-value="hoje">Hoje</span>
-          <span class="filter-chip" data-filter="period" data-value="7dias">7 dias</span>
-          <span class="filter-chip" data-filter="period" data-value="30dias">30 dias</span>
+          <button type="button" class="filter-chip active" data-filter="period" data-value="todos" aria-pressed="true">Todos os dias</button>
+          <button type="button" class="filter-chip" data-filter="period" data-value="hoje" aria-pressed="false">Hoje</button>
+          <button type="button" class="filter-chip" data-filter="period" data-value="7dias" aria-pressed="false">7 dias</button>
+          <button type="button" class="filter-chip" data-filter="period" data-value="30dias" aria-pressed="false">30 dias</button>
         </div>
       </div>
 
@@ -69,13 +95,14 @@
       <button class="btn btn-secondary btn-load-more" id="btn-load-more" style="display:none">
         Carregar mais registros
       </button>
-    </div>
+    </main>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="js/a11y.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/devices.js"></script>
   <script src="js/history.js"></script>

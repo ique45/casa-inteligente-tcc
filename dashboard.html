@@ -4,78 +4,105 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Casa Inteligente — Dashboard</title>
+  <script>
+    /* Le a preferencia antes do CSS carregar, para a tela nao piscar no tema
+       errado. Curto de proposito: um arquivo externo reintroduziria o piscar. */
+    (function () {
+      var t = localStorage.getItem('ci-theme');
+      var s = localStorage.getItem('ci-textsize');
+      if (t === 'escuro') document.documentElement.setAttribute('data-theme', 'dark');
+      if (s && s !== 'normal') document.documentElement.setAttribute('data-textsize', s);
+    })();
+  </script>
   <link rel="stylesheet" href="css/app.css"/>
   <style>
-    .devices-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+    .devices-list { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 2rem; }
     .voice-btn {
-      display: flex; align-items: center; gap: 14px;
-      padding: 16px 20px; background: rgba(255,255,255,0.04);
+      display: flex; align-items: center; gap: 0.875rem;
+      padding: 1rem 1.25rem; background: var(--surface-2);
       border: 2px solid var(--border); border-radius: var(--radius);
       cursor: pointer; transition: all 0.2s; width: 100%;
       font-family: inherit; color: var(--text); text-align: left;
-      margin-bottom: 8px;
+      margin-bottom: 0.5rem;
     }
-    .voice-btn.listening { border-color: var(--purple); background: var(--purple-glow); }
+    .voice-btn.listening { border-color: var(--accent); background: var(--accent-weak); }
     .voice-btn-icon {
-      width: 42px; height: 42px; flex-shrink: 0;
-      background: rgba(124,58,237,0.3); border: 2px solid var(--purple);
-      border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;
+      width: 2.625rem; height: 2.625rem; flex-shrink: 0;
+      background: var(--accent-weak); border: 2px solid var(--accent);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--fs-xl);
     }
-    .voice-btn-title { font-size: 15px; font-weight: 700; }
-    .voice-btn-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-    .mic-status { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; display: block; }
-    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .voice-btn-title { font-size: var(--fs-lg); font-weight: 700; }
+    .voice-btn-sub { font-size: var(--fs-sm); color: var(--text-muted); margin-top: 0.125rem; }
+    .mic-status { font-size: var(--fs-base); color: var(--text-muted); margin-bottom: 1.75rem; display: block; }
+    .history-list { display: flex; flex-direction: column; gap: 0.5rem; }
     .offline-hint {
-      display: none; font-size: 13px; color: var(--purple-light);
-      margin-bottom: 12px; padding: 10px 14px;
-      background: var(--purple-glow); border-radius: 8px;
-      border-left: 3px solid var(--purple);
+      display: none; font-size: var(--fs-base); color: var(--text);
+      margin-bottom: 0.75rem; padding: 0.625rem 0.875rem;
+      background: var(--accent-weak); border-radius: 8px;
+      border-left: 3px solid var(--accent);
     }
     .section-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;
     }
     .link-ver-mais {
-      font-size: 13px; color: var(--purple-light); cursor: pointer; font-weight: 600;
+      font-size: var(--fs-base); color: var(--accent-text); cursor: pointer; font-weight: 600;
+      /* alvo de toque de 44px: o texto tem 27px, o preenchimento completa o resto */
+      display: inline-flex; align-items: center; min-height: var(--tap-min);
+      padding: 0 0.5rem; border-radius: 8px; text-decoration: none;
     }
+    .link-ver-mais:hover { text-decoration: underline; }
+    .link-ver-mais:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
   </style>
 </head>
-<body class="has-mobile-topbar">
-  <div class="mobile-topbar loading" id="mobile-topbar">
-    <span>●</span>
-    <span>ARDUINO</span>
-    <span id="mobile-arduino-text">Verificando...</span>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conte&uacute;do</a>
+
+  <div class="a11y-bar">
+    <div class="a11y-arduino loading" id="arduino-status">
+      <span aria-hidden="true">&#9679;</span>
+      <span>Arduino</span>
+      <span id="arduino-status-text">Verificando...</span>
+    </div>
+    <div class="a11y-group" role="group" aria-label="Tamanho do texto">
+      <span class="a11y-group-label">Tamanho do texto:</span>
+      <button type="button" class="a11y-size" data-size="normal" aria-pressed="true" title="Texto normal">A</button>
+      <button type="button" class="a11y-size" data-size="grande" aria-pressed="false" title="Texto grande">A</button>
+      <button type="button" class="a11y-size" data-size="maior" aria-pressed="false" title="Texto muito grande">A</button>
+    </div>
+
+    <button type="button" class="a11y-theme" id="btn-theme">
+      <span aria-hidden="true">&#127769;</span> <span id="btn-theme-label">Tema escuro</span>
+    </button>
+
+    <span id="a11y-live" class="visually-hidden" aria-live="polite"></span>
   </div>
   <div class="app-layout">
     <nav class="sidebar">
       <div class="sidebar-logo">
-        <div class="sidebar-logo-dot"></div>
+        <div class="sidebar-logo-dot" aria-hidden="true"></div>
         <span class="sidebar-logo-text">CASA<br>INTELIGENTE</span>
       </div>
       <div class="sidebar-nav">
         <a href="dashboard.html" class="sidebar-item active" id="btn-dashboard">
-          <span class="sidebar-item-icon">🏠</span><span>Dashboard</span>
+          <span class="sidebar-item-icon" aria-hidden="true">🏠</span><span>Dashboard</span>
         </a>
         <a href="automation.html" class="sidebar-item" id="btn-automations">
-          <span class="sidebar-item-icon">⚡</span><span>Automações</span>
+          <span class="sidebar-item-icon" aria-hidden="true">⚡</span><span>Automações</span>
         </a>
         <a href="history.html" class="sidebar-item" id="btn-history-page">
-          <span class="sidebar-item-icon">📋</span><span>Histórico</span>
+          <span class="sidebar-item-icon" aria-hidden="true">📋</span><span>Histórico</span>
         </a>
         <a href="profile.html" class="sidebar-item" id="btn-profile">
-          <span class="sidebar-item-icon">👤</span><span>Perfil</span>
+          <span class="sidebar-item-icon" aria-hidden="true">👤</span><span>Perfil</span>
         </a>
         <button class="sidebar-item sidebar-item-danger" id="btn-logout">
-          <span class="sidebar-item-icon">🚪</span><span>Sair</span>
+          <span class="sidebar-item-icon" aria-hidden="true">🚪</span><span>Sair</span>
         </button>
-      </div>
-      <div class="sidebar-footer" id="arduino-sidebar">
-        <div class="sidebar-footer-label">● ARDUINO</div>
-        <div class="sidebar-footer-value" id="arduino-status-text">Verificando...</div>
       </div>
     </nav>
 
-    <div class="page-body">
-      <h2 class="section-title">Seus dispositivos</h2>
+    <main class="page-body" id="conteudo">
+      <h1 class="section-title">Seus dispositivos</h1>
       <p class="section-subtitle">Toque para ligar ou desligar</p>
 
       <p class="offline-hint" id="offline-hint">
@@ -89,7 +116,7 @@
       <div id="voice-section" style="display:none">
         <h2 class="section-title">Controle por voz</h2>
         <button class="voice-btn" id="btn-mic">
-          <div class="voice-btn-icon">🎤</div>
+          <div class="voice-btn-icon" aria-hidden="true">🎤</div>
           <div>
             <div class="voice-btn-title">Ativar microfone</div>
             <div class="voice-btn-sub">Clique e fale um comando</div>
@@ -100,21 +127,23 @@
 
       <div class="section-header">
         <h2 class="section-title" style="margin:0">Ativações recentes</h2>
-        <a class="link-ver-mais" onclick="window.location.href='history.html'">Ver histórico completo →</a>
+        <a class="link-ver-mais" href="history.html">Ver histórico completo →</a>
       </div>
       <div class="history-list" id="history-list">
         <div class="empty-msg">Nenhuma ativação ainda.</div>
       </div>
-    </div>
+    </main>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="js/a11y.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/devices.js"></script>
   <script src="js/voice.js"></script>
+  <script src="js/speech.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>

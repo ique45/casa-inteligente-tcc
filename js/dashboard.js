@@ -9,6 +9,11 @@ let _rtdbStatusRef  = null;
 let _automationNamesUnsubscribe = null;
 let _historyUnsubscribe = null;
 
+// O primeiro snapshot do RTDB entrega o estado dos 4 dispositivos de uma vez
+// ao abrir a pagina. Sem esta trava, o app anunciaria os quatro em sequencia
+// a cada carregamento. So libera a fala depois de processar esse snapshot.
+let _falaLiberada = false;
+
 // Sem isto o status ficaria "Online" para sempre depois que o aparelho
 // parasse, porque quem para de sincronizar não avisa que parou — só some.
 //
@@ -90,8 +95,8 @@ function renderDevices() {
     const statusLabel = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
     if (auto) {
       return `
-        <button class="device-card${isOn ? ' on' : ''}" id="btn-${d.id}" data-id="${d.id}">
-          <span class="device-card-icon">${d.icon}</span>
+        <button class="device-card${isOn ? ' on' : ''}" id="btn-${d.id}" data-id="${d.id}" aria-pressed="${isOn ? 'true' : 'false'}">
+          <span class="device-card-icon" aria-hidden="true">${d.icon}</span>
           <div class="device-card-info">
             <div class="device-card-name">${escapeHtml(d.name)}</div>
             <div class="device-card-status" id="state-${d.id}">${statusLabel}</div>
@@ -103,7 +108,7 @@ function renderDevices() {
     }
     return `
       <div class="device-card device-card--readonly" id="btn-${d.id}">
-        <span class="device-card-icon">${d.icon}</span>
+        <span class="device-card-icon" aria-hidden="true">${d.icon}</span>
         <div class="device-card-info">
           <div class="device-card-name">${escapeHtml(d.name)}</div>
           <div class="device-card-status" id="state-${d.id}">${statusLabel}</div>
@@ -126,6 +131,7 @@ function listenDeviceStates() {
       deviceStates[d.id] = isOn;
       updateDeviceUI(d.id, isOn);
     });
+    _falaLiberada = true;
   });
 }
 
@@ -138,10 +144,15 @@ function updateDeviceUI(deviceId, isOn) {
   if (!btn.disabled) {
     if (btn.tagName === 'BUTTON') {
       btn.classList.toggle('on', isOn);
+      // O leitor de tela le o estado por aqui; a classe .on so pinta.
+      btn.setAttribute('aria-pressed', String(isOn));
       if (toggleEl) toggleEl.classList.toggle('on', isOn);
     }
     stateEl.textContent = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
   }
+  // Gancho unico: toda mudanca de estado confirmada pelo Firebase passa aqui,
+  // venha do botao, da voz ou do proprio ESP8266.
+  if (_falaLiberada) speech.falar(frasePara(deviceId, isOn));
 }
 
 function listenArduinoStatus() {
@@ -160,12 +171,11 @@ function listenArduinoStatus() {
 
 function renderArduinoStatus() {
     const data = _arduinoStatus || {};
-    const sidebar = document.getElementById('arduino-sidebar');
+    // O status vive na barra de acessibilidade desde a Task 4; antes havia
+    // uma copia no rodape da sidebar e outra na topbar do celular.
+    const caixa = document.getElementById('arduino-status');
     const statusText = document.getElementById('arduino-status-text');
     const offlineHint = document.getElementById('offline-hint');
-    const mobileTopbar = document.getElementById('mobile-topbar');
-    const mobileText = document.getElementById('mobile-arduino-text');
-    if (mobileTopbar) mobileTopbar.classList.remove('loading');
 
     // Idade negativa acontece se o relógio do computador estiver atrasado
     // em relação ao servidor; nesse caso tratamos como contato recente.
@@ -173,17 +183,13 @@ function renderArduinoStatus() {
     const recente = !!data.lastSeen && idade < ARDUINO_TIMEOUT_MS;
 
     if (data.online && recente) {
-      if (sidebar) sidebar.className = 'sidebar-footer';
+      if (caixa) caixa.className = 'a11y-arduino';
       if (statusText) statusText.textContent = 'Online';
       if (offlineHint) offlineHint.style.display = 'none';
-      if (mobileTopbar) mobileTopbar.classList.remove('offline');
-      if (mobileText) mobileText.textContent = 'Online';
     } else {
-      if (sidebar) sidebar.className = 'sidebar-footer offline';
+      if (caixa) caixa.className = 'a11y-arduino offline';
       if (statusText) statusText.textContent = 'Offline';
       if (offlineHint) offlineHint.style.display = 'block';
-      if (mobileTopbar) mobileTopbar.classList.add('offline');
-      if (mobileText) mobileText.textContent = 'Offline';
     }
 }
 
@@ -213,7 +219,10 @@ async function toggleDevice(deviceId) {
     await logHistory(deviceId, 'botao', newState);
   } catch (err) {
     console.error('Erro ao acionar dispositivo:', err);
-    if (!rtdbOk) updateDeviceUI(deviceId, prevState);
+    if (!rtdbOk) {
+      updateDeviceUI(deviceId, prevState);
+      speech.falar(`Não foi possível ${newState ? 'ligar' : 'desligar'} ${d ? d.name.toLowerCase() : 'o dispositivo'}`);
+    }
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -274,7 +283,7 @@ function loadHistory() {
         return `
           <div class="history-card">
             <div class="history-card-header">
-              <span class="history-card-icon">${deviceIcon}</span>
+              <span class="history-card-icon" aria-hidden="true">${deviceIcon}</span>
               <div class="history-card-name">${escapeHtml(d.device)}</div>
               <div class="history-card-time">${ts}</div>
               <span class="badge ${stateClass}">${stateLabel}</span>

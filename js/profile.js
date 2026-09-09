@@ -73,16 +73,19 @@ auth.onAuthStateChanged(async user => {
 
 function renderProfiles() {
   const list = document.getElementById('profiles-grid');
-  list.innerHTML = PROFILES.map(p => `
-    <div class="profile-card ${selectedProfiles.has(p.id) ? 'selected' : ''}" data-id="${p.id}">
-      <div class="profile-card-icon">${p.icon}</div>
+  list.innerHTML = PROFILES.map(p => {
+    const sel = selectedProfiles.has(p.id);
+    return `
+    <button type="button" class="profile-card ${sel ? 'selected' : ''}" data-id="${p.id}" aria-pressed="${sel}">
+      <div class="profile-card-icon" aria-hidden="true">${p.icon}</div>
       <div class="profile-card-info">
         <div class="profile-card-name">${escapeHtml(p.name)}</div>
         <div class="profile-card-desc">${escapeHtml(p.desc)}</div>
       </div>
-      <div class="profile-radio ${selectedProfiles.has(p.id) ? 'selected' : ''}"></div>
-    </div>
-  `).join('');
+      <div class="profile-radio ${sel ? 'selected' : ''}" aria-hidden="true"></div>
+    </button>
+  `;
+  }).join('');
 
   list.querySelectorAll('.profile-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -131,7 +134,7 @@ function renderToggles() {
           <div class="toggle-label">${t.label}</div>
           ${t.hint ? `<div class="toggle-hint">${t.hint}</div>` : ''}
         </div>
-        <div class="toggle-switch ${isOn ? 'on' : ''}" role="switch" aria-checked="${isOn}" tabindex="0" data-id="${t.id}"></div>
+        <button type="button" class="toggle-switch ${isOn ? 'on' : ''}" role="switch" aria-checked="${isOn}" data-id="${t.id}"></button>
       </div>
     `;
   }).join('');
@@ -176,3 +179,50 @@ document.getElementById('btn-dashboard').addEventListener('click', () => {
 document.getElementById('btn-logout').addEventListener('click', () => {
   auth.signOut().then(() => window.location.href = 'login.html');
 });
+
+// Confirmação falada — mora no localStorage como o tema e o tamanho do texto
+// (ci-theme, ci-textsize), não no Firestore: é ajuste de acessibilidade, não
+// de conta. Nasce desligada: som inesperado assusta, e o navegador bloqueia
+// fala antes da primeira interação do usuário.
+(function initFala() {
+  const toggleFala = document.getElementById('toggle-fala');
+  const btnTestar  = document.getElementById('btn-testar-fala');
+  const hint       = document.getElementById('fala-hint');
+  if (!toggleFala || !btnTestar) return;
+
+  function pintar() {
+    const on = localStorage.getItem('ci-fala') === 'on';
+    toggleFala.classList.toggle('on', on);
+    toggleFala.setAttribute('aria-checked', String(on));
+  }
+
+  function aplicarDisponibilidade() {
+    const ok = speech.disponivel();
+    toggleFala.disabled = !ok;
+    btnTestar.disabled  = !ok;
+    hint.textContent = ok
+      ? 'O app fala o que aconteceu, ex.: "Luz ligada".'
+      : 'Não disponível neste navegador (sem voz em português).';
+  }
+
+  toggleFala.addEventListener('click', () => {
+    if (toggleFala.disabled) return;
+    localStorage.setItem('ci-fala', localStorage.getItem('ci-fala') === 'on' ? 'off' : 'on');
+    pintar();
+  });
+
+  btnTestar.addEventListener('click', () => {
+    // Fala mesmo com o interruptor desligado, só para o usuário ouvir como é.
+    const anterior = localStorage.getItem('ci-fala');
+    localStorage.setItem('ci-fala', 'on');
+    speech.falar('Luz ligada');
+    localStorage.setItem('ci-fala', anterior || 'off');
+  });
+
+  pintar();
+  aplicarDisponibilidade();
+  // getVoices() volta vazio na 1ª chamada do Chrome; reavalia quando carregam.
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.addEventListener('voiceschanged', aplicarDisponibilidade);
+  }
+})();

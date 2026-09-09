@@ -4,50 +4,76 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Casa Inteligente — Automações</title>
+  <script>
+    /* Le a preferencia antes do CSS carregar, para a tela nao piscar no tema
+       errado. Curto de proposito: um arquivo externo reintroduziria o piscar. */
+    (function () {
+      var t = localStorage.getItem('ci-theme');
+      var s = localStorage.getItem('ci-textsize');
+      if (t === 'escuro') document.documentElement.setAttribute('data-theme', 'dark');
+      if (s && s !== 'normal') document.documentElement.setAttribute('data-textsize', s);
+    })();
+  </script>
   <link rel="stylesheet" href="css/app.css"/>
   <style>
-    .automations-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .automations-list { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 1.75rem; }
     .form-card {
-      background: var(--bg-card); border: 2px solid var(--border);
-      border-radius: var(--radius); padding: 24px;
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem;
     }
-    .form-step { margin-bottom: 20px; }
+    .form-step { margin-bottom: 1.25rem; }
     .section-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;
     }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#conteudo">Pular para o conte&uacute;do</a>
+
+  <div class="a11y-bar">
+    <div class="a11y-group" role="group" aria-label="Tamanho do texto">
+      <span class="a11y-group-label">Tamanho do texto:</span>
+      <button type="button" class="a11y-size" data-size="normal" aria-pressed="true" title="Texto normal">A</button>
+      <button type="button" class="a11y-size" data-size="grande" aria-pressed="false" title="Texto grande">A</button>
+      <button type="button" class="a11y-size" data-size="maior" aria-pressed="false" title="Texto muito grande">A</button>
+    </div>
+
+    <button type="button" class="a11y-theme" id="btn-theme">
+      <span aria-hidden="true">&#127769;</span> <span id="btn-theme-label">Tema escuro</span>
+    </button>
+
+    <span id="a11y-live" class="visually-hidden" aria-live="polite"></span>
+  </div>
   <div class="app-layout">
     <nav class="sidebar">
       <div class="sidebar-logo">
-        <div class="sidebar-logo-dot"></div>
+        <div class="sidebar-logo-dot" aria-hidden="true"></div>
         <span class="sidebar-logo-text">CASA<br>INTELIGENTE</span>
       </div>
       <div class="sidebar-nav">
         <a href="dashboard.html" class="sidebar-item" id="btn-dashboard">
-          <span class="sidebar-item-icon">🏠</span><span>Dashboard</span>
+          <span class="sidebar-item-icon" aria-hidden="true">🏠</span><span>Dashboard</span>
         </a>
         <a href="automation.html" class="sidebar-item active" id="btn-automations">
-          <span class="sidebar-item-icon">⚡</span><span>Automações</span>
+          <span class="sidebar-item-icon" aria-hidden="true">⚡</span><span>Automações</span>
         </a>
         <a href="history.html" class="sidebar-item" id="btn-history-page">
-          <span class="sidebar-item-icon">📋</span><span>Histórico</span>
+          <span class="sidebar-item-icon" aria-hidden="true">📋</span><span>Histórico</span>
         </a>
         <a href="profile.html" class="sidebar-item" id="btn-profile">
-          <span class="sidebar-item-icon">👤</span><span>Perfil</span>
+          <span class="sidebar-item-icon" aria-hidden="true">👤</span><span>Perfil</span>
         </a>
         <button class="sidebar-item sidebar-item-danger" id="btn-logout">
-          <span class="sidebar-item-icon">🚪</span><span>Sair</span>
+          <span class="sidebar-item-icon" aria-hidden="true">🚪</span><span>Sair</span>
         </button>
       </div>
     </nav>
 
-    <div class="page-body">
+    <main class="page-body" id="conteudo">
       <div class="section-header">
         <div>
-          <h2 class="section-title" style="margin:0">Minhas automações</h2>
-          <p class="section-subtitle" style="margin:4px 0 0">Regras automáticas para seus dispositivos</p>
+          <h1 class="section-title" style="margin:0">Minhas automações</h1>
+          <p class="section-subtitle" style="margin:0.25rem 0 0">Regras automáticas para seus dispositivos</p>
         </div>
         <button class="btn btn-primary" id="btn-new-auto">+ Nova automação</button>
       </div>
@@ -67,7 +93,7 @@
             <div class="form-group" style="margin:0">
               <label class="form-label" for="input-name">
                 <span class="step-num">2</span> Nome
-                <span class="tooltip-icon" tabindex="0">ⓘ<span class="tooltip-text">Nome para identificar essa automação. Aparece no histórico. Ex: "Luz Cozinha".</span></span>
+                <button type="button" class="tooltip-icon" aria-expanded="false"><span aria-hidden="true">ⓘ</span><span class="visually-hidden">Ajuda</span><span class="tooltip-text">Nome para identificar essa automação. Aparece no histórico. Ex: "Luz Cozinha".</span></button>
               </label>
               <input type="text" id="input-name" class="form-input" placeholder="Ex: Luz Cozinha" maxlength="40"/>
             </div>
@@ -76,7 +102,7 @@
           <div class="form-step" id="step-trigger" style="display:none">
             <div class="step-label">
               <span class="step-num">3</span> Gatilho
-              <span class="tooltip-icon" tabindex="0">ⓘ<span class="tooltip-text">O que vai acionar essa automação: sua voz, um botão no site, sensor de presença, temperatura ou horário programado.</span></span>
+              <button type="button" class="tooltip-icon" aria-expanded="false"><span aria-hidden="true">ⓘ</span><span class="visually-hidden">Ajuda</span><span class="tooltip-text">O que vai acionar essa automação: sua voz, um botão no site, sensor de presença, temperatura ou horário programado.</span></button>
             </div>
             <div class="chip-group" id="trigger-chips"></div>
           </div>
@@ -85,9 +111,9 @@
             <div class="form-group" style="margin:0">
               <label class="form-label" for="input-voice">
                 <span class="step-num">4</span> Comando de voz
-                <span class="tooltip-icon" tabindex="0">ⓘ<span class="tooltip-text">A frase exata que você vai falar para ativar essa automação.</span></span>
+                <button type="button" class="tooltip-icon" aria-expanded="false"><span aria-hidden="true">ⓘ</span><span class="visually-hidden">Ajuda</span><span class="tooltip-text">A frase exata que você vai falar para ativar essa automação.</span></button>
               </label>
-              <div class="chip-group" id="voice-suggestions" style="margin-bottom:10px"></div>
+              <div class="chip-group" id="voice-suggestions" style="margin-bottom:0.625rem"></div>
               <input type="text" id="input-voice" class="form-input" placeholder="Ex: Ligar luz da sala" maxlength="60"/>
             </div>
           </div>
@@ -102,17 +128,18 @@
             <div class="preview-box" id="preview-box">—</div>
           </div>
 
-          <p id="auto-error-msg" class="error-msg" style="display:none;margin-top:12px"></p>
-          <button class="btn btn-primary" id="btn-save-auto" style="display:none;margin-top:16px">Salvar automação</button>
+          <p id="auto-error-msg" class="error-msg" style="display:none;margin-top:0.75rem"></p>
+          <button class="btn btn-primary" id="btn-save-auto" style="display:none;margin-top:1rem">Salvar automação</button>
         </div>
       </div>
-    </div>
+    </main>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="js/a11y.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/devices.js"></script>
   <script src="js/automation.js"></script>
