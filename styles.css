@@ -212,8 +212,8 @@ body {
 .house-illustration {
   position: relative;
   width: 100%;
-  max-width: 540px;
-  aspect-ratio: 1.1;
+  max-width: 515px;
+  aspect-ratio: 220 / 236;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -755,7 +755,7 @@ cite {
 /* ── RESPONSIVE ── */
 @media (max-width: 1024px) {
   .hero-section { flex-direction: column; min-height: unset; padding-top: 120px; }
-  .hero-image { width: 100%; max-width: 450px; }
+  .hero-image { width: 100%; max-width: 460px; }
   .importance-grid, .split-layout, .project-cards,
   .demo-card, .code-section, .ref-layout { grid-template-columns: 1fr; }
   .cards-grid-2x2, .dev-cards { grid-template-columns: 1fr; }
