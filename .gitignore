@@ -3,6 +3,7 @@ backend/.env
 .superpowers/
 *.docx
 *.pdf
+*.pptx
 
 # Credenciais — nunca versionar
 *firebase-adminsdk*.json
