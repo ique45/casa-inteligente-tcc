@@ -8,6 +8,14 @@ atendidos antes da homologação final."*
 Abaixo, a versão do nosso projeto — mesma estrutura (frase de abertura + 3 tópicos ▸),
 com números reais conferidos em 10/09/2026.
 
+## Gráfico do slide
+
+`grafico-testes.png` (2400×1132) — colar como imagem central do slide, no lugar das
+figuras decorativas do modelo. Mostra: os 3 números-chave (37 automatizados · 100% ·
+19 casos de qualidade) e um gráfico de barras "antes e depois do reteste" — 1ª execução
+(16 aprovados + 3 reprovados) contra o reteste de 10/09 (19 aprovados). Fonte editável:
+`grafico-testes.svg`.
+
 ---
 
 ## Frase de abertura (escolher uma)
