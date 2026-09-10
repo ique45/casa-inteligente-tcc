@@ -43,9 +43,14 @@ const PREVIEW_SCRIPT = `
     ],
     // db.collection('automations').doc(uid).collection('items')
     items: [
-      { id: 'a1', data: { deviceType: 'luz',        deviceName: 'Luz da sala',       trigger: 'presenca', action: 'on',     enabled: true,  voiceCommand: '', createdAt: ts(now - 4 * 86400000) } },
-      { id: 'a2', data: { deviceType: 'ventilador', deviceName: 'Ventilador',        trigger: 'botao',    action: 'toggle', enabled: true,  voiceCommand: '', createdAt: ts(now - 2 * 86400000) } },
-      { id: 'a3', data: { deviceType: 'alarme',     deviceName: 'Alarme da entrada', trigger: 'horario',  action: 'on',     enabled: false, voiceCommand: '', createdAt: ts(now - 1 * 86400000) } }
+      { id: 'a1', data: { deviceType: 'luz',        deviceName: 'Luz da sala',        trigger: 'botao',       action: 'toggle', enabled: true,  voiceCommand: '',               createdAt: ts(now - 7 * 86400000) } },
+      { id: 'a2', data: { deviceType: 'ventilador', deviceName: 'Ventilador do quarto', trigger: 'botao',     action: 'toggle', enabled: true,  voiceCommand: '',               createdAt: ts(now - 7 * 86400000) } },
+      { id: 'a3', data: { deviceType: 'portao',     deviceName: 'Portão da garagem',  trigger: 'botao',       action: 'toggle', enabled: true,  voiceCommand: '',               createdAt: ts(now - 6 * 86400000) } },
+      { id: 'a4', data: { deviceType: 'alarme',     deviceName: 'Alarme da entrada',  trigger: 'botao',       action: 'toggle', enabled: true,  voiceCommand: '',               createdAt: ts(now - 6 * 86400000) } },
+      { id: 'a5', data: { deviceType: 'luz',        deviceName: 'Luz da sala',        trigger: 'presenca',    action: 'on',     enabled: true,  voiceCommand: '',               createdAt: ts(now - 4 * 86400000) } },
+      { id: 'a6', data: { deviceType: 'ventilador', deviceName: 'Ventilador do quarto', trigger: 'temperatura', action: 'on',   enabled: true,  voiceCommand: '',               createdAt: ts(now - 3 * 86400000) } },
+      { id: 'a7', data: { deviceType: 'portao',     deviceName: 'Portão da garagem',  trigger: 'voz',         action: 'off',    enabled: true,  voiceCommand: 'fechar o portão', createdAt: ts(now - 2 * 86400000) } },
+      { id: 'a8', data: { deviceType: 'alarme',     deviceName: 'Alarme da entrada',  trigger: 'horario',     action: 'on',     enabled: false, voiceCommand: '',               createdAt: ts(now - 1 * 86400000) } }
     ]
   };
   var RTDB_SEED = {
