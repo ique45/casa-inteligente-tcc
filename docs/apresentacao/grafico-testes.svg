@@ -1,69 +1,69 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 660" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
   <defs>
     <pattern id="hatch" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-      <rect width="9" height="9" fill="#d03b3b"/>
-      <line x1="0" y1="0" x2="0" y2="9" stroke="#9c2626" stroke-width="3.2"/>
+      <rect width="9" height="9" fill="#e2a9f1"/>
+      <line x1="0" y1="0" x2="0" y2="9" stroke="#663e72" stroke-width="3"/>
     </pattern>
   </defs>
 
-  <rect x="0" y="0" width="1400" height="660" fill="#f9f9f7"/>
-  <rect x="24" y="24" width="1352" height="612" rx="16" fill="#fcfcfb" stroke="rgba(11,11,11,0.10)"/>
+  <rect x="0" y="0" width="1400" height="660" fill="#f4eef6"/>
+  <rect x="24" y="24" width="1352" height="612" rx="16" fill="#fcfcfb" stroke="rgba(32,26,38,0.12)"/>
 
   <!-- title -->
   <rect x="60" y="52" width="6" height="26" rx="2" fill="#663e72"/>
-  <text x="78" y="74" font-size="27" font-weight="700" fill="#0b0b0b">Validação e cobertura de testes</text>
+  <text x="78" y="74" font-size="27" font-weight="700" fill="#663e72">Validação e cobertura de testes</text>
 
   <!-- stat tiles -->
   <g>
-    <rect x="60"  y="104" width="400" height="128" rx="12" fill="#f4f3f0" stroke="rgba(11,11,11,0.08)"/>
-    <rect x="500" y="104" width="400" height="128" rx="12" fill="#f4f3f0" stroke="rgba(11,11,11,0.08)"/>
-    <rect x="940" y="104" width="400" height="128" rx="12" fill="#f4f3f0" stroke="rgba(11,11,11,0.08)"/>
+    <rect x="60"  y="104" width="400" height="128" rx="12" fill="#f4ecf7" stroke="rgba(102,62,114,0.18)"/>
+    <rect x="500" y="104" width="400" height="128" rx="12" fill="#f4ecf7" stroke="rgba(102,62,114,0.18)"/>
+    <rect x="940" y="104" width="400" height="128" rx="12" fill="#f4ecf7" stroke="rgba(102,62,114,0.18)"/>
 
-    <text x="84"  y="166" font-size="40" font-weight="700" fill="#0b0b0b">37</text>
-    <text x="84"  y="194" font-size="14.5" font-weight="600" fill="#52514e">testes automatizados</text>
-    <text x="84"  y="214" font-size="12.5" fill="#898781">19 no aplicativo · 18 no backend</text>
+    <text x="84"  y="166" font-size="40" font-weight="700" fill="#201a26">37</text>
+    <text x="84"  y="194" font-size="14.5" font-weight="600" fill="#3d4350">testes automatizados</text>
+    <text x="84"  y="214" font-size="12.5" fill="#6f6675">19 no aplicativo · 18 no backend</text>
 
-    <text x="524" y="166" font-size="40" font-weight="700" fill="#0b0b0b">100%</text>
-    <text x="524" y="194" font-size="14.5" font-weight="600" fill="#52514e">aprovados</text>
-    <text x="524" y="214" font-size="12.5" fill="#898781">rodam a cada alteração de código</text>
+    <text x="524" y="166" font-size="40" font-weight="700" fill="#201a26">100%</text>
+    <text x="524" y="194" font-size="14.5" font-weight="600" fill="#3d4350">aprovados</text>
+    <text x="524" y="214" font-size="12.5" fill="#6f6675">rodam a cada alteração de código</text>
 
-    <text x="964" y="166" font-size="40" font-weight="700" fill="#0b0b0b">19</text>
-    <text x="964" y="194" font-size="14.5" font-weight="600" fill="#52514e">casos de qualidade</text>
-    <text x="964" y="214" font-size="12.5" fill="#898781">plano de testes formal · 4 camadas</text>
+    <text x="964" y="166" font-size="40" font-weight="700" fill="#201a26">19</text>
+    <text x="964" y="194" font-size="14.5" font-weight="600" fill="#3d4350">casos de qualidade</text>
+    <text x="964" y="214" font-size="12.5" fill="#6f6675">plano de testes formal · 4 camadas</text>
   </g>
 
   <!-- section label -->
-  <text x="60" y="284" font-size="16" font-weight="600" fill="#0b0b0b">Casos de qualidade — antes e depois do reteste</text>
+  <text x="60" y="284" font-size="16" font-weight="600" fill="#201a26">Casos de qualidade — antes e depois do reteste</text>
 
   <!-- gridlines + baseline -->
-  <g stroke="#e1e0d9" stroke-width="1">
+  <g stroke="#e7ddeb" stroke-width="1">
     <line x1="612.63"  y1="314" x2="612.63"  y2="470"/>
     <line x1="865.26"  y1="314" x2="865.26"  y2="470"/>
     <line x1="1117.89" y1="314" x2="1117.89" y2="470"/>
   </g>
-  <line x1="360" y1="314" x2="360" y2="474" stroke="#c3c2b7" stroke-width="1"/>
+  <line x1="360" y1="314" x2="360" y2="474" stroke="#c9bcd0" stroke-width="1"/>
 
   <!-- row labels -->
   <g text-anchor="end">
-    <text x="344" y="346" font-size="14" font-weight="600" fill="#0b0b0b">1ª execução</text>
-    <text x="344" y="363" font-size="12" fill="#898781">02/09/2026</text>
-    <text x="344" y="432" font-size="14" font-weight="600" fill="#0b0b0b">Reteste</text>
-    <text x="344" y="449" font-size="12" fill="#898781">10/09/2026</text>
+    <text x="344" y="346" font-size="14" font-weight="600" fill="#201a26">1ª execução</text>
+    <text x="344" y="363" font-size="12" fill="#6f6675">02/09/2026</text>
+    <text x="344" y="432" font-size="14" font-weight="600" fill="#201a26">Reteste</text>
+    <text x="344" y="449" font-size="12" fill="#6f6675">10/09/2026</text>
   </g>
 
   <!-- bar A: 02/09  (16 aprovados + 3 reprovados) -->
-  <path d="M 365,320 H 1168.42 V 378 H 365 Q 360,378 360,373 V 325 Q 360,320 365,320 Z" fill="#0ca30c"/>
-  <path d="M 1170.42,320 H 1315 Q 1320,320 1320,325 V 373 Q 1320,378 1315,378 H 1170.42 Z" fill="url(#hatch)"/>
+  <path d="M 365,320 H 1168.42 V 378 H 365 Q 360,378 360,373 V 325 Q 360,320 365,320 Z" fill="#663e72"/>
+  <path d="M 1170.42,320 H 1315 Q 1320,320 1320,325 V 373 Q 1320,378 1315,378 H 1170.42 Z" fill="url(#hatch)" stroke="#663e72" stroke-width="1.5"/>
   <text x="384" y="354" font-size="18" font-weight="600" fill="#ffffff">16 aprovados</text>
-  <text x="1245" y="354" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+  <text x="1245" y="354" font-size="17" font-weight="700" fill="#201a26" text-anchor="middle">3</text>
 
   <!-- bar B: reteste (19 aprovados) -->
-  <rect x="360" y="406" width="960" height="58" rx="5" fill="#0ca30c"/>
+  <rect x="360" y="406" width="960" height="58" rx="5" fill="#663e72"/>
   <text x="384" y="440" font-size="18" font-weight="600" fill="#ffffff">19 aprovados</text>
   <text x="1298" y="441" font-size="18" font-weight="700" fill="#ffffff" text-anchor="middle">✓</text>
 
   <!-- x ticks -->
-  <g font-size="11" fill="#898781" text-anchor="middle">
+  <g font-size="11" fill="#6f6675" text-anchor="middle">
     <text x="360"     y="490">0</text>
     <text x="612.63"  y="490">5</text>
     <text x="865.26"  y="490">10</text>
@@ -73,16 +73,16 @@
 
   <!-- legend -->
   <g>
-    <rect x="360" y="508" width="16" height="16" rx="3" fill="#0ca30c"/>
-    <text x="384" y="521" font-size="14" fill="#52514e">Aprovado</text>
-    <rect x="486" y="508" width="16" height="16" rx="3" fill="url(#hatch)"/>
-    <text x="510" y="521" font-size="14" fill="#52514e">Reprovado</text>
+    <rect x="360" y="508" width="16" height="16" rx="3" fill="#663e72"/>
+    <text x="384" y="521" font-size="14" fill="#3d4350">Aprovado</text>
+    <rect x="486" y="508" width="16" height="16" rx="3" fill="url(#hatch)" stroke="#663e72" stroke-width="1.5"/>
+    <text x="510" y="521" font-size="14" fill="#3d4350">Reprovado</text>
   </g>
 
   <!-- caption -->
-  <text x="60" y="556" font-size="13" fill="#52514e">Os 3 casos reprovados na 1ª execução — CT-17, CT-18 e CT-19 — eram controles clicáveis que o teclado não alcançava.</text>
-  <text x="60" y="574" font-size="13" fill="#52514e">Corrigidos no commit f5f8768 (mesclado em master) e reverificados em 10/09/2026. Nenhum defeito em aberto.</text>
+  <text x="60" y="556" font-size="13" fill="#3d4350">Os 3 casos reprovados na 1ª execução — CT-17, CT-18 e CT-19 — eram controles clicáveis que o teclado não alcançava.</text>
+  <text x="60" y="574" font-size="13" fill="#3d4350">Corrigidos no commit f5f8768 (mesclado em master) e reverificados em 10/09/2026. Nenhum defeito em aberto.</text>
 
   <!-- footer -->
-  <text x="60" y="612" font-size="11" fill="#898781">Fonte: Relatório de Testes — Casa Inteligente (Partes 3 e 5). Automatizados: node --test (frontend) + Jest (backend).</text>
+  <text x="60" y="612" font-size="11" fill="#8a8290">Fonte: Relatório de Testes — Casa Inteligente (Partes 3 e 5). Automatizados: node --test (frontend) + Jest (backend).</text>
 </svg>
