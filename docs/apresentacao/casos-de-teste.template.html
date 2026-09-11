@@ -1,0 +1,476 @@
+<title>Dez Casos de Teste</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root {
+    --ground: #ece7db;
+    --panel: #fbf9f4;
+    --panel-2: #f2eee3;
+    --ink: #201a26;
+    --muted: #5b5361;
+    --line: #ddd5c5;
+    --line-soft: #e7e0d1;
+    --accent: #663e72;
+    --accent-ink: #57345f;
+    --lilac: #e2a9f1;
+    --lilac-wash: #f0dcf6;
+    --good: #1a7a42;
+    --good-wash: #e2efe0;
+    --good-line: #bcd8bf;
+    --warn: #97590f;
+    --warn-wash: #f5e9d3;
+    --warn-line: #e0c78f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #171320;
+      --panel: #211b2b;
+      --panel-2: #1b1624;
+      --ink: #ece6f1;
+      --muted: #a99fb4;
+      --line: #362e42;
+      --line-soft: #2a2334;
+      --accent: #c98fd8;
+      --accent-ink: #d9a9e8;
+      --lilac: #e2a9f1;
+      --lilac-wash: #2c2036;
+      --good: #4fb374;
+      --good-wash: #17301f;
+      --good-line: #2d5138;
+      --warn: #dba94c;
+      --warn-wash: #332411;
+      --warn-line: #57441f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #171320;
+    --panel: #211b2b;
+    --panel-2: #1b1624;
+    --ink: #ece6f1;
+    --muted: #a99fb4;
+    --line: #362e42;
+    --line-soft: #2a2334;
+    --accent: #c98fd8;
+    --accent-ink: #d9a9e8;
+    --lilac: #e2a9f1;
+    --lilac-wash: #2c2036;
+    --good: #4fb374;
+    --good-wash: #17301f;
+    --good-line: #2d5138;
+    --warn: #dba94c;
+    --warn-wash: #332411;
+    --warn-line: #57441f;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 66rem; margin: 0 auto; padding: 3.25rem 1.25rem 5rem; }
+
+  code, .mono { font-family: "IBM Plex Mono", monospace; }
+
+  /* ---------- header ---------- */
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent-ink); margin: 0 0 .8rem;
+  }
+  h1 {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 800; font-size: clamp(1.9rem, 5vw, 2.7rem);
+    line-height: 1.05; letter-spacing: -.02em; text-wrap: balance;
+    margin: 0 0 1rem;
+  }
+  .lede {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.12rem; color: var(--muted); max-width: 42rem; margin: 0 0 .5rem;
+  }
+  .meta { font-size: .85rem; color: var(--muted); margin: .9rem 0 0; }
+  .meta code { background: var(--panel-2); border: 1px solid var(--line-soft); padding: .05rem .35rem; border-radius: 4px; color: var(--accent-ink); }
+
+  /* ---------- stat strip ---------- */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem;
+    margin: 2.25rem 0 1.75rem;
+  }
+  .stat {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .3rem;
+  }
+  .stat strong {
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 800;
+    font-size: 1.9rem; letter-spacing: -.01em; color: var(--ink);
+  }
+  .stat span { font-size: .82rem; color: var(--muted); font-weight: 500; }
+
+  /* ---------- filters ---------- */
+  .filters { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 2.5rem; }
+  .filter-chip {
+    font-family: inherit; font-size: .84rem; font-weight: 600; cursor: pointer;
+    padding: .5rem 1rem; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--muted);
+  }
+  .filter-chip:hover { border-color: var(--accent); color: var(--ink); }
+  .filter-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ---------- case cards ---------- */
+  .cases { display: flex; flex-direction: column; gap: 1.25rem; }
+  .case {
+    display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.3fr);
+    gap: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+    overflow: hidden;
+  }
+  @media (max-width: 780px) { .case { grid-template-columns: 1fr; } }
+
+  .case-media { background: var(--panel-2); position: relative; display: flex; flex-direction: column; }
+  .case-media.pair { flex-direction: row; }
+  .shot-frame { position: relative; flex: 1; overflow: hidden; height: 21rem; display: flex; }
+  .shot-frame img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  /* pares (antes/depois): imagem inteira, nunca cortada, para a comparacao ser justa */
+  .case-media.pair .shot-frame { height: 18rem; align-items: center; }
+  .case-media.pair .shot-frame img { object-fit: contain; object-position: center; }
+  .case-media.pair .shot-frame:first-child { border-right: 1px solid var(--line-soft); }
+  .shot-frame .tag {
+    position: absolute; left: .6rem; top: .6rem; font-family: "IBM Plex Mono", monospace;
+    font-size: .68rem; letter-spacing: .04em; background: rgba(32,26,38,.72); color: #fff;
+    padding: .2rem .5rem; border-radius: 5px;
+  }
+  .media-caption {
+    font-family: "IBM Plex Mono", monospace; font-size: .7rem; color: var(--muted);
+    padding: .55rem .9rem; border-top: 1px solid var(--line-soft); background: var(--panel-2);
+  }
+
+  .case-body { padding: 1.5rem 1.6rem 1.6rem; display: flex; flex-direction: column; min-width: 0; }
+  .case-head { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-bottom: .55rem; }
+  .case-id {
+    font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: .78rem;
+    background: var(--lilac-wash); color: var(--accent-ink); padding: .18rem .55rem; border-radius: 6px;
+  }
+  .case-cat { font-size: .74rem; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+  .case-status {
+    margin-left: auto; font-size: .74rem; font-weight: 700; padding: .2rem .6rem; border-radius: 999px;
+    background: var(--good-wash); color: var(--good); border: 1px solid var(--good-line);
+    display: flex; align-items: center; gap: .3rem;
+  }
+  .case-status::before { content: "✓"; font-weight: 800; }
+
+  .case-body h3 {
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1.28rem;
+    letter-spacing: -.01em; text-wrap: balance; margin: 0 0 .85rem;
+  }
+
+  .timeline { display: flex; align-items: center; gap: .5rem; margin: 0 0 1rem; font-size: .78rem; }
+  .timeline .pill { padding: .22rem .6rem; border-radius: 999px; font-weight: 700; border: 1px solid; white-space: nowrap; }
+  .timeline .pill.before { background: var(--warn-wash); color: var(--warn); border-color: var(--warn-line); text-decoration: line-through; text-decoration-thickness: 1.5px; }
+  .timeline .pill.after { background: var(--good-wash); color: var(--good); border-color: var(--good-line); }
+  .timeline .arrow { color: var(--muted); }
+  .timeline .note { color: var(--muted); }
+
+  .case-facts { margin: 0 0 1rem; display: grid; gap: .55rem; font-size: .88rem; }
+  .case-facts > div { display: grid; grid-template-columns: 6.2rem 1fr; gap: .6rem; }
+  .case-facts dt { font-weight: 600; color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .02em; padding-top: .05rem; }
+  .case-facts dd { margin: 0; color: var(--ink); }
+  .case-facts dd.result strong { color: var(--good); font-weight: 700; }
+
+  .case-evidence {
+    margin: auto 0 0; font-family: "IBM Plex Mono", monospace; font-size: .74rem; color: var(--muted);
+    background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 8px;
+    padding: .6rem .75rem; overflow-x: auto; white-space: pre-wrap; line-height: 1.5;
+  }
+
+  footer.page-footer {
+    margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-size: .82rem; color: var(--muted);
+  }
+  footer.page-footer a { color: var(--accent-ink); }
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">Atividade de Qualidade e Teste de Software · Casa Inteligente</p>
+  <h1>Dez casos de teste, tela a tela</h1>
+  <p class="lede">
+    Curadoria de 10 entre os casos verificados do projeto — cada um pareado com a tela exata
+    que prova o resultado, para apresentar sem precisar abrir o app ao vivo.
+  </p>
+  <p class="meta">
+    Equipe: Henrique Delalibera, Isabela Scucciato, Thiago Pinheiro, Rebeca Damásio, Sofia Lopes, Lucas Ribeiro ·
+    Versão testada: <code>master</code>, commit <code>8070c10</code> · Execução original: 02/09/2026 · Reteste: 10/09/2026
+  </p>
+
+  <section class="stats">
+    <div class="stat"><strong>37</strong><span>testes automatizados, 100% passando</span></div>
+    <div class="stat"><strong>19</strong><span>casos de qualidade no relatório</span></div>
+    <div class="stat"><strong>10</strong><span>telas e estados diferentes capturados</span></div>
+    <div class="stat"><strong>10</strong><span>casos nesta curadoria</span></div>
+  </section>
+
+  <div class="filters" role="group" aria-label="Filtrar por categoria">
+    <button type="button" class="filter-chip" data-cat="todos" aria-pressed="true">Todos</button>
+    <button type="button" class="filter-chip" data-cat="funcional" aria-pressed="false">Funcional</button>
+    <button type="button" class="filter-chip" data-cat="seguranca" aria-pressed="false">Segurança e sessão</button>
+    <button type="button" class="filter-chip" data-cat="a11y" aria-pressed="false">Acessibilidade</button>
+    <button type="button" class="filter-chip" data-cat="ux" aria-pressed="false">Experiência do usuário</button>
+  </div>
+
+  <main class="cases" id="cases">
+
+    <!-- 1 -->
+    <article class="case" data-cat="funcional">
+      <div class="case-media">
+        <div class="shot-frame"><img src="__IMG_LOGIN__" alt="Tela de login da Casa Inteligente, com e-mail, senha e entrar com Google"></div>
+        <p class="media-caption">06-login.png</p>
+      </div>
+      <div class="case-body">
+        <div class="case-head">
+          <span class="case-id">CT-01</span>
+          <span class="case-cat">Funcional · Positivo</span>
+          <span class="case-status">Aprovado</span>
+        </div>
+        <h3>Login com credencial válida</h3>
+        <dl class="case-facts">
+          <div><dt>Pré-condição</dt><dd>Usuário cadastrado, sem sessão ativa</dd></div>
+          <div><dt>Passos</dt><dd>Autenticar com credencial válida na tela de login</dd></div>
+          <div><dt>Esperado</dt><dd class="result">Sessão criada e redirecionamento para o <strong>painel</strong></dd></div>
+        </dl>
+        <p class="case-evidence">Obtido: sessão criada; navegador redirecionou ao painel.
+Evidência: entrou como UnaXxi…Ib4QxQ2; URL passou a dashboard.html</p>
+      </div>
+    </article>
+
+    <!-- 2 -->
+    <article class="case" data-cat="seguranca">
+      <div class="case-media">
+        <div class="shot-frame"><img src="__IMG_LOGIN__" alt="Tela de login, para onde o painel redireciona quando não há sessão ativa"></div>
+        <p class="media-caption">06-login.png</p>
+      </div>
+      <div class="case-body">
+        <div class="case-head">
+          <span class="case-id">CT-06</span>
+          <span class="case-cat">Segurança · Negativo</span>
+          <span class="case-status">Aprovado</span>
+        </div>
+        <h3>Painel exige sessão ativa</h3>
+        <dl class="case-facts">
+          <div><dt>Pré-condição</dt><dd>Nenhuma sessão ativa</dd></div>
+          <div><dt>Passos</dt><dd>Acessar o endereço do painel diretamente pela URL</dd></div>
+          <div><dt>Esperado</dt><dd class="result">Redirecionamento para a tela de <strong>login</strong></dd></div>
+        </dl>
+        <p class="case-evidence">Obtido: endereço final foi login.html.
+Evidência: goto dashboard.html → URL final login.html</p>
+      </div>
+    </article>
+
+    <!-- 3 -->
+    <article class="case" data-cat="funcional">
+      <div class="case-media">
+        <div class="shot-frame"><img src="__IMG_DASH__" alt="Dashboard com os quatro dispositivos: luz, ventilador, portão e alarme"></div>
+        <p class="media-caption">01-dashboard.png</p>
+      </div>
+      <div class="case-body">
+        <div class="case-head">
+          <span class="case-id">CT-02</span>
+          <span class="case-cat">Funcional · Positivo</span>
+          <span class="case-status">Aprovado</span>
+        </div>
+        <h3>Painel lista os quatro dispositivos</h3>
+        <dl class="case-facts">
+          <div><dt>Pré-condição</dt><dd>Sessão ativa da conta de demonstração</dd></div>
+          <div><dt>Passos</dt><dd>Abrir o painel e contar os cartões de dispositivo</dd></div>
+          <div><dt>Esperado</dt><dd class="result">Quatro dispositivos: <strong>luz, ventilador, portão e alarme</strong></dd></div>
+        </dl>
+        <p class="case-evidence">Obtido: quatro cartões, com estado e cor corretos.
+Evidência: querySelectorAll('.device-card').length = 4</p>
+      </div>
+    </article>
+
+    <!-- 4 -->
+    <article class="case" data-cat="funcional">
+      <div class="case-media">
+        <div class="shot-frame"><img src="__IMG_AUTOEDIT__" alt="Formulário de nova automação com o passo Comando de voz revelado e o resumo Como vai funcionar preenchido"></div>
+        <p class="media-caption">04-automacao-editor.png</p>
+      </div>
+      <div class="case-body">
+        <div class="case-head">
+          <span class="case-id">Adicional</span>
+          <span class="case-cat">Funcional</span>
+          <span class="case-status">Aprovado</span>
+        </div>
+        <h3>Formulário da automação muda com o gatilho escolhido</h3>
+        <dl class="case-facts">
+          <div><dt>Pré-condição</dt><dd>Editor de nova automação aberto, dispositivo selecionado</dd></div>
+          <div><dt>Passos</dt><dd>Preencher o nome e escolher o gatilho "Voz"</dd></div>
+          <div><dt>Esperado</dt><dd class="result">O passo <strong>"Comando de voz"</strong> aparece, e o resumo abaixo <strong>atualiza sozinho</strong></dd></div>
+        </dl>
+        <p class="case-evidence">Obtido: o passo 4 (Comando de voz) só existe quando trigger==="voz", com sugestões prontas por
+dispositivo (ex.: "Abrir portão"); o texto "Como vai funcionar" muda a cada campo preenchido, sem precisar salvar para conferir.</p>
+      </div>
+    </article>
+
+    <!-- 5 -->
+    <article class="case" data-cat="funcional">
+      <div class="case-media pair">
+        <div class="shot-frame"><span class="tag">todos · 6 registros</span><img src="__IMG_HIST__" alt="Histórico sem filtro, seis registros"></div>
+        <div class="shot-frame"><span class="tag">voz · 1 registro</span><img src="__IMG_HISTVOZ__" alt="Histórico filtrado por voz, um único registro"></div>
+      </div>
+      <div class="case-body">
+        <div class="case-head">
+          <span class="case-id">Adicional</span>
+          <span class="case-cat">Funcional</span>
+          <span class="case-status">Aprovado</span>
+        </div>
+        <h3>Filtro de gatilho reduz a lista corretamente</h3>
+        <dl class="case-facts">
+          <div><dt>Pré-condição</dt><dd>Histórico com 6 registros de gatilhos diferentes</dd></div>
+          <div><dt>Passos</dt><dd>Clicar no filtro "Voz"</dd></div>
+          <div><dt>Esperado</dt><dd class="result">Só os registros ativados <strong>por voz</strong> continuam na lista</dd></div>
+        </dl>
+        <p class="case-evidence">Obtido: de 6 registros, sobrou 1 ("Portão · Ativado por: Comando de voz"); os outros 5 saem
+da tela na hora, sem recarregar a página.</p>
+      </div>
+    </article>
+
+    <!-- 6 -->
+    <article class="case" data-cat="ux">
+      <div class="case-media pair">
+        <div class="shot-frame"><span class="tag">voz ligada</span><img src="__IMG_DASH__" alt="Dashboard com o controle por voz ativo, botão Ativar microfone visível"></div>
+        <div class="shot-frame"><span class="tag">voz desligada</span><img src="__IMG_VOZOFF__" alt="Mesmo dashboard com o controle por voz desativado no perfil"></div>
+      </div>
+      <div class="case-body">
+        <div class="case-head">
+          <span class="case-id">Adicional</span>
+          <span class="case-cat">Experiência do usuário</span>
+          <span class="case-status">Aprovado</span>
+        </div>
+        <h3>Desligar um controle no perfil muda o dashboard</h3>
+        <dl class="case-facts">
+          <div><dt>Pré-condição</dt><dd>Conta com "Controle por voz" desligado no perfil</dd></div>
+          <div><dt>Passos</dt><dd>Abrir o dashboard com essa conta</dd></div>
+          <div><dt>Esperado</dt><dd class="result">O bloco de voz <strong>não mostra o microfone</strong> — explica onde religar</dd></div>
+        </dl>
+        <p class="case-evidence">Obtido: "Controle por voz desativado. Ativar nas configurações de perfil →" no lugar do botão
+"Ativar microfone". O mesmo vale para "Botão no dashboard": desligado, os cartões viram somente leitura.</p>
+      </div>
+    </article>
+
+    <!-- 7 -->
+    <article class="case" data-cat="a11y">
+      <div class="case-media pair">
+        <div class="shot-frame"><span class="tag">tema claro</span><img src="__IMG_DASH__" alt="Dashboard no tema claro"></div>
+        <div class="shot-frame"><span class="tag">tema escuro</span><img src="__IMG_DARK__" alt="Dashboard no tema escuro"></div>
+      </div>
+      <div class="case-body">
+        <div class="case-head">
+          <span class="case-id">CT-16</span>
+          <span class="case-cat">Acessibilidade · Limite</span>
+          <span class="case-status">Aprovado</span>
+        </div>
+        <h3>Contraste AAA nos dois temas</h3>
+        <dl class="case-facts">
+          <div><dt>Pré-condição</dt><dd>Folha de estilo com os dois temas</dd></div>
+          <div><dt>Passos</dt><dd>Medir todo par de texto/fundo e de contorno/fundo, claro e escuro</dd></div>
+          <div><dt>Esperado</dt><dd class="result"><strong>7:1</strong> para texto, <strong>3:1</strong> para contorno, em todo par</dd></div>
+        </dl>
+        <p class="case-evidence">Obtido: todos os pares dos dois temas atingiram o alvo.
+Evidência: node tools/check-contrast.js → saída zero (13 pares testados)</p>
+      </div>
+    </article>
+
+    <!-- 8 -->
+    <article class="case" data-cat="funcional">
+      <div class="case-media">
+        <div class="shot-frame"><img src="__IMG_PERFIL__" alt="Tela de perfil com o card Idoso selecionado e os toggles de voz, botão e presença ligados"></div>
+        <p class="media-caption">02-perfil.png</p>
+      </div>
+      <div class="case-body">
+        <div class="case-head">
+          <span class="case-id">Adicional</span>
+          <span class="case-cat">Funcional · Positivo</span>
+          <span class="case-status">Aprovado</span>
+        </div>
+        <h3>Perfil reflete a configuração da conta</h3>
+        <dl class="case-facts">
+          <div><dt>Pré-condição</dt><dd>Conta com perfil "Idoso" e voz/botão/presença habilitados</dd></div>
+          <div><dt>Passos</dt><dd>Abrir a tela de perfil com essa conta</dd></div>
+          <div><dt>Esperado</dt><dd class="result">Perfil e togles <strong>marcados batem</strong> com os dados salvos</dd></div>
+        </dl>
+        <p class="case-evidence">Obtido: card "Idoso" selecionado; Voz, Botão e Presença ligados; Horário e Temperatura desligados — idêntico ao registro da conta.</p>
+      </div>
+    </article>
+
+    <!-- 9 -->
+    <article class="case" data-cat="ux">
+      <div class="case-media">
+        <div class="shot-frame"><img src="__IMG_AUTOLIST__" alt="Lista de automações com frases em português como Quando você clicar no botão do dashboard, o sistema vai alternar"></div>
+        <p class="media-caption">03-automacoes-lista.png</p>
+      </div>
+      <div class="case-body">
+        <div class="case-head">
+          <span class="case-id">Adicional</span>
+          <span class="case-cat">Experiência do usuário</span>
+          <span class="case-status">Aprovado</span>
+        </div>
+        <h3>Automações em linguagem natural</h3>
+        <dl class="case-facts">
+          <div><dt>Pré-condição</dt><dd>Conta com automações de gatilhos variados</dd></div>
+          <div><dt>Passos</dt><dd>Abrir a lista com automações de botão, presença, temperatura, voz e horário</dd></div>
+          <div><dt>Esperado</dt><dd class="result">Cada regra lida como <strong>"Quando… / O sistema vai…"</strong>, sem jargão</dd></div>
+        </dl>
+        <p class="case-evidence">Obtido: 8 cartões, nenhum usa "trigger" ou "action"; badge ⚡ ATIVA / ● DESLIGADA correto em cada um.</p>
+      </div>
+    </article>
+
+    <!-- 10 -->
+    <article class="case" data-cat="ux">
+      <div class="case-media pair">
+        <div class="shot-frame"><span class="tag">texto normal</span><img src="__IMG_DASH__" alt="Dashboard com o tamanho de texto normal"></div>
+        <div class="shot-frame"><span class="tag">texto maior</span><img src="__IMG_BIG__" alt="Mesmo dashboard com o tamanho de texto ampliado, interface inteira maior"></div>
+      </div>
+      <div class="case-body">
+        <div class="case-head">
+          <span class="case-id">Adicional</span>
+          <span class="case-cat">Experiência do usuário</span>
+          <span class="case-status">Aprovado</span>
+        </div>
+        <h3>Ampliar o texto redimensiona a interface inteira</h3>
+        <dl class="case-facts">
+          <div><dt>Pré-condição</dt><dd>Dashboard aberto, tamanho de texto "normal"</dd></div>
+          <div><dt>Passos</dt><dd>Clicar no maior dos três "A" da barra de acessibilidade</dd></div>
+          <div><dt>Esperado</dt><dd class="result">Toda a interface <strong>escala junto</strong>, não só o texto solto</dd></div>
+        </dl>
+        <p class="case-evidence">Obtido: data-textsize="maior" aplicado; raiz vai de 16px para 22,4px; sidebar, cartões e botões crescem juntos (layout em rem desde a Task 3).</p>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="page-footer">
+    Fonte completa: <code>Relatorio_Testes_Casa_Inteligente.docx</code> (19 casos, Partes 2–5) e
+    <code>docs/apresentacao/</code> no repositório. Curadoria feita para apresentar sem precisar abrir o app ao vivo —
+    o app continua disponível para demonstração se a banca pedir.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var chips = document.querySelectorAll('.filter-chip');
+  var cases = document.querySelectorAll('.case');
+  chips.forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c === chip)); });
+      var cat = chip.dataset.cat;
+      cases.forEach(function (c) {
+        c.hidden = !(cat === 'todos' || c.dataset.cat === cat);
+      });
+    });
+  });
+})();
+</script>
