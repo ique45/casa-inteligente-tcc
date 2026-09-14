@@ -16,7 +16,7 @@
       <li><a href="#projeto" class="nav-link" data-section="projeto">PROJETO</a></li>
       <li><a href="#desenvolvimento" class="nav-link" data-section="desenvolvimento">DESENVOLVIMENTO</a></li>
       <li><a href="#grupo" class="nav-link" data-section="grupo">GRUPO</a></li>
-      <li><a href="#referencia" class="nav-link" data-section="referencia">REFERÊNCIA</a></li>
+      <li><a href="#referencia" class="nav-link" data-section="referencia">BASTIDORES</a></li>
     </ul>
     <div class="nav-search" id="searchToggle">
       <span class="search-icon">&#x2315;</span>
@@ -190,13 +190,13 @@
         </p>
       </div>
       <div class="card card-purple">
-        <div class="card-label">METAS CENTRAIS</div>
+        <div class="card-label">RESULTADOS ALCANÇADOS</div>
         <ul class="metas-list">
-          <li><span class="check">&#10003;</span> Eficiência Energética de 40%</li>
-          <li><span class="check">&#10003;</span> Latência Zero em IoT Local</li>
-          <li><span class="check">&#10003;</span> Interface Cognitiva Adaptativa</li>
+          <li><span class="check">&#10003;</span> 37 testes automatizados, 100% passando</li>
+          <li><span class="check">&#10003;</span> Contraste WCAG AAA (7:1) verificado</li>
+          <li><span class="check">&#10003;</span> Hardware completo por ~R$ 160</li>
         </ul>
-        <div class="year-label">2024</div>
+        <div class="year-label">2026</div>
       </div>
     </div>
   </section>
@@ -235,8 +235,9 @@
       <div class="demo-text">
         <h2>Veja nosso projeto funcionando</h2>
         <p>
-          No vídeo ao lado, é possível conhecer o projeto em funcionamento, com a demonstração
-          de suas funcionalidades na prática por meio do uso de realidade virtual.
+          Do clique no dashboard até o relé acionar: a cadeia completa foi validada com o
+          firmware real rodando em simulação (Wokwi), sem precisar do hardware físico
+          montado. O vídeo ao lado mostra essa demonstração, ponta a ponta.
         </p>
         <a href="#desenvolvimento" class="btn-primary">Veja o Desenvolvimento do Projeto &rarr;</a>
       </div>
@@ -250,18 +251,17 @@
       <div class="split-text">
         <h2 class="big-title">Desenvolvimento<br />Técnico.</h2>
         <p>
-          O desenvolvimento do projeto foi realizado com base na aplicação de tecnologias voltadas
-          à automação residencial, utilizando o microcontrolador Arduino aliado a recursos de
-          realidade virtual. A proposta consiste na integração de dispositivos inteligentes capazes
-          de se comunicar entre si, permitindo o controle e a automação de funções dentro do
-          ambiente doméstico.
+          O sistema é formado por quatro camadas que se comunicam em tempo real: o site
+          (HTML, CSS e JavaScript puros, sem framework), o Firebase (autenticação, banco de
+          dados e sincronização), um backend em Node.js publicado na Railway, e o firmware
+          do microcontrolador ESP8266 (NodeMCU), programado em C++ na IDE do Arduino.
         </p>
         <p>
-          Além disso, a realidade virtual foi utilizada para simular o funcionamento da casa
-          inteligente, possibilitando a visualização prática das funcionalidades desenvolvidas.
-          Durante o processo, foram selecionados componentes e ferramentas adequados para garantir
-          o funcionamento eficiente do sistema, priorizando acessibilidade, segurança e facilidade
-          de uso.
+          A cada 2 segundos, o ESP8266 consulta o backend por HTTPS, informando o estado dos
+          sensores e recebendo os comandos pendentes — do site ou das automações. A escolha
+          por esse ciclo curto de sincronização, em vez de um protocolo assíncrono mais
+          complexo, prioriza simplicidade de manutenção e baixo custo de hardware, mantendo o
+          foco em acessibilidade, segurança e facilidade de uso.
         </p>
       </div>
       <div class="split-image chip-image"></div>
@@ -286,12 +286,13 @@
       </div>
       <div class="card card-purple">
         <div class="card-icon-row">
-          <span class="icon-cpu">&#9768;</span>
-          <h3>Realidade Virtual</h3>
+          <span class="icon-cpu">&#9855;</span>
+          <h3>Acessibilidade Testada</h3>
         </div>
         <p>
-          Aplicação da realidade virtual para simular o ambiente da casa inteligente e
-          demonstrar suas funcionalidades na prática.
+          Contraste verificado automaticamente contra o padrão WCAG AAA (7:1), navegação
+          completa por teclado e confirmação falada das ações em português — testado a cada
+          alteração de código, não só no lançamento.
         </p>
       </div>
     </div>
@@ -300,11 +301,12 @@
       <div class="card card-dark">
         <div class="card-icon-row">
           <span class="icon-cpu">&#9729;</span>
-          <h3>Arduino</h3>
+          <h3>ESP8266 (NodeMCU)</h3>
         </div>
         <p>
-          Utilização do microcontrolador Arduino para controlar os dispositivos e integrar os
-          sistemas de automação da residência.
+          Microcontrolador com WiFi embutido, escolhido pelo baixo custo (~R$ 28) e por
+          suportar o handshake HTTPS exigido para falar com o backend em segurança — um
+          Arduino Uno não tem RAM suficiente para isso.
         </p>
       </div>
       <div class="card card-image server-image-card">
@@ -320,8 +322,9 @@
       <div class="code-block">
         <h3>Programação</h3>
         <p>
-          O trecho de código abaixo demonstra a inicialização da conexão segura com o broker
-          MQTT e a subscrição aos tópicos de controle de iluminação.
+          O trecho abaixo é o núcleo do firmware: a cada 2 segundos, o ESP8266 monta um JSON
+          com o estado dos relés e a temperatura lida, envia por HTTPS ao backend, e aplica
+          os comandos que ele devolver.
         </p>
         <div class="code-window">
           <div class="code-dots">
@@ -329,23 +332,30 @@
             <span class="dot yellow"></span>
             <span class="dot green"></span>
           </div>
-          <pre><code><span class="code-keyword">void</span> <span class="code-fn">setup_wifi</span>() {
-  <span class="code-fn">delay</span>(10);
-  Serial.<span class="code-fn">println</span>(<span class="code-str">"Connecting to Wifi..."</span>);
-  WiFi.<span class="code-fn">begin</span>(ssid, password);
-  <span class="code-keyword">while</span> (WiFi.<span class="code-fn">status</span>() != WL_CONNECTED) {
-    <span class="code-fn">delay</span>(500);
-    Serial.<span class="code-fn">print</span>(<span class="code-str">"."</span>);
-  }
-}
+          <pre><code><span class="code-keyword">void</span> <span class="code-fn">syncWithBackend</span>() {
+  secureClient.<span class="code-fn">stop</span>();
 
-<span class="code-keyword">void</span> <span class="code-fn">callback</span>(<span class="code-keyword">char</span>* topic, <span class="code-keyword">byte</span>* payload, <span class="code-keyword">unsigned int</span> length) {
-  <span class="code-comment">/* logic for message processing */</span>
-  <span class="code-keyword">if</span> ((<span class="code-keyword">char</span>)payload[0] == <span class="code-str">'1'</span>) {
-    <span class="code-fn">digitalWrite</span>(RELAY_PIN, HIGH);
-  } <span class="code-keyword">else</span> {
-    <span class="code-fn">digitalWrite</span>(RELAY_PIN, LOW);
-  }
+  HTTPClient http;
+  http.<span class="code-fn">begin</span>(secureClient, BACKEND_URL);
+  http.<span class="code-fn">addHeader</span>(<span class="code-str">"Content-Type"</span>, <span class="code-str">"application/json"</span>);
+
+  JsonDocument doc;
+  doc[<span class="code-str">"uid"</span>]    = UID;
+  doc[<span class="code-str">"token"</span>]  = TOKEN;
+  doc[<span class="code-str">"online"</span>] = <span class="code-keyword">true</span>;
+  <span class="code-keyword">if</span> (tempValida) doc[<span class="code-str">"temperature"</span>] = currentTemp;
+
+  JsonObject devices = doc[<span class="code-str">"devices"</span>].to&lt;JsonObject&gt;();
+  devices[<span class="code-str">"luz"</span>]        = estadoLuz;
+  devices[<span class="code-str">"ventilador"</span>] = estadoVentilador;
+  devices[<span class="code-str">"portao"</span>]     = estadoPortao;
+  devices[<span class="code-str">"alarme"</span>]     = estadoAlarme;
+
+  String body;
+  <span class="code-fn">serializeJson</span>(doc, body);
+
+  <span class="code-keyword">int</span> status = http.<span class="code-fn">POST</span>(body);
+  <span class="code-comment">// status 200 -&gt; aplica os comandos devolvidos pelo backend</span>
 }</code></pre>
         </div>
       </div>
@@ -358,22 +368,22 @@
           <div class="flow-step">
             <div class="step-num">1</div>
             <div>
-              <strong>Sensor Input</strong>
-              <p>Leitura analógica (ESP32 ADC)</p>
+              <strong>Leitura dos Sensores</strong>
+              <p>Temperatura (DHT11) e presença (PIR)</p>
             </div>
           </div>
           <div class="flow-step">
             <div class="step-num step-purple">2</div>
             <div>
-              <strong>MQTT Publish</strong>
-              <p>Payload JSON via WiFi 2.4GHz</p>
+              <strong>Sync HTTPS</strong>
+              <p>POST em JSON ao backend, a cada 2s</p>
             </div>
           </div>
           <div class="flow-step">
             <div class="step-num">3</div>
             <div>
-              <strong>Firebase Storage</strong>
-              <p>Atualização da Realtime DB</p>
+              <strong>Firebase Realtime DB</strong>
+              <p>Estado sincronizado, relés acionados</p>
             </div>
           </div>
         </div>
@@ -447,88 +457,42 @@
 
   <!-- SECTION: REFERÊNCIA -->
   <section id="referencia" class="section">
-    <div class="badge">ARQUIVO ACADÊMICO</div>
+    <div class="badge">BASTIDORES DO PROJETO</div>
     <div class="split-layout">
       <div class="split-text">
-        <h2 class="big-title-ref">REFERÊNCIAS<br /><span class="purple">&amp; FONTES</span></h2>
+        <h2 class="big-title-ref">TECNOLOGIAS<br /><span class="purple">&amp; AGRADECIMENTOS</span></h2>
         <p>
-          Compilação rigorosa das fontes bibliográficas, documentação técnica e ferramentas que
-          fundamentaram a pesquisa e o desenvolvimento do projeto Casa Inteligente.
+          As ferramentas que sustentam o projeto de ponta a ponta, e as pessoas que tornaram
+          esse trabalho possível.
         </p>
       </div>
       <div class="split-image library-image"></div>
     </div>
 
-    <div class="ref-layout">
-      <div class="ref-bib">
-        <div class="ref-section-title">
-          <span>&#128218;</span> Bibliografia ABNT
-        </div>
-
-        <div class="ref-item">
-          <span class="ref-type">MONOGRAFIA / TCC</span>
-          <p>
-            SILVA, Roberto. <strong>Sistemas Embarcados e Automação Residencial</strong>. 2. ed.
-            São Paulo: Editora Acadêmica, 2023. 245 p.
-          </p>
-        </div>
-        <div class="ref-item">
-          <span class="ref-type">ARTIGO CIENTÍFICO</span>
-          <p>
-            OLIVEIRA, M. A.; SANTOS, J. P. <strong>Protocolos de Comunicação IOT em Ambientes Domésticos</strong>.
-            Revista Brasileira de Tecnologia, Curitiba, v. 12, n. 3, p. 45-67, jul. 2022.
-          </p>
-        </div>
-        <div class="ref-item">
-          <span class="ref-type">DOCUMENTAÇÃO TÉCNICA</span>
-          <p>
-            IEEE STANDARDS ASSOCIATION. <strong>Standard for Smart Grid Interoperability</strong>.
-            IEEE Std 2030-2011. New York, 2011.
-          </p>
-        </div>
-        <div class="ref-item">
-          <span class="ref-type">RECURSOS ONLINE</span>
-          <p>
-            W3C. <strong>Web of Things (WoT) Architecture</strong>. Disponível em:
-            https://www.w3.org/TR/wot-architecture/. Acesso em: 15 out. 2023.
-          </p>
-        </div>
+    <div class="ref-side">
+      <div class="card card-purple">
+        <div class="card-label">STACK TÉCNICA</div>
+        <ol class="tools-list">
+          <li><span class="tool-num">01</span> HTML, CSS e JavaScript puros (sem framework)</li>
+          <li><span class="tool-num">02</span> Firebase (Auth, Firestore, Realtime Database)</li>
+          <li><span class="tool-num">03</span> Node.js + Express, hospedado na Railway</li>
+          <li><span class="tool-num">04</span> ESP8266 (NodeMCU) + Arduino IDE</li>
+          <li><span class="tool-num">05</span> Jest + Supertest (37 testes automatizados)</li>
+        </ol>
       </div>
-
-      <div class="ref-side">
-        <div class="card card-purple">
-          <div class="card-label">FERRAMENTAS</div>
-          <ol class="tools-list">
-            <li><span class="tool-num">01</span> Arduino IDE &amp; ESP32 Framework</li>
-            <li><span class="tool-num">02</span> Figma for UI/UX Prototyping</li>
-            <li><span class="tool-num">03</span> Python (Backend Automation)</li>
-            <li><span class="tool-num">04</span> Docker &amp; Home Assistant</li>
-          </ol>
-        </div>
-        <div class="card card-dark">
-          <div class="card-label">AGRADECIMENTOS</div>
-          <p class="ack-label">Orientação</p>
-          <p class="ack-text italic">
-            Aos professores do departamento de Engenharia pela mentoria técnica e paciência
-            durante o ciclo de desenvolvimento.
-          </p>
-          <p class="ack-label">Institucional</p>
-          <p class="ack-text italic">
-            À Universidade pelo livre acesso aos laboratórios de prototipagem e infraestrutura
-            de rede.
-          </p>
-        </div>
+      <div class="card card-dark">
+        <div class="card-label">AGRADECIMENTOS</div>
+        <p class="ack-label">Orientação</p>
+        <p class="ack-text italic">
+          Aos professores do departamento de Engenharia pela mentoria técnica e paciência
+          durante o ciclo de desenvolvimento.
+        </p>
+        <p class="ack-label">Institucional</p>
+        <p class="ack-text italic">
+          À Universidade pelo livre acesso aos laboratórios de prototipagem e infraestrutura
+          de rede.
+        </p>
       </div>
-    </div>
-
-    <!-- QUOTE -->
-    <div class="quote-section">
-      <div class="quote-mark">99</div>
-      <blockquote>
-        "A tecnologia é apenas uma ferramenta. No que se refere a motivar as crianças e
-        conseguir que trabalhem juntas, o professor é o mais importante."
-      </blockquote>
-      <cite>— BILL GATES</cite>
     </div>
   </section>
 

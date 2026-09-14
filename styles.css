@@ -696,7 +696,7 @@ body {
 .ref-item p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
 .ref-item strong { color: var(--text); }
 
-.ref-side { display: flex; flex-direction: column; gap: 1.5rem; }
+.ref-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
 
 .tools-list { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem; }
 .tools-list li { display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; font-weight: 600; }
