@@ -149,6 +149,17 @@ function serveHtml(res, data, isPreview) {
   res.end(html);
 }
 
+// Serve a pagina 404.html de verdade, com status 404. Se ela mesma nao puder
+// ser lida (nunca deveria acontecer, mas evita recursao/erro nao tratado),
+// cai de volta no texto puro.
+function serve404(res) {
+  fs.readFile(path.join(ROOT, '404.html'), (err, data) => {
+    if (err) { res.writeHead(404); res.end('Not found'); return; }
+    res.writeHead(404, { 'Content-Type': 'text/html' });
+    res.end(data);
+  });
+}
+
 // Verifica se um caminho pode ser servido usando ALLOWLIST, nao DENYLIST.
 // Allowlist eh muito mais seguro porque:
 // 1. Nao requer enumerar todos os nomes perigosos possiveis
@@ -210,7 +221,7 @@ http.createServer((req, res) => {
     }
     const mime = MIME[ext] || 'application/octet-stream';
     fs.readFile(filePath, (err, data) => {
-      if (err) { res.writeHead(404); res.end('Not found'); return; }
+      if (err) { serve404(res); return; }
       if (ext === '.html') { serveHtml(res, data, isPreview); return; }
       res.writeHead(200, { 'Content-Type': mime });
       res.end(data);
@@ -224,7 +235,7 @@ http.createServer((req, res) => {
       return;
     }
     fs.readFile(fallbackPath, (err, data) => {
-      if (err) { res.writeHead(404); res.end('Not found'); return; }
+      if (err) { serve404(res); return; }
       serveHtml(res, data, isPreview);
     });
   }
