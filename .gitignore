@@ -17,3 +17,6 @@ serviceAccountKey.json
 
 # Screenshots soltos na raiz (os versionados ficam em docs/screenshots/)
 /*.png
+!/favicon.png
+!/apple-touch-icon.png
+!/logo-icon.png

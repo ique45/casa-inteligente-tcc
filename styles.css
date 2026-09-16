@@ -18,6 +18,7 @@
   --text-muted: #3d4350;
   --text-dim: #3d4350;
   --border: #966ea2;
+  --font-display: 'Baloo 2', 'Segoe UI', system-ui, sans-serif;
 }
 
 html { scroll-behavior: smooth; }
@@ -51,11 +52,20 @@ body {
 }
 
 .nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.05rem;
   color: var(--purple-light);
   white-space: nowrap;
   margin-right: 0.5rem;
+}
+
+.nav-logo img {
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 .nav-links {
@@ -163,8 +173,9 @@ body {
 .hero-content { flex: 1; max-width: 600px; }
 
 .hero-title {
+  font-family: var(--font-display);
   font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1.05;
   margin-bottom: 1.5rem;
 }
@@ -348,15 +359,17 @@ body {
 }
 
 .big-title {
+  font-family: var(--font-display);
   font-size: clamp(2rem, 4vw, 3.2rem);
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1.05;
   margin-bottom: 1.5rem;
 }
 
 .big-title-ref {
+  font-family: var(--font-display);
   font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1;
   margin-bottom: 1.5rem;
 }

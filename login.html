@@ -4,6 +4,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Casa Inteligente — Login</title>
+  <link rel="icon" href="favicon.ico" sizes="any"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap" rel="stylesheet"/>
   <script>
     /* Le a preferencia antes do CSS carregar, para a tela nao piscar no tema
        errado. Curto de proposito: um arquivo externo reintroduziria o piscar. */
@@ -30,10 +36,11 @@
       display: inline-flex; align-items: center; justify-content: center;
       width: 3.5rem; height: 3.5rem;
       background: var(--accent-weak); border: 2px solid var(--accent);
-      border-radius: 16px; font-size: var(--fs-2xl); margin-bottom: 0.75rem;
+      border-radius: 16px; margin-bottom: 0.75rem;
     }
+    .login-logo-icon img { width: 2rem; height: 2rem; }
     .login-logo-title {
-      display: block; font-size: var(--fs-lg); font-weight: 800;
+      display: block; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 800;
       letter-spacing: 0.5px; color: var(--text);
     }
     .login-logo-sub {
@@ -85,7 +92,7 @@
   <main class="login-container" id="conteudo">
     <div class="login-card">
       <div class="login-logo">
-        <div class="login-logo-icon" aria-hidden="true">🏠</div>
+        <div class="login-logo-icon" aria-hidden="true"><img src="logo-icon.png" alt=""/></div>
         <h1 class="login-logo-title">Casa Inteligente</h1>
         <span class="login-logo-sub">Automação para acessibilidade</span>
       </div>
