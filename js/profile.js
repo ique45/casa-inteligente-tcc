@@ -19,20 +19,48 @@ const PROFILES = [
   }
 ];
 
-const TRIGGER_LABELS_PROFILE = {
-  voz:         '🎤 Voz',
-  botao:       '🔘 Botão',
-  presenca:    '👁️ Presença',
-  horario:     '⏰ Horário',
-  temperatura: '🌡️ Temperatura'
+// Sugestões de acessibilidade por perfil. Recalculadas do zero a cada
+// clique a partir dos perfis atualmente marcados — desmarcar volta ao
+// padrão (texto normal, tema claro, fala desligada). Mobilidade Reduzida
+// não aparece aqui: a dificuldade é motora, não visual, então não sugere
+// nada além do padrão.
+const ACCESSIBILITY_SUGGESTIONS = {
+  visual: { textsize: 'maior', theme: 'escuro', fala: true },
+  idoso:  { textsize: 'grande', fala: true }
 };
+const TEXTSIZE_RANK = { normal: 0, grande: 1, maior: 2 };
+
+function aplicarSugestoesAcessibilidade() {
+  let textsize = 'normal';
+  let tema = 'claro';
+  let fala = false;
+
+  selectedProfiles.forEach(id => {
+    const s = ACCESSIBILITY_SUGGESTIONS[id];
+    if (!s) return;
+    if (s.textsize && TEXTSIZE_RANK[s.textsize] > TEXTSIZE_RANK[textsize]) textsize = s.textsize;
+    if (s.theme === 'escuro') tema = 'escuro';
+    if (s.fala) fala = true;
+  });
+
+  if (window.a11y) {
+    if (window.a11y.getTamanho() !== textsize) window.a11y.aplicarTamanho(textsize, true);
+    if (window.a11y.getTema() !== tema) window.a11y.aplicarTema(tema, true);
+  }
+
+  const falaAtual = localStorage.getItem('ci-fala') === 'on';
+  if (falaAtual !== fala) {
+    localStorage.setItem('ci-fala', fala ? 'on' : 'off');
+    const toggleFala = document.getElementById('toggle-fala');
+    if (toggleFala && !toggleFala.disabled) {
+      toggleFala.classList.toggle('on', fala);
+      toggleFala.setAttribute('aria-checked', String(fala));
+    }
+  }
+}
 
 const ALL_TOGGLES = [
-  { id: 'voz',         label: '🎤 Controle por voz',              hint: 'Ativa o microfone no site.' },
-  { id: 'botao',       label: '🔘 Botão no dashboard',             hint: 'Permite acionar dispositivos pelos botões do dashboard.' },
-  { id: 'presenca',    label: '👁️ Sensor de presença (Arduino)',  hint: 'O Arduino detecta presença e aciona dispositivos.' },
-  { id: 'horario',     label: '⏰ Agendamento por horário (Arduino)', hint: 'O Arduino liga/desliga dispositivos em horários programados.' },
-  { id: 'temperatura', label: '🌡️ Sensor de temperatura (Arduino)', hint: 'O Arduino age conforme a temperatura ambiente.' }
+  { id: 'voz', label: '🎤 Ativar o microfone', hint: 'Ativa o microfone no site.' }
 ];
 
 let selectedProfiles = new Set();
@@ -92,6 +120,7 @@ function renderProfiles() {
       const id = card.dataset.id;
       if (selectedProfiles.has(id)) { selectedProfiles.delete(id); }
       else { selectedProfiles.add(id); }
+      aplicarSugestoesAcessibilidade();
       renderProfiles();
       renderToggles();
       updateSaveBtn();
@@ -119,7 +148,6 @@ function renderToggles() {
   const section = document.getElementById('toggles-section');
   const list = document.getElementById('toggles-list');
 
-  if (selectedProfiles.size === 0) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
   ALL_TOGGLES.forEach(t => {

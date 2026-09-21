@@ -1,17 +1,15 @@
 const TRIGGERS_BY_DEVICE = {
   luz:        ['voz', 'botao', 'presenca'],
-  portao:     ['voz', 'botao', 'presenca'],
+  // Sem "presenca": um portão não deve abrir sozinho só porque detectou
+  // alguém por perto — risco de segurança.
+  portao:     ['voz', 'botao'],
   ventilador: ['voz', 'botao', 'temperatura', 'horario'],
   alarme:     ['botao', 'presenca', 'horario']
 };
 
-const TRIGGER_INFO = {
-  voz:         { label: 'Voz',           icon: '🎤' },
-  botao:       { label: 'Botão no dashboard', icon: '🔘' },
-  presenca:    { label: 'Presença',      icon: '👁️' },
-  temperatura: { label: 'Temperatura',   icon: '🌡️' },
-  horario:     { label: 'Horário',       icon: '⏰' }
-};
+// TRIGGER_INFO, ACTIONS_DEFAULT, ACTIONS_BY_DEVICE e getActions() vêm de
+// js/devices.js — compartilhados com o dashboard, que também precisa
+// descrever automações sem reimplementar o formulário inteiro.
 
 const VOICE_SUGGESTIONS = {
   luz:        ['Ligar luz', 'Acender luz', 'Apagar luz', 'Desligar luz'],
@@ -20,33 +18,12 @@ const VOICE_SUGGESTIONS = {
   alarme:     ['Armar alarme', 'Desarmar alarme', 'Ativar alarme', 'Desativar alarme']
 };
 
-const ACTIONS_DEFAULT = [
-  { id: 'toggle', label: 'Alternar',    icon: '🔄', desc: 'Liga se desligado, desliga se ligado' },
-  { id: 'on',     label: 'Só ligar',    icon: '✅', desc: 'Sempre liga o dispositivo' },
-  { id: 'off',    label: 'Só desligar', icon: '❌', desc: 'Sempre desliga o dispositivo' }
-];
-
-const ACTIONS_BY_DEVICE = {
-  alarme: [
-    { id: 'toggle', label: 'Alternar',  icon: '🔄', desc: 'Arma se desarmado, desarma se armado' },
-    { id: 'on',     label: 'Armar',     icon: '🔒', desc: 'Sempre ativa o alarme' },
-    { id: 'off',    label: 'Desarmar',  icon: '🔓', desc: 'Sempre desativa o alarme' }
-  ],
-  portao: [
-    { id: 'toggle', label: 'Alternar', icon: '🔄', desc: 'Abre se fechado, fecha se aberto' },
-    { id: 'on',     label: 'Abrir',    icon: '🟢', desc: 'Sempre abre o portão' },
-    { id: 'off',    label: 'Fechar',   icon: '🔴', desc: 'Sempre fecha o portão' }
-  ]
-};
-
-function getActions(deviceId) {
-  return ACTIONS_BY_DEVICE[deviceId] || ACTIONS_DEFAULT;
-}
-
 let currentUser = null;
 let form = { device: null, name: '', trigger: null, voiceCommand: '', action: null };
+let editingId = null;
 let _autoInitialized = false;
 let _automationsListUnsubscribe = null;
+let _automationsCache = {};
 
 auth.onAuthStateChanged(user => {
   if (!user) {
@@ -66,7 +43,24 @@ auth.onAuthStateChanged(user => {
   renderDeviceChips();
   renderActionChips();
   loadAutomations();
+
+  // Chegou pelo botao "Editar" do dashboard: automation.html?edit=<id>
+  const editParam = new URLSearchParams(window.location.search).get('edit');
+  if (editParam) openEditWhenLoaded(editParam);
 });
+
+// A automacao pode ainda nao estar no cache no primeiro snapshot (a query
+// do Firestore ainda esta em voo), entao esperamos ela aparecer.
+function openEditWhenLoaded(id, tentativas) {
+  tentativas = tentativas || 0;
+  if (_automationsCache[id]) {
+    enterEditMode(id);
+    history.replaceState(null, '', 'automation.html');
+    return;
+  }
+  if (tentativas > 20) return;
+  setTimeout(() => openEditWhenLoaded(id, tentativas + 1), 150);
+}
 
 // ---- Renderização do formulário ----
 
@@ -96,6 +90,39 @@ function selectDevice(id) {
   updatePreview();
 }
 
+function getTriggerNote(triggerId, deviceId) {
+  if (triggerId === 'botao') {
+    const porDispositivo = {
+      portao: 'O botão no dashboard sempre alterna o estado: abre se estiver fechado, fecha se estiver aberto.',
+      alarme: 'O botão no dashboard sempre alterna o estado: arma se estiver desarmado, desarma se estiver armado.'
+    };
+    return porDispositivo[deviceId] || 'O botão no dashboard sempre alterna o estado do dispositivo: liga se estiver desligado, desliga se estiver ligado.';
+  }
+  const NOTAS = {
+    presenca:    'Requer sensor de presença (PIR) conectado ao Arduino. Sem o sensor físico, essa automação não vai disparar.',
+    temperatura: 'Requer sensor de temperatura conectado ao Arduino. O limite é definido no código — não é possível ajustar aqui.',
+    horario:     'O horário é definido no código do Arduino. Para alterar, peça ao responsável pela configuração do dispositivo.'
+  };
+  return NOTAS[triggerId] || null;
+}
+
+function showTriggerNote(triggerId, deviceId) {
+  let noteEl = document.getElementById('trigger-note');
+  if (!noteEl) {
+    noteEl = document.createElement('p');
+    noteEl.id = 'trigger-note';
+    noteEl.className = 'trigger-note';
+    document.getElementById('trigger-chips').after(noteEl);
+  }
+  const texto = getTriggerNote(triggerId, deviceId);
+  if (texto) {
+    noteEl.textContent = texto;
+    noteEl.style.display = 'block';
+  } else {
+    noteEl.style.display = 'none';
+  }
+}
+
 function renderTriggerChips() {
   const triggers = TRIGGERS_BY_DEVICE[form.device] || [];
   const wrap = document.getElementById('trigger-chips');
@@ -118,25 +145,7 @@ function selectTrigger(id) {
     c.setAttribute('aria-pressed', String(escolhido));
   });
 
-  const TRIGGER_NOTES = {
-    botao:       ({ portao: 'O botão no dashboard sempre alterna o estado: abre se estiver fechado, fecha se estiver aberto.', alarme: 'O botão no dashboard sempre alterna o estado: arma se estiver desarmado, desarma se estiver armado.' })[form.device] || 'O botão no dashboard sempre alterna o estado do dispositivo: liga se estiver desligado, desliga se estiver ligado.',
-    presenca:    'Requer sensor de presença (PIR) conectado ao Arduino. Sem o sensor físico, essa automação não vai disparar.',
-    temperatura: 'Requer sensor de temperatura conectado ao Arduino. O limite é definido no código — não é possível ajustar aqui.',
-    horario:     'O horário é definido no código do Arduino. Para alterar, peça ao responsável pela configuração do dispositivo.'
-  };
-  let noteEl = document.getElementById('trigger-note');
-  if (!noteEl) {
-    noteEl = document.createElement('p');
-    noteEl.id = 'trigger-note';
-    noteEl.className = 'trigger-note';
-    document.getElementById('trigger-chips').after(noteEl);
-  }
-  if (TRIGGER_NOTES[id]) {
-    noteEl.textContent = TRIGGER_NOTES[id];
-    noteEl.style.display = 'block';
-  } else {
-    noteEl.style.display = 'none';
-  }
+  showTriggerNote(id, form.device);
 
   if (id === 'voz') {
     renderVoiceSuggestions();
@@ -180,12 +189,14 @@ function renderVoiceSuggestions() {
 function renderActionChips() {
   const actions = getActions(form.device);
   const wrap = document.getElementById('action-chips');
-  wrap.innerHTML = actions.map(a => `
-    <button type="button" class="chip chip-with-desc" data-id="${a.id}" aria-pressed="false">
+  wrap.innerHTML = actions.map(a => {
+    const escolhido = form.action === a.id;
+    return `
+    <button type="button" class="chip chip-with-desc ${escolhido ? 'selected' : ''}" data-id="${a.id}" aria-pressed="${escolhido}">
       <span class="chip-main">${a.icon} ${escapeHtml(a.label)}</span>
       <span class="chip-desc">${escapeHtml(a.desc)}</span>
-    </button>
-  `).join('');
+    </button>`;
+  }).join('');
   wrap.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => {
       form.action = c.dataset.id;
@@ -207,6 +218,56 @@ function hideFrom(stepId) {
     if (id === stepId) hide = true;
     if (hide) document.getElementById(id).style.display = 'none';
   });
+}
+
+// ---- Editar automação existente ----
+// Reaproveita o mesmo formulario de criacao, mas populado com os dados
+// salvos, sem passar pelos handlers de clique (que resetariam o form).
+
+function enterEditMode(id) {
+  const d = _automationsCache[id];
+  if (!d) return;
+  editingId = id;
+  form = {
+    device: d.deviceType,
+    name: d.deviceName,
+    trigger: d.trigger,
+    voiceCommand: d.voiceCommand || '',
+    action: d.action
+  };
+
+  document.getElementById('form-wrap').style.display = 'block';
+  document.getElementById('btn-new-auto').textContent = '✕ Cancelar';
+
+  document.querySelectorAll('#device-chips .chip').forEach(c => {
+    const escolhido = c.dataset.id === form.device;
+    c.classList.toggle('selected', escolhido);
+    c.setAttribute('aria-pressed', String(escolhido));
+  });
+
+  document.getElementById('input-name').value = form.name;
+  document.getElementById('step-name').style.display = 'block';
+
+  renderActionChips();
+  document.getElementById('step-trigger').style.display = 'block';
+  renderTriggerChips();
+  showTriggerNote(form.trigger, form.device);
+
+  if (form.trigger === 'voz') {
+    renderVoiceSuggestions();
+    document.getElementById('input-voice').value = form.voiceCommand;
+    document.getElementById('step-voice').style.display = 'block';
+    document.getElementById('action-step-num').textContent = '5';
+  } else {
+    document.getElementById('step-voice').style.display = 'none';
+    document.getElementById('action-step-num').textContent = '4';
+  }
+
+  document.getElementById('step-action').style.display = form.trigger === 'botao' ? 'none' : 'block';
+
+  document.getElementById('btn-save-auto').textContent = 'Salvar alterações';
+  updatePreview();
+  document.getElementById('form-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ---- Preview em tempo real ----
@@ -284,31 +345,39 @@ document.getElementById('btn-save-auto').addEventListener('click', async () => {
     deviceType: form.device,
     deviceName: form.name.trim(),
     trigger: form.trigger,
-    action: form.action,
-    enabled: true,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    action: form.action
   };
   if (form.trigger === 'voz') data.voiceCommand = form.voiceCommand.trim();
+  else if (editingId) data.voiceCommand = firebase.firestore.FieldValue.delete();
 
   const errEl = document.getElementById('auto-error-msg');
   try {
-    await db.collection('automations').doc(currentUser.uid)
-      .collection('items').add(data);
+    if (editingId) {
+      await db.collection('automations').doc(currentUser.uid)
+        .collection('items').doc(editingId).update(data);
+    } else {
+      data.enabled = true;
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('automations').doc(currentUser.uid)
+        .collection('items').add(data);
+    }
     if (errEl) errEl.style.display = 'none';
     resetForm();
     document.getElementById('form-wrap').style.display = 'none';
     document.getElementById('btn-new-auto').textContent = '+ Nova automação';
   } catch (err) {
     console.error(err);
-    if (errEl) { errEl.textContent = 'Erro ao salvar. Verifique sua conexão.'; errEl.style.display = 'block'; }
+    const msg = editingId ? 'Erro ao salvar alterações. Verifique sua conexão.' : 'Erro ao salvar. Verifique sua conexão.';
+    if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Salvar automação';
+    btn.textContent = editingId ? 'Salvar alterações' : 'Salvar automação';
   }
 });
 
 function resetForm() {
   form = { device: null, name: '', trigger: null, voiceCommand: '', action: null };
+  editingId = null;
   document.querySelectorAll('.chip').forEach(c => {
     c.classList.remove('selected');
     c.setAttribute('aria-pressed', 'false');
@@ -319,6 +388,7 @@ function resetForm() {
   hideFrom('step-trigger');
   const noteEl = document.getElementById('trigger-note');
   if (noteEl) noteEl.style.display = 'none';
+  document.getElementById('btn-save-auto').textContent = 'Salvar automação';
 }
 
 // ---- Carregar lista de automações ----
@@ -334,24 +404,14 @@ function loadAutomations() {
         list.innerHTML = '<div class="empty-msg">Nenhuma automação cadastrada ainda.</div>';
         return;
       }
+      _automationsCache = {};
+      snap.docs.forEach(doc => { _automationsCache[doc.id] = doc.data(); });
+
       list.innerHTML = snap.docs.map(doc => {
         const d = doc.data();
         const device = DEVICES.find(x => x.id === d.deviceType);
         const isEnabled = d.enabled !== false;
-
-        // Texto "Quando:"
-        let whenText = '';
-        if (d.trigger === 'voz') whenText = `você falar <strong>"${escapeHtml(d.voiceCommand || '')}"</strong>`;
-        else if (d.trigger === 'botao') whenText = `você clicar no botão do dashboard`;
-        else if (d.trigger === 'presenca') whenText = `o sensor detectar presença`;
-        else if (d.trigger === 'temperatura') whenText = `o sensor de temperatura disparar`;
-        else if (d.trigger === 'horario') whenText = `chegar o horário programado`;
-        else whenText = escapeHtml(d.trigger);
-
-        // Texto "O sistema vai:"
-        const actionObj = getActions(d.deviceType).find(a => a.id === d.action);
-        const actionVerb = escapeHtml(actionObj ? actionObj.label.toLowerCase() : (d.action || '?'));
-        const thenText = `<span class="action-verb">${actionVerb}</span> o <strong>${escapeHtml(d.deviceName)}</strong> automaticamente`;
+        const { whenText, thenText } = describeAutomation(d);
 
         const badgeClass = isEnabled ? 'badge badge-active' : 'badge badge-disabled';
         const badgeText = isEnabled ? '⚡ ATIVA' : '● DESLIGADA';
@@ -363,6 +423,7 @@ function loadAutomations() {
               <div class="automation-card-name">${escapeHtml(d.deviceName)}</div>
               <span class="${badgeClass}">${badgeText}</span>
               <button type="button" class="toggle-switch ${isEnabled ? 'on' : ''}" data-id="${doc.id}" role="switch" aria-checked="${isEnabled}"></button>
+              <button class="btn-edit" data-id="${doc.id}" aria-label="Editar automação" title="Editar">✏️</button>
               <button class="btn-delete" data-id="${doc.id}" aria-label="Excluir automação" title="Excluir">🗑️</button>
             </div>
             <div class="automation-card-body">
@@ -378,6 +439,9 @@ function loadAutomations() {
       });
       list.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', () => deleteAutomation(btn.dataset.id));
+      });
+      list.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => enterEditMode(btn.dataset.id));
       });
     });
 }

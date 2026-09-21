@@ -1,12 +1,11 @@
 let currentUser = null;
 let deviceStates = {};
 let automationNames = {};
-let buttonAutomations = {};
-let activeToggles = {};
+let automationsList = [];
 let _dashboardInitialized = false;
 let _rtdbDevicesRef = null;
 let _rtdbStatusRef  = null;
-let _automationNamesUnsubscribe = null;
+let _automationsUnsubscribe = null;
 let _historyUnsubscribe = null;
 
 // O primeiro snapshot do RTDB entrega o estado dos 4 dispositivos de uma vez
@@ -30,13 +29,12 @@ function _teardownListeners() {
   if (_rtdbStatusRef)   { _rtdbStatusRef.off('value');   _rtdbStatusRef   = null; }
   if (_arduinoStatusTimer) { clearInterval(_arduinoStatusTimer); _arduinoStatusTimer = null; }
   _arduinoStatus = null;
-  if (_automationNamesUnsubscribe) { _automationNamesUnsubscribe(); _automationNamesUnsubscribe = null; }
-  if (_historyUnsubscribe)         { _historyUnsubscribe();         _historyUnsubscribe         = null; }
-  deviceStates      = {};
-  automationNames   = {};
-  buttonAutomations = {};
-  activeToggles     = {};
-  currentUser       = null;
+  if (_automationsUnsubscribe) { _automationsUnsubscribe(); _automationsUnsubscribe = null; }
+  if (_historyUnsubscribe)     { _historyUnsubscribe();     _historyUnsubscribe     = null; }
+  deviceStates    = {};
+  automationNames = {};
+  automationsList = [];
+  currentUser     = null;
 }
 
 auth.onAuthStateChanged(async user => {
@@ -48,7 +46,6 @@ auth.onAuthStateChanged(async user => {
   try {
     const snap = await db.collection('users').doc(user.uid).get();
     const toggles = (snap.data() || {}).activeToggles || {};
-    activeToggles = toggles;
 
     const voiceSection = document.getElementById('voice-section');
     if (toggles.voz) {
@@ -67,59 +64,120 @@ auth.onAuthStateChanged(async user => {
       `;
     }
 
-    listenAutomationNames();
+    listenAutomations();
     listenDeviceStates();
     listenArduinoStatus();
     loadHistory();
   } catch (err) {
     console.error('Erro ao carregar dashboard:', err);
-    document.getElementById('devices-grid').innerHTML =
+    document.getElementById('automations-grid').innerHTML =
       '<p style="color:var(--text-muted)">Erro ao carregar. Verifique sua conexão e recarregue a página.</p>';
   }
 });
 
-function renderDevices() {
-  const grid = document.getElementById('devices-grid');
-  if (activeToggles.botao === false) {
-    grid.innerHTML = `<p style="color:var(--text-muted);font-size:14px">
-      Controle por botão desativado.
-      <span style="color:var(--purple-light);cursor:pointer" onclick="window.location.href='profile.html'">
-        Ativar nas configurações de perfil →
+function renderAutomations() {
+  const grid = document.getElementById('automations-grid');
+  if (!automationsList.length) {
+    grid.innerHTML = `<p class="empty-msg">
+      Nenhuma automação cadastrada ainda.
+      <span style="color:var(--purple-light);cursor:pointer" onclick="window.location.href='automation.html'">
+        Criar a primeira automação →
       </span>
     </p>`;
     return;
   }
-  grid.innerHTML = DEVICES.map(d => {
-    const auto = buttonAutomations[d.id];
-    const isOn = deviceStates[d.id] === true;
-    const statusLabel = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
-    if (auto) {
-      return `
-        <button class="device-card${isOn ? ' on' : ''}" id="btn-${d.id}" data-id="${d.id}" aria-pressed="${isOn ? 'true' : 'false'}">
-          <span class="device-card-icon" aria-hidden="true">${d.icon}</span>
-          <div class="device-card-info">
-            <div class="device-card-name">${escapeHtml(d.name)}</div>
-            <div class="device-card-status" id="state-${d.id}">${statusLabel}</div>
-          </div>
-          <div class="device-toggle${isOn ? ' on' : ''}" id="toggle-${d.id}">
-            <div class="toggle-thumb"></div>
-          </div>
-        </button>`;
+
+  grid.innerHTML = automationsList.map(item => {
+    const d = item.data;
+    const device = DEVICES.find(x => x.id === d.deviceType);
+    const isEnabled = d.enabled !== false;
+    const { whenText, thenText } = describeAutomation(d);
+
+    // Só a automação de gatilho "botão" tem um dispositivo físico pra
+    // acionar de verdade — vira o botão grande do card. As outras (voz,
+    // presença, horário...) não têm essa ação, só o interruptor pequeno.
+    let primaryBtnHtml = '';
+    if (d.trigger === 'botao' && device) {
+      const isOn = deviceStates[d.deviceType] === true;
+      const label = isOn ? device.labelOn.toUpperCase() : device.labelOff.toUpperCase();
+      primaryBtnHtml = `
+        <div class="automation-card-primary-wrap">
+          <button type="button" class="automation-card-primary-btn${isOn ? ' on' : ''}" id="acionar-${item.id}"
+            data-automation-id="${item.id}" data-device-id="${d.deviceType}"
+            aria-pressed="${isOn}" ${isEnabled ? '' : 'disabled'}
+            title="${isEnabled ? 'Ligar ou desligar agora' : 'Ative a automação para poder acionar'}">
+            <span id="acionar-label-${item.id}">${label}</span>
+          </button>
+        </div>`;
     }
+
     return `
-      <div class="device-card device-card--readonly" id="btn-${d.id}">
-        <span class="device-card-icon" aria-hidden="true">${d.icon}</span>
-        <div class="device-card-info">
-          <div class="device-card-name">${escapeHtml(d.name)}</div>
-          <div class="device-card-status" id="state-${d.id}">${statusLabel}</div>
+      <div class="automation-card ${isEnabled ? '' : 'disabled'}">
+        <div class="automation-card-header">
+          <span class="automation-card-icon" aria-hidden="true">${device?.icon || '⚙️'}</span>
+          <div class="automation-card-name">${escapeHtml(d.deviceName)}</div>
+          <button type="button" class="toggle-switch ${isEnabled ? 'on' : ''}" data-id="${item.id}" role="switch" aria-checked="${isEnabled}" aria-label="Ativar ou desativar automação ${escapeHtml(d.deviceName)}"></button>
+          <button class="btn-edit" data-id="${item.id}" aria-label="Editar automação ${escapeHtml(d.deviceName)}" title="Editar">✏️</button>
         </div>
-        <span class="device-card-hint">Sem automação</span>
+        ${primaryBtnHtml}
+        <div class="automation-card-body">
+          <div class="automation-card-when"><span style="color:var(--text-muted);font-weight:600">Quando: </span>${whenText}</div>
+          <div class="automation-card-then"><span style="color:var(--text-muted);font-weight:600">O sistema vai: </span>${thenText}</div>
+        </div>
       </div>`;
   }).join('');
 
-  grid.querySelectorAll('button.device-card').forEach(btn => {
-    btn.addEventListener('click', () => toggleDevice(btn.dataset.id));
+  grid.querySelectorAll('.toggle-switch').forEach(sw => {
+    sw.addEventListener('click', () => toggleAutomationEnabled(sw.dataset.id, !sw.classList.contains('on')));
   });
+  grid.querySelectorAll('.btn-edit').forEach(btn => {
+    btn.addEventListener('click', () => { window.location.href = `automation.html?edit=${btn.dataset.id}`; });
+  });
+  grid.querySelectorAll('.automation-card-primary-btn').forEach(btn => {
+    btn.addEventListener('click', () => acionarDispositivo(btn.dataset.automationId, btn.dataset.deviceId));
+  });
+}
+
+async function acionarDispositivo(automationId, deviceId) {
+  if (!currentUser) return;
+  if (deviceStates[deviceId] === undefined) return;
+  const item = automationsList.find(x => x.id === automationId);
+  if (!item) return;
+  const d = DEVICES.find(x => x.id === deviceId);
+  const prevState = deviceStates[deviceId] === true;
+  const action = item.data.action || 'toggle';
+  const newState = action === 'on' ? true : action === 'off' ? false : !prevState;
+
+  const btn = document.getElementById(`acionar-${automationId}`);
+  const label = document.getElementById(`acionar-label-${automationId}`);
+
+  if (d?.labelTransition) {
+    if (label) label.textContent = (newState ? d.labelTransition.on : d.labelTransition.off).toUpperCase();
+    if (btn) btn.disabled = true;
+    await new Promise(r => setTimeout(r, 1200));
+    if (!currentUser) { if (btn) btn.disabled = false; return; }
+  }
+
+  try {
+    await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: newState, ts: Date.now() });
+    await logHistory(deviceId, 'botao', newState);
+  } catch (err) {
+    console.error('Erro ao acionar dispositivo:', err);
+    if (label) label.textContent = (prevState ? d.labelOn : d.labelOff).toUpperCase();
+    speech.falar(`Não foi possível ${newState ? 'ligar' : 'desligar'} ${d ? d.name.toLowerCase() : 'o dispositivo'}`);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function toggleAutomationEnabled(id, enabled) {
+  if (!currentUser) return;
+  try {
+    await db.collection('automations').doc(currentUser.uid)
+      .collection('items').doc(id).update({ enabled });
+  } catch (err) {
+    console.error('Erro ao atualizar automação:', err);
+  }
 }
 
 function listenDeviceStates() {
@@ -135,23 +193,22 @@ function listenDeviceStates() {
   });
 }
 
+// Atualiza os botoes "acionar" das automacoes de gatilho botao que
+// controlam este dispositivo, e anuncia por voz toda mudanca de estado
+// confirmada pelo Firebase — venha do proprio botao, da voz ou do ESP8266.
 function updateDeviceUI(deviceId, isOn) {
   const d = DEVICES.find(x => x.id === deviceId);
-  const btn = document.getElementById(`btn-${deviceId}`);
-  const stateEl = document.getElementById(`state-${deviceId}`);
-  const toggleEl = document.getElementById(`toggle-${deviceId}`);
-  if (!btn || !stateEl || !d) return;
-  if (!btn.disabled) {
-    if (btn.tagName === 'BUTTON') {
+  if (!d) return;
+  automationsList.forEach(item => {
+    if (item.data.trigger !== 'botao' || item.data.deviceType !== deviceId) return;
+    const btn = document.getElementById(`acionar-${item.id}`);
+    const label = document.getElementById(`acionar-label-${item.id}`);
+    if (btn && !btn.disabled) {
       btn.classList.toggle('on', isOn);
-      // O leitor de tela le o estado por aqui; a classe .on so pinta.
       btn.setAttribute('aria-pressed', String(isOn));
-      if (toggleEl) toggleEl.classList.toggle('on', isOn);
     }
-    stateEl.textContent = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
-  }
-  // Gancho unico: toda mudanca de estado confirmada pelo Firebase passa aqui,
-  // venha do botao, da voz ou do proprio ESP8266.
+    if (label) label.textContent = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
+  });
   if (_falaLiberada) speech.falar(frasePara(deviceId, isOn));
 }
 
@@ -193,55 +250,17 @@ function renderArduinoStatus() {
     }
 }
 
-async function toggleDevice(deviceId) {
-  if (!currentUser) return;
-  if (deviceStates[deviceId] === undefined) return;
-  const d = DEVICES.find(x => x.id === deviceId);
-  const prevState = deviceStates[deviceId];
-  const auto = buttonAutomations[deviceId];
-  const action = auto?.action || 'toggle';
-  const newState = action === 'on' ? true : action === 'off' ? false : !prevState;
-
-  const btn = document.getElementById(`btn-${deviceId}`);
-  const stateEl = document.getElementById(`state-${deviceId}`);
-
-  if (d?.labelTransition) {
-    if (stateEl) stateEl.textContent = newState ? d.labelTransition.on : d.labelTransition.off;
-    if (btn) btn.disabled = true;
-    await new Promise(r => setTimeout(r, 1200));
-    if (!currentUser) { if (btn) btn.disabled = false; return; }
-  }
-
-  let rtdbOk = false;
-  try {
-    await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: newState, ts: Date.now() });
-    rtdbOk = true;
-    await logHistory(deviceId, 'botao', newState);
-  } catch (err) {
-    console.error('Erro ao acionar dispositivo:', err);
-    if (!rtdbOk) {
-      updateDeviceUI(deviceId, prevState);
-      speech.falar(`Não foi possível ${newState ? 'ligar' : 'desligar'} ${d ? d.name.toLowerCase() : 'o dispositivo'}`);
-    }
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-function listenAutomationNames() {
-  if (_automationNamesUnsubscribe) _automationNamesUnsubscribe();
-  _automationNamesUnsubscribe = db.collection('automations').doc(currentUser.uid)
-    .collection('items').onSnapshot(snap => {
-      automationNames   = {};
-      buttonAutomations = {};
-      snap.docs.forEach(doc => {
+function listenAutomations() {
+  if (_automationsUnsubscribe) _automationsUnsubscribe();
+  _automationsUnsubscribe = db.collection('automations').doc(currentUser.uid)
+    .collection('items').orderBy('createdAt', 'desc').onSnapshot(snap => {
+      automationNames = {};
+      automationsList = snap.docs.map(doc => {
         const d = doc.data();
         if (!automationNames[d.deviceType]) automationNames[d.deviceType] = d.deviceName;
-        if (d.trigger === 'botao' && d.enabled !== false && !buttonAutomations[d.deviceType]) {
-          buttonAutomations[d.deviceType] = { action: d.action || 'toggle' };
-        }
+        return { id: doc.id, data: d };
       });
-      renderDevices();
+      renderAutomations();
     });
 }
 

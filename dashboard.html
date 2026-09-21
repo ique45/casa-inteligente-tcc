@@ -22,7 +22,7 @@
   </script>
   <link rel="stylesheet" href="css/app.css"/>
   <style>
-    .devices-list { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 2rem; }
+    .automations-list { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 2rem; }
     .voice-btn {
       display: flex; align-items: center; gap: 0.875rem;
       padding: 1rem 1.25rem; background: var(--surface-2);
@@ -108,15 +108,20 @@
     </nav>
 
     <main class="page-body" id="conteudo">
-      <h1 class="section-title">Seus dispositivos</h1>
-      <p class="section-subtitle">Toque para ligar ou desligar</p>
+      <div class="section-header">
+        <div>
+          <h1 class="section-title" style="margin:0">Suas automações</h1>
+          <p class="section-subtitle" style="margin:0.25rem 0 0">Ative, desative ou edite as automações que você criou</p>
+        </div>
+        <a href="automation.html" class="btn btn-primary" style="text-decoration:none">+ Nova automação</a>
+      </div>
 
       <p class="offline-hint" id="offline-hint">
         Hardware ainda não conectado — os comandos ficam salvos e serão aplicados quando o ESP8266 for integrado.
       </p>
 
-      <div class="devices-list" id="devices-grid">
-        <div class="empty-msg">Carregando dispositivos…</div>
+      <div class="automations-list" id="automations-grid">
+        <div class="empty-msg">Carregando automações…</div>
       </div>
 
       <div id="voice-section" style="display:none">

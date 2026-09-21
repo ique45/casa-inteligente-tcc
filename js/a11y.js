@@ -71,4 +71,14 @@
 
   aplicarTamanho(tamanhoAtual, false);
   aplicarTema(temaAtual, false);
+
+  // Exposto para a tela de Perfil aplicar sugestões de acessibilidade por
+  // perfil (idoso, deficiência visual etc.) sem duplicar a lógica de
+  // aplicar/anunciar/pintar os botões da barra.
+  window.a11y = {
+    aplicarTamanho: aplicarTamanho,
+    aplicarTema: aplicarTema,
+    getTamanho: function () { return tamanhoAtual; },
+    getTema: function () { return temaAtual; }
+  };
 })();

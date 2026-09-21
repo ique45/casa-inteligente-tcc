@@ -13,6 +13,57 @@ function frasePara(deviceId, isOn) {
   return `${d.name} ${isOn ? d.speechOn : d.speechOff}`;
 }
 
+// Compartilhado entre automation.html (formulário) e dashboard.html (lista
+// de cards): descreve as ações disponíveis por dispositivo e monta os
+// textos "Quando: / O sistema vai:" de uma automação salva.
+
+const TRIGGER_INFO = {
+  voz:         { label: 'Voz',           icon: '🎤' },
+  botao:       { label: 'Botão no dashboard', icon: '🔘' },
+  presenca:    { label: 'Presença',      icon: '👁️' },
+  temperatura: { label: 'Temperatura',   icon: '🌡️' },
+  horario:     { label: 'Horário',       icon: '⏰' }
+};
+
+const ACTIONS_DEFAULT = [
+  { id: 'toggle', label: 'Alternar',    icon: '🔄', desc: 'Liga se desligado, desliga se ligado' },
+  { id: 'on',     label: 'Só ligar',    icon: '✅', desc: 'Sempre liga o dispositivo' },
+  { id: 'off',    label: 'Só desligar', icon: '❌', desc: 'Sempre desliga o dispositivo' }
+];
+
+const ACTIONS_BY_DEVICE = {
+  alarme: [
+    { id: 'toggle', label: 'Alternar',  icon: '🔄', desc: 'Arma se desarmado, desarma se armado' },
+    { id: 'on',     label: 'Armar',     icon: '🔒', desc: 'Sempre ativa o alarme' },
+    { id: 'off',    label: 'Desarmar',  icon: '🔓', desc: 'Sempre desativa o alarme' }
+  ],
+  portao: [
+    { id: 'toggle', label: 'Alternar', icon: '🔄', desc: 'Abre se fechado, fecha se aberto' },
+    { id: 'on',     label: 'Abrir',    icon: '🟢', desc: 'Sempre abre o portão' },
+    { id: 'off',    label: 'Fechar',   icon: '🔴', desc: 'Sempre fecha o portão' }
+  ]
+};
+
+function getActions(deviceId) {
+  return ACTIONS_BY_DEVICE[deviceId] || ACTIONS_DEFAULT;
+}
+
+function describeAutomation(d) {
+  let whenText = '';
+  if (d.trigger === 'voz') whenText = `você falar <strong>"${escapeHtml(d.voiceCommand || '')}"</strong>`;
+  else if (d.trigger === 'botao') whenText = `você clicar no botão do dashboard`;
+  else if (d.trigger === 'presenca') whenText = `o sensor detectar presença`;
+  else if (d.trigger === 'temperatura') whenText = `o sensor de temperatura disparar`;
+  else if (d.trigger === 'horario') whenText = `chegar o horário programado`;
+  else whenText = escapeHtml(d.trigger);
+
+  const actionObj = getActions(d.deviceType).find(a => a.id === d.action);
+  const actionVerb = escapeHtml(actionObj ? actionObj.label.toLowerCase() : (d.action || '?'));
+  const thenText = `<span class="action-verb">${actionVerb}</span> o <strong>${escapeHtml(d.deviceName)}</strong> automaticamente`;
+
+  return { whenText, thenText };
+}
+
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
