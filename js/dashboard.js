@@ -24,16 +24,25 @@ const ARDUINO_TIMEOUT_MS = 30000;
 let _arduinoStatus = null;   // último valor lido de arduino_status/{uid}
 let _arduinoStatusTimer = null;
 
+// O rótulo "Armando..." só sai quando o ESP8266 confirma o novo estado em
+// devices/{uid}. Sem placa ligada essa confirmação nunca chega, e o botão
+// ficava preso em "Armando..." para sempre. Damos o dobro da cadência de
+// sync (~10s) antes de desistir de esperar e mostrar o estado real.
+const CONFIRMACAO_TIMEOUT_MS = 20000;
+const _esperandoConfirmacao = {};   // deviceId -> id do setTimeout
+
 function _teardownListeners() {
   if (_rtdbDevicesRef)  { _rtdbDevicesRef.off('value');  _rtdbDevicesRef  = null; }
   if (_rtdbStatusRef)   { _rtdbStatusRef.off('value');   _rtdbStatusRef   = null; }
   if (_arduinoStatusTimer) { clearInterval(_arduinoStatusTimer); _arduinoStatusTimer = null; }
+  Object.keys(_esperandoConfirmacao).forEach(_pararEspera);
   _arduinoStatus = null;
   if (_automationsUnsubscribe) { _automationsUnsubscribe(); _automationsUnsubscribe = null; }
   if (_historyUnsubscribe)     { _historyUnsubscribe();     _historyUnsubscribe     = null; }
   deviceStates    = {};
   automationNames = {};
   automationsList = [];
+  voiceControl.setAutomacoes([]);
   currentUser     = null;
 }
 
@@ -145,8 +154,7 @@ async function acionarDispositivo(automationId, deviceId) {
   if (!item) return;
   const d = DEVICES.find(x => x.id === deviceId);
   const prevState = deviceStates[deviceId] === true;
-  const action = item.data.action || 'toggle';
-  const newState = action === 'on' ? true : action === 'off' ? false : !prevState;
+  const newState = !prevState;   // toda automação alterna
 
   const btn = document.getElementById(`acionar-${automationId}`);
   const label = document.getElementById(`acionar-label-${automationId}`);
@@ -161,6 +169,7 @@ async function acionarDispositivo(automationId, deviceId) {
   try {
     await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: newState, ts: Date.now() });
     await logHistory(deviceId, 'botao', newState);
+    aguardarConfirmacao(deviceId, newState);
   } catch (err) {
     console.error('Erro ao acionar dispositivo:', err);
     if (label) label.textContent = (prevState ? d.labelOn : d.labelOff).toUpperCase();
@@ -168,6 +177,46 @@ async function acionarDispositivo(automationId, deviceId) {
   } finally {
     if (btn) btn.disabled = false;
   }
+}
+
+// Chamada depois de gravar um comando (botão ou voz): espera o ESP8266
+// confirmar em devices/{uid} ou avisa que a casa não respondeu.
+function aguardarConfirmacao(deviceId, newState) {
+  _pararEspera(deviceId);
+  // Mesmo estado de antes: o Firebase não dispara mudança, então não há
+  // confirmação a esperar.
+  if (newState === (deviceStates[deviceId] === true)) mostrarEstadoReal(deviceId);
+  else if (!arduinoOnline()) avisarSemPlaca(deviceId);
+  else _esperandoConfirmacao[deviceId] = setTimeout(() => avisarSemPlaca(deviceId), CONFIRMACAO_TIMEOUT_MS);
+}
+
+function _pararEspera(deviceId) {
+  clearTimeout(_esperandoConfirmacao[deviceId]);
+  delete _esperandoConfirmacao[deviceId];
+}
+
+function arduinoOnline() {
+  const data = _arduinoStatus || {};
+  return !!data.online && !!data.lastSeen && (Date.now() - data.lastSeen) < ARDUINO_TIMEOUT_MS;
+}
+
+// Volta os rótulos dos botões deste dispositivo para o último estado
+// confirmado, sem anunciar por voz (nada mudou de fato na casa).
+function mostrarEstadoReal(deviceId) {
+  const d = DEVICES.find(x => x.id === deviceId);
+  if (!d) return;
+  const isOn = deviceStates[deviceId] === true;
+  automationsList.forEach(item => {
+    if (item.data.trigger !== 'botao' || item.data.deviceType !== deviceId) return;
+    const label = document.getElementById(`acionar-label-${item.id}`);
+    if (label) label.textContent = (isOn ? d.labelOn : d.labelOff).toUpperCase();
+  });
+}
+
+function avisarSemPlaca(deviceId) {
+  _pararEspera(deviceId);
+  mostrarEstadoReal(deviceId);
+  speech.falar('A casa não respondeu. O comando ficou salvo e será feito quando a placa estiver ligada.');
 }
 
 async function toggleAutomationEnabled(id, enabled) {
@@ -199,6 +248,7 @@ function listenDeviceStates() {
 function updateDeviceUI(deviceId, isOn) {
   const d = DEVICES.find(x => x.id === deviceId);
   if (!d) return;
+  _pararEspera(deviceId);
   automationsList.forEach(item => {
     if (item.data.trigger !== 'botao' || item.data.deviceType !== deviceId) return;
     const btn = document.getElementById(`acionar-${item.id}`);
@@ -260,14 +310,15 @@ function listenAutomations() {
         if (!automationNames[d.deviceType]) automationNames[d.deviceType] = d.deviceName;
         return { id: doc.id, data: d };
       });
+      voiceControl.setAutomacoes(automationsList);
       renderAutomations();
     });
 }
 
-async function logHistory(deviceId, trigger, state) {
+async function logHistory(deviceId, trigger, state, nome) {
   const device = DEVICES.find(d => d.id === deviceId);
   if (!device) return;
-  const deviceName = automationNames[deviceId] || device.name;
+  const deviceName = nome || automationNames[deviceId] || device.name;
   await db.collection('users').doc(currentUser.uid)
     .collection('history').add({
       device: deviceName,
@@ -313,6 +364,12 @@ function loadHistory() {
     });
 }
 
+// Mostra na dica um comando que o usuário salvou, se houver algum ativo.
+function exemploDeComando() {
+  const voz = automationsList.find(a => a.data.trigger === 'voz' && a.data.enabled !== false && a.data.voiceOn);
+  return voz ? voz.data.voiceOn : 'acender luz';
+}
+
 function initVoice() {
   const btn = document.getElementById('btn-mic');
   const status = document.getElementById('mic-status');
@@ -331,14 +388,15 @@ function initVoice() {
     status.textContent = ERROR_MSGS[code] || 'Erro ao usar o microfone. Tente novamente.';
   };
 
-  voiceControl.onResult = async ({ command, deviceId, action }) => {
+  voiceControl.onResult = async ({ command, deviceId, action, automationName, frase }) => {
     if (deviceId && action !== null) {
       try {
         if (!currentUser) return;
         _voiceResultHandled = true;
         await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: action, ts: Date.now() });
-        await logHistory(deviceId, 'voz', action);
-        status.textContent = `Comando reconhecido: "${command}"`;
+        await logHistory(deviceId, 'voz', action, automationName);
+        aguardarConfirmacao(deviceId, action);
+        status.textContent = `Comando reconhecido: "${frase || command}"`;
         setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 3000);
       } catch (err) {
         console.error('Erro ao enviar comando de voz:', err);
@@ -346,6 +404,8 @@ function initVoice() {
         setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 5000);
       }
     } else {
+      // Sem isto o onEnd, que chega logo depois, apagava a mensagem.
+      _voiceResultHandled = true;
       status.textContent = `Não entendi: "${command}"`;
       setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 3000);
     }
@@ -372,7 +432,7 @@ function initVoice() {
       }
       btn.classList.add('listening');
       btn.textContent = '🎙️ Ouvindo...';
-      status.textContent = 'Fale um comando (ex: "ligar luz", "abrir portão", "armar alarme")';
+      status.textContent = `Fale um comando (ex: "${exemploDeComando()}")`;
     }
   });
 }
