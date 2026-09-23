@@ -42,6 +42,7 @@ function _teardownListeners() {
   deviceStates    = {};
   automationNames = {};
   automationsList = [];
+  voiceControl.setAutomacoes([]);
   currentUser     = null;
 }
 
@@ -153,8 +154,7 @@ async function acionarDispositivo(automationId, deviceId) {
   if (!item) return;
   const d = DEVICES.find(x => x.id === deviceId);
   const prevState = deviceStates[deviceId] === true;
-  const action = item.data.action || 'toggle';
-  const newState = action === 'on' ? true : action === 'off' ? false : !prevState;
+  const newState = !prevState;   // toda automação alterna
 
   const btn = document.getElementById(`acionar-${automationId}`);
   const label = document.getElementById(`acionar-label-${automationId}`);
@@ -310,14 +310,15 @@ function listenAutomations() {
         if (!automationNames[d.deviceType]) automationNames[d.deviceType] = d.deviceName;
         return { id: doc.id, data: d };
       });
+      voiceControl.setAutomacoes(automationsList);
       renderAutomations();
     });
 }
 
-async function logHistory(deviceId, trigger, state) {
+async function logHistory(deviceId, trigger, state, nome) {
   const device = DEVICES.find(d => d.id === deviceId);
   if (!device) return;
-  const deviceName = automationNames[deviceId] || device.name;
+  const deviceName = nome || automationNames[deviceId] || device.name;
   await db.collection('users').doc(currentUser.uid)
     .collection('history').add({
       device: deviceName,
@@ -363,6 +364,12 @@ function loadHistory() {
     });
 }
 
+// Mostra na dica um comando que o usuário salvou, se houver algum ativo.
+function exemploDeComando() {
+  const voz = automationsList.find(a => a.data.trigger === 'voz' && a.data.enabled !== false && a.data.voiceOn);
+  return voz ? voz.data.voiceOn : 'acender luz';
+}
+
 function initVoice() {
   const btn = document.getElementById('btn-mic');
   const status = document.getElementById('mic-status');
@@ -381,15 +388,15 @@ function initVoice() {
     status.textContent = ERROR_MSGS[code] || 'Erro ao usar o microfone. Tente novamente.';
   };
 
-  voiceControl.onResult = async ({ command, deviceId, action }) => {
+  voiceControl.onResult = async ({ command, deviceId, action, automationName, frase }) => {
     if (deviceId && action !== null) {
       try {
         if (!currentUser) return;
         _voiceResultHandled = true;
         await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: action, ts: Date.now() });
-        await logHistory(deviceId, 'voz', action);
+        await logHistory(deviceId, 'voz', action, automationName);
         aguardarConfirmacao(deviceId, action);
-        status.textContent = `Comando reconhecido: "${command}"`;
+        status.textContent = `Comando reconhecido: "${frase || command}"`;
         setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 3000);
       } catch (err) {
         console.error('Erro ao enviar comando de voz:', err);
@@ -397,6 +404,8 @@ function initVoice() {
         setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 5000);
       }
     } else {
+      // Sem isto o onEnd, que chega logo depois, apagava a mensagem.
+      _voiceResultHandled = true;
       status.textContent = `Não entendi: "${command}"`;
       setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 3000);
     }
@@ -423,7 +432,7 @@ function initVoice() {
       }
       btn.classList.add('listening');
       btn.textContent = '🎙️ Ouvindo...';
-      status.textContent = 'Fale um comando (ex: "ligar luz", "abrir portão", "armar alarme")';
+      status.textContent = `Fale um comando (ex: "${exemploDeComando()}")`;
     }
   });
 }
