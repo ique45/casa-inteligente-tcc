@@ -24,10 +24,18 @@ const ARDUINO_TIMEOUT_MS = 30000;
 let _arduinoStatus = null;   // último valor lido de arduino_status/{uid}
 let _arduinoStatusTimer = null;
 
+// O rótulo "Armando..." só sai quando o ESP8266 confirma o novo estado em
+// devices/{uid}. Sem placa ligada essa confirmação nunca chega, e o botão
+// ficava preso em "Armando..." para sempre. Damos o dobro da cadência de
+// sync (~10s) antes de desistir de esperar e mostrar o estado real.
+const CONFIRMACAO_TIMEOUT_MS = 20000;
+const _esperandoConfirmacao = {};   // deviceId -> id do setTimeout
+
 function _teardownListeners() {
   if (_rtdbDevicesRef)  { _rtdbDevicesRef.off('value');  _rtdbDevicesRef  = null; }
   if (_rtdbStatusRef)   { _rtdbStatusRef.off('value');   _rtdbStatusRef   = null; }
   if (_arduinoStatusTimer) { clearInterval(_arduinoStatusTimer); _arduinoStatusTimer = null; }
+  Object.keys(_esperandoConfirmacao).forEach(_pararEspera);
   _arduinoStatus = null;
   if (_automationsUnsubscribe) { _automationsUnsubscribe(); _automationsUnsubscribe = null; }
   if (_historyUnsubscribe)     { _historyUnsubscribe();     _historyUnsubscribe     = null; }
@@ -161,6 +169,7 @@ async function acionarDispositivo(automationId, deviceId) {
   try {
     await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: newState, ts: Date.now() });
     await logHistory(deviceId, 'botao', newState);
+    aguardarConfirmacao(deviceId, newState);
   } catch (err) {
     console.error('Erro ao acionar dispositivo:', err);
     if (label) label.textContent = (prevState ? d.labelOn : d.labelOff).toUpperCase();
@@ -168,6 +177,46 @@ async function acionarDispositivo(automationId, deviceId) {
   } finally {
     if (btn) btn.disabled = false;
   }
+}
+
+// Chamada depois de gravar um comando (botão ou voz): espera o ESP8266
+// confirmar em devices/{uid} ou avisa que a casa não respondeu.
+function aguardarConfirmacao(deviceId, newState) {
+  _pararEspera(deviceId);
+  // Mesmo estado de antes: o Firebase não dispara mudança, então não há
+  // confirmação a esperar.
+  if (newState === (deviceStates[deviceId] === true)) mostrarEstadoReal(deviceId);
+  else if (!arduinoOnline()) avisarSemPlaca(deviceId);
+  else _esperandoConfirmacao[deviceId] = setTimeout(() => avisarSemPlaca(deviceId), CONFIRMACAO_TIMEOUT_MS);
+}
+
+function _pararEspera(deviceId) {
+  clearTimeout(_esperandoConfirmacao[deviceId]);
+  delete _esperandoConfirmacao[deviceId];
+}
+
+function arduinoOnline() {
+  const data = _arduinoStatus || {};
+  return !!data.online && !!data.lastSeen && (Date.now() - data.lastSeen) < ARDUINO_TIMEOUT_MS;
+}
+
+// Volta os rótulos dos botões deste dispositivo para o último estado
+// confirmado, sem anunciar por voz (nada mudou de fato na casa).
+function mostrarEstadoReal(deviceId) {
+  const d = DEVICES.find(x => x.id === deviceId);
+  if (!d) return;
+  const isOn = deviceStates[deviceId] === true;
+  automationsList.forEach(item => {
+    if (item.data.trigger !== 'botao' || item.data.deviceType !== deviceId) return;
+    const label = document.getElementById(`acionar-label-${item.id}`);
+    if (label) label.textContent = (isOn ? d.labelOn : d.labelOff).toUpperCase();
+  });
+}
+
+function avisarSemPlaca(deviceId) {
+  _pararEspera(deviceId);
+  mostrarEstadoReal(deviceId);
+  speech.falar('A casa não respondeu. O comando ficou salvo e será feito quando a placa estiver ligada.');
 }
 
 async function toggleAutomationEnabled(id, enabled) {
@@ -199,6 +248,7 @@ function listenDeviceStates() {
 function updateDeviceUI(deviceId, isOn) {
   const d = DEVICES.find(x => x.id === deviceId);
   if (!d) return;
+  _pararEspera(deviceId);
   automationsList.forEach(item => {
     if (item.data.trigger !== 'botao' || item.data.deviceType !== deviceId) return;
     const btn = document.getElementById(`acionar-${item.id}`);
@@ -338,6 +388,7 @@ function initVoice() {
         _voiceResultHandled = true;
         await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: action, ts: Date.now() });
         await logHistory(deviceId, 'voz', action);
+        aguardarConfirmacao(deviceId, action);
         status.textContent = `Comando reconhecido: "${command}"`;
         setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 3000);
       } catch (err) {
