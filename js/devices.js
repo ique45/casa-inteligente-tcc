@@ -14,8 +14,8 @@ function frasePara(deviceId, isOn) {
 }
 
 // Compartilhado entre automation.html (formulário) e dashboard.html (lista
-// de cards): descreve as ações disponíveis por dispositivo e monta os
-// textos "Quando: / O sistema vai:" de uma automação salva.
+// de cards e microfone): gatilhos, comandos de voz e os textos
+// "Quando: / O sistema vai:" de uma automação salva.
 
 const TRIGGER_INFO = {
   voz:         { label: 'Voz',           icon: '🎤' },
@@ -25,42 +25,110 @@ const TRIGGER_INFO = {
   horario:     { label: 'Horário',       icon: '⏰' }
 };
 
-const ACTIONS_DEFAULT = [
-  { id: 'toggle', label: 'Alternar',    icon: '🔄', desc: 'Liga se desligado, desliga se ligado' },
-  { id: 'on',     label: 'Só ligar',    icon: '✅', desc: 'Sempre liga o dispositivo' },
-  { id: 'off',    label: 'Só desligar', icon: '❌', desc: 'Sempre desliga o dispositivo' }
-];
-
-const ACTIONS_BY_DEVICE = {
-  alarme: [
-    { id: 'toggle', label: 'Alternar',  icon: '🔄', desc: 'Arma se desarmado, desarma se armado' },
-    { id: 'on',     label: 'Armar',     icon: '🔒', desc: 'Sempre ativa o alarme' },
-    { id: 'off',    label: 'Desarmar',  icon: '🔓', desc: 'Sempre desativa o alarme' }
-  ],
-  portao: [
-    { id: 'toggle', label: 'Alternar', icon: '🔄', desc: 'Abre se fechado, fecha se aberto' },
-    { id: 'on',     label: 'Abrir',    icon: '🟢', desc: 'Sempre abre o portão' },
-    { id: 'off',    label: 'Fechar',   icon: '🔴', desc: 'Sempre fecha o portão' }
-  ]
+// Pares de verbos que o formulário oferece para a automação de voz. O
+// primeiro de cada lista é o padrão, já escolhido ao abrir a etapa de voz.
+const VOICE_VERBS = {
+  luz:        [{ on: 'Acender', off: 'Apagar' },   { on: 'Ligar', off: 'Desligar' }],
+  ventilador: [{ on: 'Ligar',   off: 'Desligar' }],
+  portao:     [{ on: 'Abrir',   off: 'Fechar' }],
+  alarme:     [{ on: 'Armar',   off: 'Desarmar' }, { on: 'Ativar', off: 'Desativar' }]
 };
 
-function getActions(deviceId) {
-  return ACTIONS_BY_DEVICE[deviceId] || ACTIONS_DEFAULT;
+// Toda automação alterna. O texto explica o que "alternar" faz em cada
+// dispositivo, concordando em gênero ("desligada" para luz).
+const ALTERNAR_DESC = {
+  luz:        'liga se estiver desligada, desliga se estiver ligada',
+  ventilador: 'liga se estiver desligado, desliga se estiver ligado',
+  portao:     'abre se estiver fechado, fecha se estiver aberto',
+  alarme:     'arma se estiver desarmado, desarma se estiver armado'
+};
+
+function descAlternar(deviceId) {
+  return ALTERNAR_DESC[deviceId] || 'liga se estiver desligado, desliga se estiver ligado';
+}
+
+function montarComandos(par, nome) {
+  const n = String(nome || '').trim().replace(/\s+/g, ' ');
+  return {
+    voiceOn:  n ? `${par.on} ${n}`  : par.on,
+    voiceOff: n ? `${par.off} ${n}` : par.off
+  };
+}
+
+// Palavras que o reconhecimento de fala às vezes inclui e às vezes não
+// ("acender a luz do quarto" x "acender luz quarto"). Somem na comparação.
+const PALAVRAS_SOLTAS = new Set(['o', 'a', 'os', 'as', 'do', 'da', 'dos', 'das', 'de', 'no', 'na']);
+
+function normalizarFrase(texto) {
+  return String(texto || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(p => p && !PALAVRAS_SOLTAS.has(p))
+    .join(' ');
+}
+
+// Compara por palavra inteira: "desligar ventilador" contém a substring
+// "ligar ventilador", mas não pode acionar o comando de ligar.
+function _contemFrase(fala, frase) {
+  return (' ' + fala + ' ').includes(' ' + frase + ' ');
+}
+
+function _automacoesDeVoz(automacoes) {
+  return (automacoes || []).filter(a => a && a.data && a.data.trigger === 'voz');
+}
+
+function encontrarComando(fala, automacoes) {
+  const f = normalizarFrase(fala);
+  if (!f) return null;
+  let melhor = null;
+  let melhorTamanho = 0;
+  _automacoesDeVoz(automacoes).forEach(item => {
+    if (item.data.enabled === false) return;
+    [[item.data.voiceOn, true], [item.data.voiceOff, false]].forEach(([frase, state]) => {
+      const n = normalizarFrase(frase);
+      if (!n || !_contemFrase(f, n)) return;
+      // ">" e não ">=": no empate fica a primeira encontrada.
+      if (n.length > melhorTamanho) {
+        melhor = { automation: item, state, frase };
+        melhorTamanho = n.length;
+      }
+    });
+  });
+  return melhor;
+}
+
+function comandoJaUsado(frase, automacoes, ignorarId) {
+  const n = normalizarFrase(frase);
+  if (!n) return null;
+  return _automacoesDeVoz(automacoes).find(item =>
+    item.id !== ignorarId &&
+    (normalizarFrase(item.data.voiceOn) === n || normalizarFrase(item.data.voiceOff) === n)
+  ) || null;
 }
 
 function describeAutomation(d) {
   let whenText = '';
-  if (d.trigger === 'voz') whenText = `você falar <strong>"${escapeHtml(d.voiceCommand || '')}"</strong>`;
+  if (d.trigger === 'voz') {
+    whenText = `você falar <strong>"${escapeHtml(d.voiceOn || '')}"</strong> (liga)` +
+               ` ou <strong>"${escapeHtml(d.voiceOff || '')}"</strong> (desliga)`;
+  }
   else if (d.trigger === 'botao') whenText = `você clicar no botão do dashboard`;
   else if (d.trigger === 'presenca') whenText = `o sensor detectar presença`;
   else if (d.trigger === 'temperatura') whenText = `o sensor de temperatura disparar`;
   else if (d.trigger === 'horario') whenText = `chegar o horário programado`;
   else whenText = escapeHtml(d.trigger);
 
-  const actionObj = getActions(d.deviceType).find(a => a.id === d.action);
-  const actionVerb = escapeHtml(actionObj ? actionObj.label.toLowerCase() : (d.action || '?'));
-  const thenText = `<span class="action-verb">${actionVerb}</span> o <strong>${escapeHtml(d.deviceName)}</strong> automaticamente`;
-
+  const nome = `<strong>${escapeHtml(d.deviceName)}</strong>`;
+  let thenText;
+  if (d.trigger === 'voz') {
+    const par = (VOICE_VERBS[d.deviceType] || [{ on: 'Ligar', off: 'Desligar' }])[0];
+    const verbos = `${par.on.toLowerCase()} ou ${par.off.toLowerCase()}`;
+    thenText = `<span class="action-verb">${verbos}</span> o ${nome}, conforme o comando`;
+  } else {
+    thenText = `<span class="action-verb">alternar</span> o ${nome} (${descAlternar(d.deviceType)})`;
+  }
   return { whenText, thenText };
 }
 
@@ -83,5 +151,9 @@ function formatRelativeTime(date) {
 
 // Inerte no navegador, onde `module` não existe; só o Node (testes) usa isto.
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { DEVICES, escapeHtml, formatRelativeTime, frasePara };
+  module.exports = {
+    DEVICES, escapeHtml, formatRelativeTime, frasePara,
+    VOICE_VERBS, montarComandos, normalizarFrase, encontrarComando,
+    comandoJaUsado, describeAutomation, descAlternar
+  };
 }
