@@ -499,6 +499,7 @@ h1, h2, h3, .section-title { line-height: 1.3; }
   min-height: var(--tap-min);
 }
 .suggestion-chip:hover { background: var(--accent-weak); color: var(--text); border-color: var(--border-strong); }
+.suggestion-chip.selected { background: var(--accent-weak); color: var(--text); border-color: var(--border-strong); font-weight: 700; }
 
 /* ─── MISC ───────────────────────────────── */
 

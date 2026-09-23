@@ -114,19 +114,20 @@
           </div>
 
           <div class="form-step" id="step-voice" style="display:none">
-            <div class="form-group" style="margin:0">
-              <label class="form-label" for="input-voice">
-                <span class="step-num">4</span> Comando de voz
-                <button type="button" class="tooltip-icon" aria-expanded="false"><span aria-hidden="true">ⓘ</span><span class="visually-hidden">Ajuda</span><span class="tooltip-text">A frase exata que você vai falar para ativar essa automação.</span></button>
-              </label>
-              <div class="chip-group" id="voice-suggestions" style="margin-bottom:0.625rem"></div>
-              <input type="text" id="input-voice" class="form-input" placeholder="Ex: Ligar luz da sala" maxlength="60"/>
+            <div class="step-label">
+              <span class="step-num">4</span> Comandos de voz
+              <button type="button" class="tooltip-icon" aria-expanded="false"><span aria-hidden="true">ⓘ</span><span class="visually-hidden">Ajuda</span><span class="tooltip-text">Uma frase para ligar e outra para desligar. Escolha os verbos e o nome entra sozinho no final. Você pode mudar as frases à vontade.</span></button>
             </div>
-          </div>
-
-          <div class="form-step" id="step-action" style="display:none">
-            <div class="step-label"><span class="step-num" id="action-step-num">5</span> Ação</div>
-            <div class="chip-group" id="action-chips"></div>
+            <div class="chip-group" id="voice-verbs" style="margin-bottom:0.625rem"></div>
+            <div class="form-group">
+              <label class="form-label" for="input-voice-on">Comando para ligar</label>
+              <input type="text" id="input-voice-on" class="form-input" placeholder="Ex: Acender Luz Quarto" maxlength="60"/>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label" for="input-voice-off">Comando para desligar</label>
+              <input type="text" id="input-voice-off" class="form-input" placeholder="Ex: Apagar Luz Quarto" maxlength="60"/>
+            </div>
+            <p id="voice-aviso" class="trigger-note" role="status" style="display:none"></p>
           </div>
 
           <div id="preview-wrap" style="display:none">
