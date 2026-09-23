@@ -130,6 +130,9 @@ function renderTriggerChips() {
 }
 
 function selectTrigger(id) {
+  // Tocar de novo no gatilho já escolhido (fácil no celular) não pode
+  // apagar os comandos que a pessoa escreveu.
+  if (form.trigger === id) return;
   form.trigger = id;
   document.querySelectorAll('#trigger-chips .chip').forEach(c => {
     const escolhido = c.dataset.id === id;
@@ -217,15 +220,9 @@ function enterEditMode(id) {
   form.trigger = d.trigger;
   form.voiceOn = d.voiceOn || '';
   form.voiceOff = d.voiceOff || '';
-  // Se as frases salvas ainda são exatamente as geradas por um par, renomear
-  // continua recalculando; se não, o usuário as escreveu e ficam como estão.
-  const pares = VOICE_VERBS[form.device] || [];
-  const i = pares.findIndex(p => {
-    const c = montarComandos(p, form.name);
-    return c.voiceOn === form.voiceOn && c.voiceOff === form.voiceOff;
-  });
-  form.par = i >= 0 ? i : null;
-  form.editadoOn = form.editadoOff = i < 0;
+  // A frase que ainda é a gerada pelo par continua sendo recalculada ao
+  // renomear; a que o usuário escreveu fica como está.
+  Object.assign(form, detectarPar(VOICE_VERBS[form.device] || [], form.name, form.voiceOn, form.voiceOff));
 
   document.getElementById('form-wrap').style.display = 'block';
   document.getElementById('btn-new-auto').textContent = '✕ Cancelar';
@@ -267,10 +264,8 @@ function _listaCache() {
 function validarVoz() {
   if (form.trigger !== 'voz') return { erro: null, aviso: null };
   const on = form.voiceOn.trim(), off = form.voiceOff.trim();
-  if (!on || !off) return { erro: 'Preencha o comando para ligar e o para desligar.', aviso: null };
-  if (normalizarFrase(on) === normalizarFrase(off)) {
-    return { erro: 'Os dois comandos precisam ser diferentes.', aviso: null };
-  }
+  const erro = validarComandos(on, off);
+  if (erro) return { erro, aviso: null };
   const repetida = comandoJaUsado(on, _listaCache(), editingId) || comandoJaUsado(off, _listaCache(), editingId);
   const aviso = repetida
     ? `Atenção: a automação "${repetida.data.deviceName}" já usa um desses comandos. Só uma delas vai responder.`

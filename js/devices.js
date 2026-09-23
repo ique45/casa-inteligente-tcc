@@ -108,6 +108,32 @@ function comandoJaUsado(frase, automacoes, ignorarId) {
   ) || null;
 }
 
+// Ao abrir uma automação salva para edição: descobre de qual par de verbos
+// as frases vieram, campo a campo. O campo que não bate com o par foi
+// escrito à mão e não deve ser recalculado quando o nome mudar.
+function detectarPar(pares, nome, voiceOn, voiceOff) {
+  for (let i = 0; i < pares.length; i++) {
+    const c = montarComandos(pares[i], nome);
+    if (c.voiceOn === voiceOn || c.voiceOff === voiceOff) {
+      return { par: i, editadoOn: c.voiceOn !== voiceOn, editadoOff: c.voiceOff !== voiceOff };
+    }
+  }
+  return { par: null, editadoOn: true, editadoOff: true };
+}
+
+// Mensagem que impede salvar, ou null. Uma palavra só ("Luz") casaria
+// dentro de qualquer fala com essa palavra — "apagar luz" ligaria a luz.
+function validarComandos(voiceOn, voiceOff) {
+  const on = String(voiceOn || '').trim(), off = String(voiceOff || '').trim();
+  if (!on || !off) return 'Preencha o comando para ligar e o para desligar.';
+  const nOn = normalizarFrase(on), nOff = normalizarFrase(off);
+  if (nOn.split(' ').length < 2 || nOff.split(' ').length < 2) {
+    return 'Cada comando precisa de pelo menos duas palavras, como "Acender Luz".';
+  }
+  if (nOn === nOff) return 'Os dois comandos precisam ser diferentes.';
+  return null;
+}
+
 function describeAutomation(d) {
   let whenText = '';
   if (d.trigger === 'voz') {
@@ -154,6 +180,6 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     DEVICES, escapeHtml, formatRelativeTime, frasePara,
     VOICE_VERBS, montarComandos, normalizarFrase, encontrarComando,
-    comandoJaUsado, describeAutomation, descAlternar
+    comandoJaUsado, describeAutomation, descAlternar, detectarPar, validarComandos
   };
 }

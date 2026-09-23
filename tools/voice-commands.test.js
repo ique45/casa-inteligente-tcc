@@ -206,3 +206,52 @@ test('describeAutomation de documento antigo nao explode', () => {
   const { whenText } = describeAutomation({ deviceType: 'luz', deviceName: 'L', trigger: 'voz', voiceCommand: 'x' });
   assert.strictEqual(typeof whenText, 'string');
 });
+
+// ---- detectarPar (modo edição) ----
+
+const { detectarPar, validarComandos } = require('../js/devices.js');
+
+test('detectarPar reconhece frases geradas pelo par', () => {
+  assert.deepStrictEqual(
+    detectarPar(VOICE_VERBS.luz, 'Luz Quarto', 'Ligar Luz Quarto', 'Desligar Luz Quarto'),
+    { par: 1, editadoOn: false, editadoOff: false });
+});
+
+test('detectarPar marca so o campo editado a mao', () => {
+  assert.deepStrictEqual(
+    detectarPar(VOICE_VERBS.luz, 'Luz Quarto', 'Acender Luz Quarto', 'Desligar tudo'),
+    { par: 0, editadoOn: false, editadoOff: true });
+  assert.deepStrictEqual(
+    detectarPar(VOICE_VERBS.luz, 'Luz Quarto', 'Luz ja', 'Apagar Luz Quarto'),
+    { par: 0, editadoOn: true, editadoOff: false });
+});
+
+test('detectarPar sem nenhuma frase do par marca as duas como editadas', () => {
+  assert.deepStrictEqual(
+    detectarPar(VOICE_VERBS.luz, 'Luz Quarto', 'Faz luz', 'Tira luz'),
+    { par: null, editadoOn: true, editadoOff: true });
+  assert.deepStrictEqual(detectarPar([], 'X', '', ''), { par: null, editadoOn: true, editadoOff: true });
+});
+
+// ---- validarComandos ----
+
+test('validarComandos aceita dois comandos de duas palavras ou mais', () => {
+  assert.strictEqual(validarComandos('Acender Luz Quarto', 'Apagar Luz Quarto'), null);
+  assert.strictEqual(validarComandos('Abrir portão', 'Fechar portão'), null);
+});
+
+test('validarComandos exige os dois preenchidos', () => {
+  assert.match(validarComandos('', 'Apagar Luz'), /Preencha/);
+  assert.match(validarComandos('Acender Luz', '   '), /Preencha/);
+});
+
+test('validarComandos recusa comando de uma palavra so', () => {
+  // "Luz" sozinho casaria dentro de "apagar luz" e ligaria a luz.
+  assert.match(validarComandos('Luz', 'Apagar Luz'), /duas palavras/);
+  assert.match(validarComandos('Acender Luz', 'Apagar'), /duas palavras/);
+  assert.match(validarComandos('Ligar o', 'Apagar Luz'), /duas palavras/);
+});
+
+test('validarComandos recusa comandos iguais depois de normalizar', () => {
+  assert.match(validarComandos('Ligar Luz', 'ligar luz!'), /diferentes/);
+});
