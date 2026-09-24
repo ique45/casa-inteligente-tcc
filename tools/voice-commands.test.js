@@ -255,3 +255,27 @@ test('validarComandos recusa comando de uma palavra so', () => {
 test('validarComandos recusa comandos iguais depois de normalizar', () => {
   assert.match(validarComandos('Ligar Luz', 'ligar luz!'), /diferentes/);
 });
+
+// ---- comandoDesativado ----
+// A frase de uma automação desligada não pode cair nos padrões fixos do
+// microfone (voice.js): "Acender Luz Quarto" acenderia a luz pelo padrão
+// "acender luz" mesmo com a automação desligada.
+const { comandoDesativado } = require('../js/devices.js');
+
+test('frase de automacao desativada e reconhecida como desativada', () => {
+  const lista = [auto('a1', 'Acender Luz Quarto', 'Apagar Luz Quarto', { enabled: false, deviceName: 'Luz Quarto' })];
+  const r = comandoDesativado('acender a luz do quarto', lista);
+  assert.strictEqual(r.automation.id, 'a1');
+  assert.strictEqual(comandoDesativado('Apagar Luz Quarto', lista).automation.id, 'a1');
+});
+
+test('automacao ativa nao conta como desativada', () => {
+  const lista = [auto('a1', 'Acender Luz Quarto', 'Apagar Luz Quarto')];
+  assert.strictEqual(comandoDesativado('acender luz quarto', lista), null);
+});
+
+test('fala que nao casa com nenhuma automacao desativada devolve null', () => {
+  const lista = [auto('a1', 'Acender Luz Quarto', 'Apagar Luz Quarto', { enabled: false })];
+  assert.strictEqual(comandoDesativado('abrir portao', lista), null);
+  assert.strictEqual(comandoDesativado('', lista), null);
+});

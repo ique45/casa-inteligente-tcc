@@ -64,6 +64,20 @@ const voiceControl = (() => {
           });
           return;
         }
+        // Frase de uma automação desligada: avisar em vez de executar pelo
+        // padrão fixo — desligar a automação tem que desligar o comando.
+        const desligada = comandoDesativado(command, _automacoes);
+        if (desligada) {
+          api.onResult({
+            command,
+            deviceId: null,
+            action: null,
+            automationName: desligada.automation.data.deviceName,
+            frase: desligada.frase,
+            desativada: true
+          });
+          return;
+        }
         const match = COMMANDS.find(c => c.pattern.test(command));
         api.onResult({
           command,

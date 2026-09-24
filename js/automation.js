@@ -323,6 +323,14 @@ document.getElementById('input-name').addEventListener('input', e => {
   if (form.name.trim()) {
     document.getElementById('step-trigger').style.display = 'block';
     renderTriggerChips();
+    // Apagar o nome esconde também a etapa de voz, mas mantém o gatilho
+    // escolhido; ao digitar de novo ela precisa voltar junto com o gatilho.
+    // Sem isso "Voz" aparecia marcado, o toque nele era ignorado e o botão
+    // Salvar surgia com comandos que a pessoa não via.
+    if (form.trigger === 'voz') {
+      document.getElementById('step-voice').style.display = 'block';
+      renderVoiceVerbs();
+    }
   } else {
     hideFrom('step-trigger');
   }

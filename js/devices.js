@@ -80,12 +80,22 @@ function _automacoesDeVoz(automacoes) {
 }
 
 function encontrarComando(fala, automacoes) {
+  return _melhorComando(fala, automacoes, true);
+}
+
+// A frase de uma automação desligada. O microfone precisa saber disso para
+// não cair nos padrões fixos, que executariam o comando mesmo assim.
+function comandoDesativado(fala, automacoes) {
+  return _melhorComando(fala, automacoes, false);
+}
+
+function _melhorComando(fala, automacoes, ativas) {
   const f = normalizarFrase(fala);
   if (!f) return null;
   let melhor = null;
   let melhorTamanho = 0;
   _automacoesDeVoz(automacoes).forEach(item => {
-    if (item.data.enabled === false) return;
+    if ((item.data.enabled !== false) !== ativas) return;
     [[item.data.voiceOn, true], [item.data.voiceOff, false]].forEach(([frase, state]) => {
       const n = normalizarFrase(frase);
       if (!n || !_contemFrase(f, n)) return;
@@ -179,7 +189,7 @@ function formatRelativeTime(date) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     DEVICES, escapeHtml, formatRelativeTime, frasePara,
-    VOICE_VERBS, montarComandos, normalizarFrase, encontrarComando,
+    VOICE_VERBS, montarComandos, normalizarFrase, encontrarComando, comandoDesativado,
     comandoJaUsado, describeAutomation, descAlternar, detectarPar, validarComandos
   };
 }
