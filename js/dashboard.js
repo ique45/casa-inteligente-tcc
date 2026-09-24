@@ -233,8 +233,13 @@ function listenDeviceStates() {
   _rtdbDevicesRef = rtdb.ref(`devices/${currentUser.uid}`);
   _rtdbDevicesRef.on('value', snap => {
     const data = snap.val() || {};
+    // Só o dispositivo que mudou: updateDeviceUI encerra a espera pela
+    // confirmação e anuncia o estado por voz. Chamada para todos, a escrita
+    // do ventilador cancelava a espera do portão, e como cada fala corta a
+    // anterior, só o último da lista era ouvido.
     DEVICES.forEach(d => {
       const isOn = data[d.id]?.state === true;
+      if (deviceStates[d.id] === isOn) return;
       deviceStates[d.id] = isOn;
       updateDeviceUI(d.id, isOn);
     });
@@ -388,8 +393,12 @@ function initVoice() {
     status.textContent = ERROR_MSGS[code] || 'Erro ao usar o microfone. Tente novamente.';
   };
 
-  voiceControl.onResult = async ({ command, deviceId, action, automationName, frase }) => {
-    if (deviceId && action !== null) {
+  voiceControl.onResult = async ({ command, deviceId, action, automationName, frase, desativada }) => {
+    if (desativada) {
+      _voiceResultHandled = true;
+      status.textContent = `A automação "${automationName}" está desativada. Ative-a para usar este comando.`;
+      setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 5000);
+    } else if (deviceId && action !== null) {
       try {
         if (!currentUser) return;
         _voiceResultHandled = true;
