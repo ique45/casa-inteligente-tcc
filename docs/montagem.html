@@ -1,0 +1,1177 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="../favicon.ico"><style>body{margin:0}img{max-width:100%}</style></head><body>
+<title>Montagem da Casa Inteligente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+  :root {
+    --ground:      #EEF0F2;
+    --surface:     #FFFFFF;
+    --surface-alt: #E4E8EB;
+    --ink:         #14181D;
+    --ink-soft:    #3A434D;
+    --muted:       #5A6470;
+    --line:        #C9D0D6;
+    --line-soft:   #DDE3E7;
+
+    --accent:      #0D6E6B;
+    --accent-soft: #D6E9E7;
+    --accent-ink:  #0A5250;
+
+    --danger:      #B22F26;
+    --danger-bg:   #FBE7E5;
+    --caution:     #8A6100;
+    --caution-bg:  #FBF0D8;
+
+    --wire-red:    #D0342C;
+    --wire-black:  #23282E;
+    --wire-orange: #D9762B;
+    --wire-blue:   #2C6FB5;
+    --wire-yellow: #D9A61C;
+    --wire-green:  #3E9B4F;
+
+    --done:        #0D6E6B;
+
+    --font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --font-body:    'IBM Plex Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono:    'IBM Plex Mono', 'Consolas', 'Courier New', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #12161A;
+      --surface:     #1B2127;
+      --surface-alt: #242C34;
+      --ink:         #E7EBEF;
+      --ink-soft:    #C2CBD3;
+      --muted:       #93A0AC;
+      --line:        #333D47;
+      --line-soft:   #262E36;
+
+      --accent:      #4FC3BC;
+      --accent-soft: #16302F;
+      --accent-ink:  #7FD8D2;
+
+      --danger:      #F08379;
+      --danger-bg:   #341B19;
+      --caution:     #E5B851;
+      --caution-bg:  #31280F;
+
+      --wire-red:    #EA6157;
+      --wire-black:  #8B959F;
+      --wire-orange: #EC9552;
+      --wire-blue:   #6BA6DE;
+      --wire-yellow: #E8C356;
+      --wire-green:  #6EC47C;
+
+      --done:        #4FC3BC;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #12161A;
+    --surface:     #1B2127;
+    --surface-alt: #242C34;
+    --ink:         #E7EBEF;
+    --ink-soft:    #C2CBD3;
+    --muted:       #93A0AC;
+    --line:        #333D47;
+    --line-soft:   #262E36;
+
+    --accent:      #4FC3BC;
+    --accent-soft: #16302F;
+    --accent-ink:  #7FD8D2;
+
+    --danger:      #F08379;
+    --danger-bg:   #341B19;
+    --caution:     #E5B851;
+    --caution-bg:  #31280F;
+
+    --wire-red:    #EA6157;
+    --wire-black:  #8B959F;
+    --wire-orange: #EC9552;
+    --wire-blue:   #6BA6DE;
+    --wire-yellow: #E8C356;
+    --wire-green:  #6EC47C;
+
+    --done:        #4FC3BC;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    padding: 0 1.15rem 5rem;
+  }
+
+  .wrap {
+    max-width: 43rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3.25rem;
+  }
+
+  /* ── Cabeçalho ─────────────────────────────────────── */
+
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+    padding: 3rem 0 0;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.1rem, 8vw, 3.1rem);
+    line-height: 1.02;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .standfirst {
+    font-size: 1.06rem;
+    color: var(--ink-soft);
+    max-width: 34rem;
+  }
+
+  .meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.35rem;
+    padding-top: 0.5rem;
+    border-top: 2px solid var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.73rem;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Blocos genéricos ──────────────────────────────── */
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.42rem;
+    line-height: 1.18;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+  }
+
+  .stepno {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--surface);
+    background: var(--ink);
+    padding: 0.14rem 0.44rem;
+    border-radius: 3px;
+    flex: none;
+    letter-spacing: 0.02em;
+    position: relative;
+    top: -0.15rem;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.97rem;
+    letter-spacing: 0.01em;
+    margin: 0;
+  }
+
+  p { margin: 0; max-width: 36rem; }
+
+  a { color: var(--accent); }
+
+  ul, ol { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.45rem; max-width: 36rem; }
+
+  strong { font-weight: 600; }
+
+  /* ── Pinos e literais ──────────────────────────────── */
+
+  code, .pin {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    font-weight: 500;
+  }
+
+  code {
+    background: var(--surface-alt);
+    padding: 0.08em 0.34em;
+    border-radius: 3px;
+  }
+
+  .pin {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 0.1rem 0.44rem;
+    border-radius: 3px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pin-accent {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  /* ── Conexões ──────────────────────────────────────── */
+
+  .wiring {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .conn {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.55rem 0.8rem;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-left: 4px solid var(--wire);
+    border-radius: 4px;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .conn-check {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 2px solid var(--line);
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+    flex: none;
+    display: grid;
+    place-content: center;
+    margin: 0;
+  }
+
+  .conn-check::after {
+    content: "";
+    width: 0.72rem;
+    height: 0.4rem;
+    border-left: 2.5px solid var(--surface);
+    border-bottom: 2.5px solid var(--surface);
+    transform: rotate(-45deg) translate(1px, -2px);
+    opacity: 0;
+  }
+
+  .conn-check:checked {
+    background: var(--done);
+    border-color: var(--done);
+  }
+
+  .conn-check:checked::after { opacity: 1; }
+
+  .conn-check:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .conn-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.42rem;
+    min-width: 0;
+  }
+
+  .conn:has(.conn-check:checked) .conn-body { opacity: 0.5; }
+
+  .arrow {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+  }
+
+  .conn-note {
+    grid-column: 2;
+    font-size: 0.83rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .conn:has(.conn-check:checked) .conn-note { opacity: 0.5; }
+
+  /* ── Legenda de fios ───────────────────────────────── */
+
+  .legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.55rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 5px;
+    padding: 1rem 1.1rem;
+  }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.87rem;
+  }
+
+  .swatch {
+    width: 1.5rem;
+    height: 0.28rem;
+    border-radius: 2px;
+    flex: none;
+    background: var(--wire);
+  }
+
+  /* ── Avisos ────────────────────────────────────────── */
+
+  .alert {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    border-radius: 5px;
+    padding: 1rem 1.15rem;
+    border-left: 4px solid var(--tone);
+    background: var(--tone-bg);
+  }
+
+  .alert-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.83rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--tone);
+  }
+
+  .alert p { font-size: 0.94rem; color: var(--ink-soft); }
+
+  .stop  { --tone: var(--danger);  --tone-bg: var(--danger-bg); }
+  .care  { --tone: var(--caution); --tone-bg: var(--caution-bg); }
+  .note  { --tone: var(--accent);  --tone-bg: var(--accent-soft); }
+
+  /* ── Tabela de referência ──────────────────────────── */
+
+  .scroller { overflow-x: auto; border: 1px solid var(--line-soft); border-radius: 5px; background: var(--surface); }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.88rem;
+    min-width: 26rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  thead th {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.73rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.mono { font-family: var(--font-mono); font-weight: 500; white-space: nowrap; }
+
+  /* ── Checklist simples ─────────────────────────────── */
+
+  .checklist { display: flex; flex-direction: column; gap: 0.42rem; }
+
+  .check-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.8rem;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.95rem;
+  }
+
+  .check-item .conn-check { margin-top: 0.08rem; }
+
+  .check-item:has(.conn-check:checked) .check-text { opacity: 0.5; }
+
+  /* ── Rodapé de progresso ───────────────────────────── */
+
+  .progress-bar {
+    position: sticky;
+    bottom: 0;
+    margin: 0 -1.15rem -5rem;
+    padding: 0.7rem 1.15rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    z-index: 5;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 4px;
+    background: var(--surface-alt);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--done);
+    transition: width 0.25s ease;
+  }
+
+  .reset-btn {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.22rem 0.5rem;
+    cursor: pointer;
+  }
+
+  .reset-btn:hover { color: var(--ink); border-color: var(--muted); }
+  .reset-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Diagrama de alimentação ───────────────────────── */
+
+  .rails {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.8rem;
+  }
+
+  .rail {
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-top: 3px solid var(--wire);
+    border-radius: 4px;
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .rail-label {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--wire);
+  }
+
+  .rail h3 { font-size: 1.05rem; }
+
+  .rail p { font-size: 0.9rem; color: var(--ink-soft); }
+
+  .rail ul { font-size: 0.88rem; color: var(--ink-soft); gap: 0.25rem; }
+
+  /* ── Divisor de seção ──────────────────────────────── */
+
+  .rule { height: 1px; background: var(--line); border: none; margin: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media (max-width: 30rem) {
+    body { font-size: 16px; }
+    .conn { padding: 0.65rem 0.7rem; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">TCC · 3 AMS Desenvolvimento de Sistemas</div>
+    <h1>Montagem da Casa Inteligente</h1>
+    <p class="standfirst">
+      Ligação pino a pino do NodeMCU ESP8266 com o módulo de relé, o sensor de
+      temperatura e o sensor de presença. Siga na ordem — os passos existem nessa
+      sequência por motivo elétrico, não por organização.
+    </p>
+    <div class="meta-strip">
+      <span>Placa: NodeMCU 1.0 (ESP-12E)</span>
+      <span>4 relés · 2 sensores</span>
+      <span>~40 min</span>
+    </div>
+  </header>
+
+  <div class="alert stop">
+    <div class="alert-title">Antes de encostar em qualquer fio</div>
+    <p>
+      Nada de USB no notebook, nada de carregador na tomada. Toda a montagem é
+      feita com o circuito sem energia. Você só liga na hora que o
+      <strong>Passo 7</strong> mandar.
+    </p>
+  </div>
+
+  <!-- ─────────────── Conceito ─────────────── -->
+
+  <section>
+    <h2>Duas alimentações, um terra</h2>
+    <p>
+      A parte mais importante de entender antes de montar: existem
+      <strong>dois circuitos de energia separados</strong> nesta montagem, e eles
+      se encontram num único ponto.
+    </p>
+
+    <div class="rails">
+      <div class="rail" style="--wire: var(--wire-orange);">
+        <div class="rail-label">Circuito 1 · Cérebro</div>
+        <h3>3,3 V, vindo da USB</h3>
+        <p>O notebook alimenta só o NodeMCU. Consumo baixo, sobra folga.</p>
+        <ul>
+          <li>NodeMCU</li>
+          <li>Sensor DHT11</li>
+        </ul>
+      </div>
+      <div class="rail" style="--wire: var(--wire-red);">
+        <div class="rail-label">Circuito 2 · Músculo</div>
+        <h3>5 V, vindo do carregador</h3>
+        <p>Os eletroímãs dos relés puxam ~70 mA cada. Isso não sai da USB.</p>
+        <ul>
+          <li>Módulo de relé (VCC)</li>
+          <li>Sensor PIR</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alert care">
+      <div class="alert-title">O ponto de encontro</div>
+      <p>
+        Os dois circuitos precisam compartilhar o <strong>GND</strong>. Sem isso,
+        cada lado tem seu próprio "zero volts" e o relé simplesmente não entende a
+        ordem que o NodeMCU manda. É o erro nº 1 de quem monta isso pela primeira
+        vez, e ele não dá erro nenhum na tela — só não funciona.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ─────────────── Legenda ─────────────── -->
+
+  <section>
+    <h2>Código de cores dos fios</h2>
+    <p>
+      Não é enfeite: a cor diz a função. Se alguém da equipe precisar conferir a
+      montagem depois, ou se um fio soltar no dia da apresentação, a cor sozinha
+      já diz onde ele voltava.
+    </p>
+    <div class="legend">
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-red);"></span> +5 V (força)</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-black);"></span> GND (terra comum)</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-orange);"></span> 3,3 V</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-blue);"></span> Comando de relé</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-yellow);"></span> Dado do DHT11</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-green);"></span> Saída do PIR</div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ─────────────── Passo 1 ─────────────── -->
+
+  <section>
+    <h2><span class="stepno">01</span> O terra comum</h2>
+    <p>
+      Comece por aqui, sempre. Escolha uma das linhas azuis (negativas) da
+      protoboard e trate ela como <strong>o</strong> terra do projeto inteiro. Tudo
+      que tiver GND vai nessa linha.
+    </p>
+
+    <div class="wiring">
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="gnd-nodemcu">
+        <span class="conn-body">
+          <span class="pin">NodeMCU GND</span><span class="arrow">→</span><span class="pin">linha azul da protoboard</span>
+        </span>
+        <span class="conn-note">O NodeMCU tem mais de um pino GND. Qualquer um serve.</span>
+      </label>
+
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="gnd-fonte">
+        <span class="conn-body">
+          <span class="pin">Fio preto do adaptador USB</span><span class="arrow">→</span><span class="pin">mesma linha azul</span>
+        </span>
+        <span class="conn-note">Este é o fio que faz os dois circuitos se entenderem. Não pule.</span>
+      </label>
+
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="gnd-rele">
+        <span class="conn-body">
+          <span class="pin">Módulo de relé GND</span><span class="arrow">→</span><span class="pin">mesma linha azul</span>
+        </span>
+      </label>
+    </div>
+  </section>
+
+  <!-- ─────────────── Passo 2 ─────────────── -->
+
+  <section>
+    <h2><span class="stepno">02</span> O trilho de 5 V</h2>
+    <p>
+      Agora a linha vermelha (positiva) da protoboard. Ela vai receber os 5 V do
+      carregador — e <em>só</em> do carregador. Nada de 5 V vindo do NodeMCU.
+    </p>
+
+    <div class="wiring">
+      <label class="conn" style="--wire: var(--wire-red);">
+        <input type="checkbox" class="conn-check" data-id="v5-adaptador">
+        <span class="conn-body">
+          <span class="pin">Fio vermelho do adaptador USB</span><span class="arrow">→</span><span class="pin">linha vermelha da protoboard</span>
+        </span>
+        <span class="conn-note">O adaptador ainda está fora da tomada. Só o fio, por enquanto.</span>
+      </label>
+
+      <label class="conn" style="--wire: var(--wire-red);">
+        <input type="checkbox" class="conn-check" data-id="v5-rele">
+        <span class="conn-body">
+          <span class="pin">linha vermelha</span><span class="arrow">→</span><span class="pin">Módulo de relé VCC</span>
+        </span>
+      </label>
+    </div>
+
+    <div class="alert stop">
+      <div class="alert-title">Nunca ligue o VCC do relé no NodeMCU</div>
+      <p>
+        Tem um pino <code>VIN</code> ou <code>VU</code> na placa que entrega 5 V, e
+        é tentador usar. Não use. Os quatro eletroímãs juntos passam de 280 mA e
+        essa corrente atravessaria o conector micro-USB e as trilhas da placa. Na
+        melhor das hipóteses o NodeMCU reinicia no meio da demonstração.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─────────────── Passo 3 ─────────────── -->
+
+  <section>
+    <h2><span class="stepno">03</span> O NodeMCU na protoboard</h2>
+    <p>
+      Encaixe a placa <strong>na divisória central</strong> da protoboard, com as
+      duas fileiras de pinos em lados opostos do canal. Se você encaixar de um lado
+      só, os pinos ficam curto-circuitados entre si.
+    </p>
+    <p>
+      O NodeMCU é largo: ele vai ocupar quase toda a largura e sobrar pouquíssimo
+      espaço de um dos lados. É normal. Deixe o conector micro-USB virado para a
+      borda da protoboard, para o cabo entrar sem forçar.
+    </p>
+
+    <div class="alert note">
+      <div class="alert-title">Achando os pinos</div>
+      <p>
+        Os nomes <code>D1</code>, <code>D2</code>, <code>D4</code> … estão
+        impressos na própria placa, na lateral de cada pino. É essa numeração que
+        o guia usa. Ignore os números <code>GPIO</code> na hora de montar — eles
+        só aparecem dentro do código.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─────────────── Passo 4 ─────────────── -->
+
+  <section>
+    <h2><span class="stepno">04</span> Os sensores</h2>
+
+    <h3>DHT11 — temperatura e umidade</h3>
+    <p>
+      Alimentado em <strong>3,3 V</strong>, direto do NodeMCU. Isso é proposital:
+      o pino de dado do sensor responde na mesma tensão da alimentação dele, e o
+      NodeMCU não tolera 5 V nas entradas.
+    </p>
+
+    <div class="wiring">
+      <label class="conn" style="--wire: var(--wire-orange);">
+        <input type="checkbox" class="conn-check" data-id="dht-vcc">
+        <span class="conn-body">
+          <span class="pin">DHT11 VCC</span><span class="arrow">→</span><span class="pin pin-accent">3V3</span>
+        </span>
+        <span class="conn-note">Pino do NodeMCU escrito <code>3V3</code>. Não é o <code>VIN</code>.</span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="dht-gnd">
+        <span class="conn-body">
+          <span class="pin">DHT11 GND</span><span class="arrow">→</span><span class="pin">linha azul</span>
+        </span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-yellow);">
+        <input type="checkbox" class="conn-check" data-id="dht-data">
+        <span class="conn-body">
+          <span class="pin">DHT11 DATA</span><span class="arrow">→</span><span class="pin pin-accent">D1</span>
+        </span>
+        <span class="conn-note">Alguns módulos escrevem <code>S</code>, <code>OUT</code> ou <code>SIG</code> no lugar de DATA.</span>
+      </label>
+    </div>
+
+    <h3 style="margin-top: 0.9rem;">PIR HC-SR501 — presença</h3>
+    <p>
+      Este vai no trilho de <strong>5 V</strong>, não no 3,3 V. O HC-SR501 tem um
+      regulador interno e precisa de pelo menos 4,5 V para funcionar direito — em
+      3,3 V ele até acende, mas dispara sozinho ou não dispara nunca. A saída dele
+      já sai em 3,3 V, então é seguro ligar direto no NodeMCU.
+    </p>
+
+    <div class="wiring">
+      <label class="conn" style="--wire: var(--wire-red);">
+        <input type="checkbox" class="conn-check" data-id="pir-vcc">
+        <span class="conn-body">
+          <span class="pin">PIR VCC</span><span class="arrow">→</span><span class="pin">linha vermelha (5 V)</span>
+        </span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="pir-gnd">
+        <span class="conn-body">
+          <span class="pin">PIR GND</span><span class="arrow">→</span><span class="pin">linha azul</span>
+        </span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-green);">
+        <input type="checkbox" class="conn-check" data-id="pir-out">
+        <span class="conn-body">
+          <span class="pin">PIR OUT</span><span class="arrow">→</span><span class="pin pin-accent">D2</span>
+        </span>
+        <span class="conn-note">É o pino do meio nos três da lateral do módulo.</span>
+      </label>
+    </div>
+
+    <div class="alert care">
+      <div class="alert-title">Os dois potenciômetros laranja do PIR</div>
+      <p>
+        Um regula a distância de detecção, o outro o tempo que a saída fica ligada
+        depois de detectar. Deixe os dois no mínimo por enquanto — no dia da
+        apresentação, com o tempo alto, o sensor fica "preso" em presença
+        detectada e parece travado.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─────────────── Passo 5 ─────────────── -->
+
+  <section>
+    <h2><span class="stepno">05</span> Os comandos dos relés</h2>
+    <p>
+      Quatro fios, um por canal. Aqui a ordem importa: <code>IN1</code> é a luz,
+      <code>IN4</code> é o alarme, e trocar dois deles significa ligar o ventilador
+      quando o dashboard pedir o portão.
+    </p>
+
+    <div class="wiring">
+      <label class="conn" style="--wire: var(--wire-blue);">
+        <input type="checkbox" class="conn-check" data-id="in1">
+        <span class="conn-body">
+          <span class="pin">IN1</span><span class="arrow">→</span><span class="pin pin-accent">D5</span><span class="arrow">·</span><span>Luz</span>
+        </span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-blue);">
+        <input type="checkbox" class="conn-check" data-id="in2">
+        <span class="conn-body">
+          <span class="pin">IN2</span><span class="arrow">→</span><span class="pin pin-accent">D6</span><span class="arrow">·</span><span>Ventilador</span>
+        </span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-blue);">
+        <input type="checkbox" class="conn-check" data-id="in3">
+        <span class="conn-body">
+          <span class="pin">IN3</span><span class="arrow">→</span><span class="pin pin-accent">D7</span><span class="arrow">·</span><span>Portão</span>
+        </span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-blue);">
+        <input type="checkbox" class="conn-check" data-id="in4">
+        <span class="conn-body">
+          <span class="pin">IN4</span><span class="arrow">→</span><span class="pin pin-accent">D4</span><span class="arrow">·</span><span>Alarme</span>
+        </span>
+        <span class="conn-note">D4, não D8. O motivo está logo abaixo.</span>
+      </label>
+    </div>
+
+    <div class="alert stop">
+      <div class="alert-title">O alarme vai no D4 — o D8 impede a placa de ligar</div>
+      <p>
+        O pino <code>D8</code> precisa estar em 0 V no instante em que o ESP8266 é
+        energizado, senão ele não inicia. Os pinos <code>IN</code> dos módulos de
+        relé são puxados para cima por um resistor interno — com o módulo ligado no
+        D8, a placa fica morta e parece queimada.
+      </p>
+      <p>
+        O <code>D4</code> tem a regra contrária: precisa estar em nível alto no
+        boot, que é exatamente o que o módulo faz. Os dois se encaixam, e o relé
+        ainda nasce desligado. O firmware já está corrigido para isso.
+      </p>
+    </div>
+
+    <div class="alert note">
+      <div class="alert-title">O LED azul vai piscar junto com o alarme</div>
+      <p>
+        O <code>D4</code> também comanda o LED azul soldado no módulo ESP-12E.
+        Quando o relé do alarme ligar, o LED acende junto. É inofensivo, e na
+        prática vira um indicador visual de graça.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ─────────────── Mapa completo ─────────────── -->
+
+  <section>
+    <h2>Mapa completo dos pinos</h2>
+    <p>A mesma informação em uma tela só, para conferir depois de montar.</p>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Pino NodeMCU</th><th>GPIO</th><th>Vai para</th><th>Função</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">D1</td><td class="mono">5</td><td class="mono">DHT11 DATA</td><td>Temperatura</td></tr>
+          <tr><td class="mono">D2</td><td class="mono">4</td><td class="mono">PIR OUT</td><td>Presença</td></tr>
+          <tr><td class="mono">D4</td><td class="mono">2</td><td class="mono">Relé IN4</td><td>Alarme</td></tr>
+          <tr><td class="mono">D5</td><td class="mono">14</td><td class="mono">Relé IN1</td><td>Luz</td></tr>
+          <tr><td class="mono">D6</td><td class="mono">12</td><td class="mono">Relé IN2</td><td>Ventilador</td></tr>
+          <tr><td class="mono">D7</td><td class="mono">13</td><td class="mono">Relé IN3</td><td>Portão</td></tr>
+          <tr><td class="mono">3V3</td><td class="mono">—</td><td class="mono">DHT11 VCC</td><td>Alimentação do sensor</td></tr>
+          <tr><td class="mono">GND</td><td class="mono">—</td><td class="mono">Terra comum</td><td>Referência dos dois circuitos</td></tr>
+          <tr><td class="mono">D8</td><td class="mono">15</td><td class="mono">— não usar —</td><td>Impede o boot</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ─────────────── Passo 6 ─────────────── -->
+
+  <section>
+    <h2><span class="stepno">06</span> Conferência antes de energizar</h2>
+    <p>
+      Cinco checagens. Levam dois minutos e evitam a única categoria de erro que
+      custa dinheiro.
+    </p>
+
+    <div class="checklist">
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="chk-vin">
+        <span class="check-text">Nenhum fio sai do <code>VIN</code> ou <code>VU</code> do NodeMCU.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="chk-gnd">
+        <span class="check-text">O fio preto do carregador <strong>e</strong> o GND do NodeMCU estão na mesma linha azul.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="chk-d8">
+        <span class="check-text">Nada está ligado no <code>D8</code>.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="chk-dht">
+        <span class="check-text">O DHT11 está no <code>3V3</code>, e o PIR está na linha vermelha de 5 V. Não invertidos.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="chk-curto">
+        <span class="check-text">Nenhum fio descascado encostando em outro, e o NodeMCU está montado sobre a divisória central.</span>
+      </label>
+    </div>
+  </section>
+
+  <!-- ─────────────── Passo 7 ─────────────── -->
+
+  <section>
+    <h2><span class="stepno">07</span> A ordem de ligar</h2>
+    <p>
+      A sequência importa. Os pinos <code>IN</code> do módulo de relé só ficam no
+      nível certo depois que o módulo tem energia — e o ESP8266 lê esses níveis no
+      instante em que liga. Carregador primeiro, USB depois.
+    </p>
+
+    <div class="checklist">
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="pwr-1">
+        <span class="check-text"><strong>Primeiro:</strong> o carregador na tomada. Os LEDs do módulo de relé acendem, nenhum relé clica.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="pwr-2">
+        <span class="check-text"><strong>Depois:</strong> o cabo USB no notebook. O LED do NodeMCU acende.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="pwr-3">
+        <span class="check-text">Nada esquentou. Se algum componente aquecer nos primeiros segundos, desligue tudo e volte à conferência.</span>
+      </label>
+    </div>
+
+    <div class="alert care">
+      <div class="alert-title">Se algum relé clicar sozinho ao energizar</div>
+      <p>
+        Um clique único no momento de ligar é normal — é o firmware forçando todos
+        para desligado. Cliques repetidos, ou um relé que fica ligado, significam
+        que a polaridade do seu módulo é invertida. Solução: trocar
+        <code>RELAY_ON</code> e <code>RELAY_OFF</code> no topo do arquivo
+        <code>.ino</code> e regravar.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─────────────── Passo 8 ─────────────── -->
+
+  <section>
+    <h2><span class="stepno">08</span> Gravar o firmware</h2>
+    <p>
+      Abra <code>firmware/esp8266/casa_inteligente/casa_inteligente.ino</code> na
+      IDE do Arduino.
+    </p>
+    <ol>
+      <li>
+        Placa: <strong>NodeMCU 1.0 (ESP-12E Module)</strong>. Se ela não aparecer
+        na lista, falta instalar o pacote ESP8266 — a URL está no README.
+      </li>
+      <li>
+        Bibliotecas, pelo Gerenciador: <code>ArduinoJson</code> (v7),
+        <code>DHT sensor library</code> e <code>Adafruit Unified Sensor</code>.
+      </li>
+      <li>
+        Preencha o bloco <strong>EDITE AQUI</strong> no topo do arquivo: nome e
+        senha do WiFi, o <code>UID</code> do Firebase e o <code>TOKEN</code>.
+      </li>
+      <li>Selecione a porta COM e clique em carregar.</li>
+    </ol>
+
+    <div class="alert care">
+      <div class="alert-title">Se nenhuma porta COM aparecer</div>
+      <p>
+        Quase sempre é driver. Placas com conversor <strong>CH340</strong> precisam
+        do driver instalado à mão no Windows; as com <strong>CP2102</strong>
+        costumam funcionar direto. O nome do chip está impresso no quadradinho
+        preto perto do conector USB.
+      </p>
+    </div>
+
+    <div class="alert note">
+      <div class="alert-title">WiFi da escola normalmente não funciona</div>
+      <p>
+        O ESP8266 não conecta em redes com login por página (aquelas que abrem um
+        formulário no navegador) nem em redes corporativas com usuário e senha
+        individuais. Use o roteador de casa para testar, e o roteador pessoal ou o
+        celular como ponto de acesso no dia da apresentação.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─────────────── Passo 9 ─────────────── -->
+
+  <section>
+    <h2><span class="stepno">09</span> Testar</h2>
+    <p>
+      Abra o Monitor Serial em <strong>115200</strong>. Você deve ver a conexão do
+      WiFi e, a cada 2 segundos, uma linha de sincronização.
+    </p>
+    <p>
+      Depois, no dashboard, clique em cada dispositivo, um por vez. O serial
+      responde <code>Comando aplicado: luz = LIGADO</code> e o relé clica. Entre o
+      clique no site e o clique do relé passam alguns segundos — é o tempo do
+      handshake criptografado, e é esperado.
+    </p>
+
+    <div class="checklist">
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="test-wifi">
+        <span class="check-text">O serial mostrou o WiFi conectado e um endereço IP.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="test-dash">
+        <span class="check-text">O dashboard parou de dizer que o hardware não está conectado.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="test-4">
+        <span class="check-text">Os quatro relés clicam, cada um no seu comando, sem trocar.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="test-dht">
+        <span class="check-text">A temperatura aparece no serial com valor plausível — não <code>nan</code>, não <code>0.0</code>.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="test-pir">
+        <span class="check-text">Passar a mão na frente do PIR gera um evento de presença.</span>
+      </label>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ─────────────── Carga ─────────────── -->
+
+  <section>
+    <h2>O outro lado do relé</h2>
+    <p>
+      Até aqui, os relés só clicam. Para eles acionarem alguma coisa, usa-se os
+      bornes de parafuso do lado oposto do módulo. Cada canal tem três:
+    </p>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Borne</th><th>Significa</th><th>Comportamento</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">COM</td><td>Comum</td><td>A entrada. Sempre usada.</td></tr>
+          <tr><td class="mono">NO</td><td>Normalmente aberto</td><td>Fecha quando o relé liga. <strong>É este que vocês querem.</strong></td></tr>
+          <tr><td class="mono">NC</td><td>Normalmente fechado</td><td>Abre quando o relé liga. Deixe vazio.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert stop">
+      <div class="alert-title">Não leve tomada de 127 V para a banca</div>
+      <p>
+        O relé aguenta, mas uma apresentação não é lugar para rede elétrica: mesa
+        cheia, fios soltos, gente encostando. Use uma fita LED de 12 V ou lâmpadas
+        de baixa tensão — o clique do relé e a luz acendendo demonstram exatamente
+        o mesmo conceito.
+      </p>
+      <p>
+        Se a equipe quiser mostrar uma lâmpada de verdade, faça em bancada, com o
+        professor presente, e não durante a apresentação.
+      </p>
+    </div>
+
+    <div class="alert care">
+      <div class="alert-title">Um por vez na demonstração</div>
+      <p>
+        Quatro relés ligados ao mesmo tempo somam ~280 mA. Se vocês acabarem sem o
+        carregador e com tudo na USB, acione um dispositivo, mostre, desligue, e
+        vá para o próximo. Fica melhor de assistir e não arrisca reiniciar a placa.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ─────────────── Troubleshooting ─────────────── -->
+
+  <section>
+    <h2>Se der errado</h2>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Sintoma</th><th>Causa quase sempre</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>A placa não liga, nenhum LED</td><td>Algo ligado no <code>D8</code>, ou o USB na porta errada</td></tr>
+          <tr><td>Reinicia sozinho a cada poucos segundos</td><td>Relé sendo alimentado pelo NodeMCU em vez do carregador</td></tr>
+          <tr><td>Relé não clica, mas o serial diz que aplicou</td><td>GND não é comum entre os dois circuitos</td></tr>
+          <tr><td>Relé fica ligado o tempo todo</td><td>Polaridade invertida — trocar <code>RELAY_ON</code> / <code>RELAY_OFF</code></td></tr>
+          <tr><td>Temperatura vem <code>nan</code></td><td>DHT11 no pino errado, ou alimentado em 5 V</td></tr>
+          <tr><td>Presença dispara sem parar</td><td>PIR em 3,3 V em vez de 5 V, ou potenciômetro de tempo no máximo</td></tr>
+          <tr><td>Nenhuma porta COM na IDE</td><td>Driver CH340 faltando, ou cabo USB só de carga, sem dados</td></tr>
+          <tr><td>Dashboard diz Offline com tudo montado</td><td>Railway hibernando — acordar em <code>/arduino/health</code> antes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<div class="progress-bar">
+  <span id="progress-label">0 de 0</span>
+  <span class="progress-track"><span class="progress-fill" id="progress-fill"></span></span>
+  <button class="reset-btn" id="reset-btn" type="button">Limpar</button>
+</div>
+
+<script>
+  (function () {
+    var KEY = 'montagem-casa-inteligente-v1';
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('.conn-check'));
+    var fill = document.getElementById('progress-fill');
+    var label = document.getElementById('progress-label');
+
+    function load() {
+      try {
+        var raw = window.localStorage.getItem(KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function save(state) {
+      try {
+        window.localStorage.setItem(KEY, JSON.stringify(state));
+      } catch (e) {
+        /* modo privado ou site data bloqueado: a página funciona sem persistir */
+      }
+    }
+
+    function render() {
+      var done = boxes.filter(function (b) { return b.checked; }).length;
+      var pct = boxes.length ? (done / boxes.length) * 100 : 0;
+      fill.style.width = pct + '%';
+      label.textContent = done + ' de ' + boxes.length;
+    }
+
+    var state = load();
+
+    boxes.forEach(function (box) {
+      var id = box.getAttribute('data-id');
+      if (state[id]) { box.checked = true; }
+      box.addEventListener('change', function () {
+        state[id] = box.checked;
+        save(state);
+        render();
+      });
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', function () {
+      boxes.forEach(function (b) { b.checked = false; });
+      state = {};
+      save(state);
+      render();
+    });
+
+    render();
+  })();
+</script>
+
+</body></html>
