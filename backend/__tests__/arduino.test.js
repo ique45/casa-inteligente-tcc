@@ -185,6 +185,54 @@ describe('POST /arduino/sync', () => {
     expect(Object.keys(updateStatusMock.mock.calls[0][0]).sort()).toEqual(['lastSeen', 'online']);
   });
 
+  test('acrescenta as linhas do serial ao log e guarda só as últimas 60', async () => {
+    const { rtdb } = require('../firebase');
+    const updateStatusMock = jest.fn().mockResolvedValue();
+    const anteriores = Array.from({ length: 59 }, (_, i) => ({ t: 1, m: `antiga ${i}` }));
+    rtdb.ref.mockImplementation((path) => {
+      if (path === 'arduino_status/uid123/log') {
+        return { once: jest.fn().mockResolvedValue({ val: () => anteriores }) };
+      }
+      if (path === 'arduino_status/uid123') return { update: updateStatusMock };
+      return defaultMockRef();
+    });
+    const res = await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret', devices: {}, events: [], online: true,
+      log: ['Botao apertado', 'Luminosidade: 512', 42, '   ']
+    });
+    expect(res.status).toBe(200);
+    const log = updateStatusMock.mock.calls[0][0].log;
+    expect(log).toHaveLength(60);
+    expect(log[0].m).toBe('antiga 1');
+    expect(log.slice(-2).map(l => l.m)).toEqual(['Botao apertado', 'Luminosidade: 512']);
+  });
+
+  test('registra no histórico quando o alarme dispara, e não repete se nada mudou', async () => {
+    const { rtdb } = require('../firebase');
+    const { logHistory } = require('../services/history');
+    logHistory.mockClear();
+    let alarmeAntes = { state: false };
+    rtdb.ref.mockImplementation((path) => {
+      if (path === 'devices/uid123/alarme') {
+        return {
+          once: jest.fn().mockImplementation(async () => ({ val: () => alarmeAntes })),
+          update: jest.fn().mockResolvedValue()
+        };
+      }
+      return defaultMockRef();
+    });
+    const corpo = { uid: 'uid123', token: 'test-secret', devices: { alarme: true }, events: [], online: true };
+
+    await request(app).post('/arduino/sync').send(corpo);
+    expect(logHistory).toHaveBeenCalledWith('uid123',
+      { deviceId: 'alarme', device: 'Alarme', trigger: 'presenca', state: true });
+
+    logHistory.mockClear();
+    alarmeAntes = { state: true };
+    await request(app).post('/arduino/sync').send(corpo);
+    expect(logHistory).not.toHaveBeenCalled();
+  });
+
   test('ignora event inválido', async () => {
     const { executeAutomations } = require('../services/automation');
     executeAutomations.mockClear();

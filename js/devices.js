@@ -1,7 +1,8 @@
 const DEVICES = [
   { id: 'luz',         name: 'Luz interna', icon: '💡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: { on: 'Ligando...',   off: 'Desligando...' }, speechOn: 'ligada',  speechOff: 'desligada'  },
   { id: 'luz_externa', name: 'Luz externa', icon: '🏡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: { on: 'Ligando...',   off: 'Desligando...' }, speechOn: 'ligada',  speechOff: 'desligada'  },
-  { id: 'alarme',      name: 'Alarme',      icon: '🔔', labelOn: 'Armado',  labelOff: 'Desarmado', labelTransition: { on: 'Armando...',   off: 'Desarmando...' }, speechOn: 'armado',  speechOff: 'desarmado'  }
+  // O alarme é ligado pela placa (PIR), não pelo site: só aparece como status.
+  { id: 'alarme',      name: 'Alarme',      icon: '🔔', labelOn: 'Disparado', labelOff: 'Desligado', labelTransition: null, speechOn: 'disparado', speechOff: 'desligado', somenteLeitura: true }
 ];
 
 // "Luz ligada", não "Luz ligado" — os rótulos visuais (labelOn) não concordam
@@ -28,16 +29,14 @@ const TRIGGER_INFO = {
 // primeiro de cada lista é o padrão, já escolhido ao abrir a etapa de voz.
 const VOICE_VERBS = {
   luz:         [{ on: 'Acender', off: 'Apagar' },   { on: 'Ligar', off: 'Desligar' }],
-  luz_externa: [{ on: 'Acender', off: 'Apagar' },   { on: 'Ligar', off: 'Desligar' }],
-  alarme:     [{ on: 'Armar',   off: 'Desarmar' }, { on: 'Ativar', off: 'Desativar' }]
+  luz_externa: [{ on: 'Acender', off: 'Apagar' },   { on: 'Ligar', off: 'Desligar' }]
 };
 
 // Toda automação alterna. O texto explica o que "alternar" faz em cada
 // dispositivo, concordando em gênero ("desligada" para luz).
 const ALTERNAR_DESC = {
   luz:         'liga se estiver desligada, desliga se estiver ligada',
-  luz_externa: 'liga se estiver desligada, desliga se estiver ligada',
-  alarme:     'arma se estiver desarmado, desarma se estiver armado'
+  luz_externa: 'liga se estiver desligada, desliga se estiver ligada'
 };
 
 function descAlternar(deviceId) {

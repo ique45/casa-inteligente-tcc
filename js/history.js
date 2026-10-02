@@ -43,7 +43,7 @@ function buildActivatedBy(d) {
 }
 
 const ACTION_LABELS = {
-  alarme: { on: 'ARMOU',    off: 'DESARMOU'  }
+  alarme: { on: 'DISPAROU', off: 'PAROU'     }
 };
 
 function actionText(deviceId, state) {

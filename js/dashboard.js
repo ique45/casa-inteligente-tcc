@@ -36,6 +36,7 @@ function _teardownListeners() {
   if (_rtdbStatusRef)   { _rtdbStatusRef.off('value');   _rtdbStatusRef   = null; }
   if (_arduinoStatusTimer) { clearInterval(_arduinoStatusTimer); _arduinoStatusTimer = null; }
   Object.keys(_esperandoConfirmacao).forEach(_pararEspera);
+  Object.keys(_pendente).forEach(k => delete _pendente[k]);
   _arduinoStatus = null;
   if (_automationsUnsubscribe) { _automationsUnsubscribe(); _automationsUnsubscribe = null; }
   if (_historyUnsubscribe)     { _historyUnsubscribe();     _historyUnsubscribe     = null; }
@@ -73,6 +74,7 @@ auth.onAuthStateChanged(async user => {
       `;
     }
 
+    renderStatusInicial();
     listenAutomations();
     listenDeviceStates();
     listenArduinoStatus();
@@ -83,6 +85,105 @@ auth.onAuthStateChanged(async user => {
       '<p style="color:var(--text-muted)">Erro ao carregar. Verifique sua conexão e recarregue a página.</p>';
   }
 });
+
+// ---- Agora na casa ----
+// Um card por dispositivo com o estado confirmado pela placa (devices/{uid}).
+// As luzes têm botão; o alarme só mostra o estado, porque quem liga e
+// desliga ele é o PIR, na própria placa.
+
+const _pendente = {};   // deviceId -> estado pedido, enquanto a placa não confirma
+
+function renderStatusInicial() {
+  const grid = document.getElementById('status-grid');
+  if (!grid) return;
+  grid.innerHTML = DEVICES.map(d => `
+    <div class="status-card" id="status-${d.id}">
+      <div class="status-topo">
+        <span class="status-icone" aria-hidden="true">${d.icon}</span>
+        <div>
+          <div class="status-nome">${escapeHtml(d.name)}</div>
+          <div class="status-estado" id="status-estado-${d.id}">—</div>
+        </div>
+      </div>
+      ${d.somenteLeitura
+        ? '<div class="status-nota">Toca sozinho enquanto o sensor de presença detecta alguém.</div>'
+        : `<button type="button" class="btn btn-primary status-acao" id="status-acao-${d.id}" data-device-id="${d.id}" disabled>Aguarde…</button>`}
+    </div>`).join('');
+  grid.querySelectorAll('.status-acao').forEach(btn => {
+    btn.addEventListener('click', () => alternarDispositivo(btn.dataset.deviceId));
+  });
+}
+
+function atualizarStatus(deviceId) {
+  const d = DEVICES.find(x => x.id === deviceId);
+  const card = document.getElementById(`status-${deviceId}`);
+  if (!d || !card) return;
+  const conhecido = deviceStates[deviceId] !== undefined;
+  const isOn = deviceStates[deviceId] === true;
+  const pedido = _pendente[deviceId];
+
+  card.classList.toggle('on', isOn && !d.somenteLeitura);
+  card.classList.toggle('alerta', isOn && !!d.somenteLeitura);
+
+  const estado = document.getElementById(`status-estado-${deviceId}`);
+  if (estado) {
+    if (pedido !== undefined && d.labelTransition) {
+      estado.textContent = (pedido ? d.labelTransition.on : d.labelTransition.off).toUpperCase();
+    } else {
+      estado.textContent = conhecido ? (isOn ? d.speechOn : d.speechOff).toUpperCase() : '—';
+    }
+  }
+
+  const btn = document.getElementById(`status-acao-${deviceId}`);
+  if (btn) {
+    const acao = isOn ? 'Desligar' : 'Ligar';
+    btn.disabled = !conhecido || pedido !== undefined;
+    btn.textContent = conhecido ? acao : 'Aguarde…';
+    btn.setAttribute('aria-label', `${acao} ${d.name.toLowerCase()}`);
+  }
+}
+
+async function alternarDispositivo(deviceId) {
+  if (!currentUser || deviceStates[deviceId] === undefined) return;
+  const d = DEVICES.find(x => x.id === deviceId);
+  const newState = deviceStates[deviceId] !== true;
+  _pendente[deviceId] = newState;
+  atualizarStatus(deviceId);
+  try {
+    await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: newState, ts: Date.now() });
+    await logHistory(deviceId, 'botao', newState, d.name);
+    aguardarConfirmacao(deviceId, newState);
+  } catch (err) {
+    console.error('Erro ao acionar dispositivo:', err);
+    delete _pendente[deviceId];
+    atualizarStatus(deviceId);
+    speech.falar(`Não foi possível ${newState ? 'ligar' : 'desligar'} ${d.name.toLowerCase()}`);
+  }
+}
+
+// ---- Monitor serial ----
+// O firmware manda as linhas do serial a cada sync; o backend guarda as
+// últimas em arduino_status/{uid}/log como [{ t: hora do recebimento, m }].
+
+function renderSerial() {
+  const box = document.getElementById('serial-box');
+  if (!box) return;
+  const log = Array.isArray(_arduinoStatus?.log) ? _arduinoStatus.log : [];
+  if (!log.length) {
+    box.innerHTML = '<div class="serial-vazio">Aguardando a placa…</div>';
+    return;
+  }
+  // Só desce sozinho se a pessoa já estava no fim; se ela subiu para ler
+  // uma linha antiga, não arrancamos a rolagem dela.
+  const noFim = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  box.innerHTML = log.map(l => {
+    const hora = l && l.t ? new Date(l.t).toLocaleTimeString('pt-BR') : '';
+    const msg = String((l && l.m) || '');
+    const alerta = /erro|falha|sem wifi|disparado/i.test(msg);
+    return `<div${alerta ? ' class="serial-alerta"' : ''}><span class="serial-hora">${hora}</span>${escapeHtml(msg)}</div>`;
+  }).join('');
+  if (noFim) box.scrollTop = box.scrollHeight;
+}
 
 function renderAutomations() {
   const grid = document.getElementById('automations-grid');
@@ -206,6 +307,8 @@ function mostrarEstadoReal(deviceId) {
   const d = DEVICES.find(x => x.id === deviceId);
   if (!d) return;
   const isOn = deviceStates[deviceId] === true;
+  delete _pendente[deviceId];
+  atualizarStatus(deviceId);
   automationsList.forEach(item => {
     if (item.data.trigger !== 'botao' || item.data.deviceType !== deviceId) return;
     const label = document.getElementById(`acionar-label-${item.id}`);
@@ -254,6 +357,8 @@ function updateDeviceUI(deviceId, isOn) {
   const d = DEVICES.find(x => x.id === deviceId);
   if (!d) return;
   _pararEspera(deviceId);
+  delete _pendente[deviceId];
+  atualizarStatus(deviceId);
   automationsList.forEach(item => {
     if (item.data.trigger !== 'botao' || item.data.deviceType !== deviceId) return;
     const btn = document.getElementById(`acionar-${item.id}`);
@@ -272,6 +377,7 @@ function listenArduinoStatus() {
   _rtdbStatusRef.on('value', snap => {
     _arduinoStatus = snap.val() || {};
     renderArduinoStatus();
+    renderSerial();
   });
 
   // O listener acima só dispara quando o valor muda no banco. Um aparelho
@@ -288,11 +394,13 @@ function renderArduinoStatus() {
     const caixa = document.getElementById('arduino-status');
     const statusText = document.getElementById('arduino-status-text');
     const offlineHint = document.getElementById('offline-hint');
+    const statusGrid = document.getElementById('status-grid');
 
     // Idade negativa acontece se o relógio do computador estiver atrasado
     // em relação ao servidor; nesse caso tratamos como contato recente.
     const idade  = Date.now() - (data.lastSeen || 0);
     const recente = !!data.lastSeen && idade < ARDUINO_TIMEOUT_MS;
+    if (statusGrid) statusGrid.classList.toggle('offline', !(data.online && recente));
 
     if (data.online && recente) {
       if (caixa) caixa.className = 'a11y-arduino';

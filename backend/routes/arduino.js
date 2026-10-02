@@ -1,11 +1,27 @@
 const express       = require('express');
 const { db, rtdb } = require('../firebase');
 const { executeAutomations } = require('../services/automation');
+const { logHistory } = require('../services/history');
 
 const router = express.Router();
 
 const VALID_DEVICES  = ['luz', 'luz_externa', 'alarme'];
 const VALID_TRIGGERS = ['presenca', 'botao_fisico', 'luminosidade'];
+
+// Monitor serial no site: o firmware manda as linhas novas a cada sync e o
+// painel mostra as últimas LOG_MAX, em arduino_status/{uid}/log (o dono da
+// conta já tem leitura nesse caminho pelas regras do RTDB).
+const LOG_MAX           = 60;
+const LOG_MAX_POR_SYNC  = 30;
+const LOG_MAX_CARACTERES = 160;
+
+function linhasDeLog(log) {
+  if (!Array.isArray(log)) return [];
+  return log
+    .filter(l => typeof l === 'string' && l.trim())
+    .slice(-LOG_MAX_POR_SYNC)
+    .map(l => l.slice(0, LOG_MAX_CARACTERES));
+}
 
 router.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
@@ -21,12 +37,28 @@ router.post('/sync', async (req, res) => {
   if (token !== process.env.ARDUINO_SECRET) return res.status(401).json({ error: 'token inválido' });
 
   try {
-    // 1. Atualiza status do Arduino no RTDB
-    await rtdb.ref(`arduino_status/${uid}`).update({ online, lastSeen: Date.now() });
+    // 1. Atualiza status do Arduino no RTDB, com as linhas novas do serial
+    const agora = Date.now();
+    const statusUpdate = { online, lastSeen: agora };
+    const novas = linhasDeLog(req.body.log);
+    if (novas.length) {
+      const anteriorSnap = await rtdb.ref(`arduino_status/${uid}/log`).once('value');
+      const anterior = Array.isArray(anteriorSnap.val()) ? anteriorSnap.val() : [];
+      statusUpdate.log = [...anterior, ...novas.map(m => ({ t: agora, m }))].slice(-LOG_MAX);
+    }
+    await rtdb.ref(`arduino_status/${uid}`).update(statusUpdate);
 
     // 2. Grava estado real de cada dispositivo informado pelo Arduino
     for (const [deviceId, state] of Object.entries(devices)) {
       if (!VALID_DEVICES.includes(deviceId)) continue;
+      // O alarme é ligado pela própria placa (PIR), sem passar por automação,
+      // então o histórico dele nasce aqui: a cada disparo e a cada parada.
+      if (deviceId === 'alarme') {
+        const antes = (await rtdb.ref(`devices/${uid}/alarme`).once('value')).val();
+        if (antes && typeof antes === 'object' && antes.state !== !!state) {
+          await logHistory(uid, { deviceId: 'alarme', device: 'Alarme', trigger: 'presenca', state: !!state });
+        }
+      }
       await rtdb.ref(`devices/${uid}/${deviceId}`).update({ state: !!state });
     }
 

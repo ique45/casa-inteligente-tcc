@@ -1,7 +1,7 @@
 const TRIGGERS_BY_DEVICE = {
   luz:         ['voz', 'botao', 'botao_fisico', 'presenca', 'luminosidade'],
-  luz_externa: ['voz', 'botao', 'botao_fisico', 'presenca', 'luminosidade'],
-  alarme:      ['botao', 'botao_fisico', 'presenca']
+  luz_externa: ['voz', 'botao', 'botao_fisico', 'presenca', 'luminosidade']
+  // Sem alarme: ele toca sozinho quando o PIR detecta (firmware).
 };
 
 // TRIGGER_INFO, VOICE_VERBS, montarComandos() e describeAutomation() vêm de
@@ -61,7 +61,7 @@ function openEditWhenLoaded(id, tentativas) {
 
 function renderDeviceChips() {
   const wrap = document.getElementById('device-chips');
-  wrap.innerHTML = DEVICES.map(d => `
+  wrap.innerHTML = DEVICES.filter(d => !d.somenteLeitura).map(d => `
     <button type="button" class="chip" data-id="${d.id}" aria-pressed="false">
       <span aria-hidden="true">${d.icon}</span> ${escapeHtml(d.name)}
     </button>

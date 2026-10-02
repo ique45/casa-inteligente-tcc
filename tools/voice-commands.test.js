@@ -16,7 +16,7 @@ function auto(id, voiceOn, voiceOff, extra) {
 // ---- VOICE_VERBS / montarComandos ----
 
 test('todo dispositivo tem pelo menos um par de verbos', () => {
-  for (const id of ['luz', 'luz_externa', 'alarme']) {
+  for (const id of ['luz', 'luz_externa']) {
     assert.ok(VOICE_VERBS[id] && VOICE_VERBS[id].length > 0, `${id} sem verbos`);
     for (const par of VOICE_VERBS[id]) assert.ok(par.on && par.off);
   }
@@ -24,7 +24,6 @@ test('todo dispositivo tem pelo menos um par de verbos', () => {
 
 test('primeiro par de cada dispositivo', () => {
   assert.deepStrictEqual(VOICE_VERBS.luz[0], { on: 'Acender', off: 'Apagar' });
-  assert.deepStrictEqual(VOICE_VERBS.alarme[0], { on: 'Armar', off: 'Desarmar' });
 });
 
 test('montarComandos poe o nome depois do verbo', () => {
@@ -170,7 +169,6 @@ test('comandoJaUsado ignora frase vazia e automacao que nao e de voz', () => {
 
 test('descAlternar concorda com o dispositivo', () => {
   assert.strictEqual(descAlternar('luz'), 'liga se estiver desligada, desliga se estiver ligada');
-  assert.strictEqual(descAlternar('alarme'), 'arma se estiver desarmado, desarma se estiver armado');
   assert.strictEqual(descAlternar('xyz'), 'liga se estiver desligado, desliga se estiver ligado');
 });
 

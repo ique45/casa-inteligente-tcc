@@ -1420,11 +1420,11 @@
   <section>
     <h2>Testar</h2>
     <p>
-      Abra o Monitor Serial em <strong>115200</strong>. Para a maquete fazer o que
-      fazia no Uno, crie no site três automações:
-      <strong>Botão físico → Luz interna</strong>,
-      <strong>Escureceu → Luz externa</strong> e
-      <strong>Presença → Alarme</strong>.
+      Abra o Monitor Serial em <strong>115200</strong> — ou o painel do site, que
+      mostra o mesmo serial. Para as luzes fazerem o que faziam no Uno, crie no
+      site duas automações: <strong>Botão físico → Luz interna</strong> e
+      <strong>Escureceu → Luz externa</strong>. O alarme não precisa de automação:
+      a própria placa liga o LED e o buzzer quando o PIR detecta.
     </p>
     <div class="checklist">
       <label class="check-item">
@@ -1433,7 +1433,7 @@
       </label>
       <label class="check-item">
         <input type="checkbox" class="conn-check" data-id="test-dash">
-        <span class="check-text">Pelo dashboard: a luz interna faz o relé clicar e acende os 4 LEDs; a luz externa acende os 2 LEDs; o alarme liga LED e buzzer. Entre o clique e a ação passam alguns segundos — é esperado.</span>
+        <span class="check-text">Pelo quadro "Agora na casa" do painel: a luz interna faz o relé clicar e acende os 4 LEDs; a luz externa acende os 2 LEDs. Entre o clique e a ação passam alguns segundos — é esperado.</span>
       </label>
       <label class="check-item">
         <input type="checkbox" class="conn-check" data-id="test-btn">
@@ -1445,7 +1445,7 @@
       </label>
       <label class="check-item">
         <input type="checkbox" class="conn-check" data-id="test-pir">
-        <span class="check-text">Passar na frente do PIR alterna o alarme.</span>
+        <span class="check-text">Passar na frente do PIR liga o LED do alarme e o buzzer na hora. Eles continuam enquanto houver movimento (o sensor é relido a cada 5 s) e desligam sozinhos depois. O painel mostra "Alarme DISPARADO".</span>
       </label>
     </div>
     <div class="alert care">
@@ -1460,11 +1460,11 @@
     <div class="alert note">
       <div class="alert-title">Diferença para o Uno</div>
       <p>
-        No Uno, cada sensor mandava direto no LED: o alarme tocava só enquanto o
-        sensor detectava, e os LEDs externos ficavam acesos enquanto estivesse
-        escuro. No sistema, cada evento <strong>alterna</strong> o dispositivo —
-        liga na primeira vez e desliga na próxima — e tudo também pode ser ligado e
-        desligado pelo site, pela voz e pelo celular.
+        O alarme funciona como no Uno: toca só enquanto o sensor detecta. Já as
+        luzes mudaram: no Uno, os LEDs externos ficavam acesos enquanto estivesse
+        escuro; no sistema, cada evento <strong>alterna</strong> a luz — liga na
+        primeira vez e desliga na próxima — e as luzes também podem ser ligadas e
+        desligadas pelo site, pela voz e pelo celular.
       </p>
     </div>
   </section>

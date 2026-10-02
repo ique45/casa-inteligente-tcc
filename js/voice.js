@@ -12,13 +12,7 @@ const voiceControl = (() => {
     { pattern: /\bligar?\s+(?:a\s+)?luz/i,            deviceId: 'luz',        action: true  },
     { pattern: /\bdesligar?\s+(?:a\s+)?luz/i,         deviceId: 'luz',        action: false },
     { pattern: /\bacend[ae]r?\s+(?:a\s+)?luz/i,       deviceId: 'luz',        action: true  },
-    { pattern: /\bapag(?:ar?|ue)\s+(?:a\s+)?luz/i,    deviceId: 'luz',        action: false },
-    { pattern: /\bligar?\s+(?:o\s+)?alarme/i,         deviceId: 'alarme',     action: true  },
-    { pattern: /\bdesligar?\s+(?:o\s+)?alarme/i,      deviceId: 'alarme',     action: false },
-    { pattern: /\barmar?\s+(?:o\s+)?alarme/i,         deviceId: 'alarme',     action: true  },
-    { pattern: /\bdesarmar?\s+(?:o\s+)?alarme/i,      deviceId: 'alarme',     action: false },
-    { pattern: /\bativar?\s+(?:o\s+)?alarme/i,        deviceId: 'alarme',     action: true  },
-    { pattern: /\bdesativar?\s+(?:o\s+)?alarme/i,     deviceId: 'alarme',     action: false }
+    { pattern: /\bapag(?:ar?|ue)\s+(?:a\s+)?luz/i,    deviceId: 'luz',        action: false }
   ];
 
   let recognition = null;
