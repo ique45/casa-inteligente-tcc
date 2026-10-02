@@ -71,6 +71,12 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 // para LOW. Se o seu funcionar ao contrario, inverta estes dois valores.
 #define RELE_LIGADO    LOW
 #define RELE_DESLIGADO HIGH
+// O modulo e de 5 V e o NodeMCU, de 3,3 V. Um HIGH de 3,3 V nao basta para
+// apagar o LED do optoacoplador (ele fica entre 5 V e o pino) e o rele
+// continuava ligado — medido na maquete em 2026-10-02: "desligar" nao
+// apagava os LEDs internos. Para desligar, o pino vira entrada (fica solto):
+// sem caminho para a corrente, o rele desliga de verdade.
+const bool RELE_DESLIGA_SOLTANDO_O_PINO = true;
 
 // Constantes de comportamento
 const unsigned long SYNC_INTERVAL          = 2000;   // ms entre cada sync
@@ -114,6 +120,9 @@ bool estadoLuzExterna = false;
 bool estaEscuro = false;  // estado do gatilho de luminosidade (edge-trigger, ve readSensors)
 int           ultimaLuzLogada = -1000;
 unsigned long ultimoLogLuz    = 0;
+const unsigned long PINOS_LOG_INTERVALO_MS = 30000;
+String        ultimaLinhaDePinos;
+unsigned long ultimoLogPinos  = 0;
 
 // Estado do alarme, mexido pelo timer (verificarAlarme) e lido pelo loop.
 Ticker                 timerAlarme;
@@ -293,6 +302,14 @@ void readSensors() {
     ultimoLogLuz    = millis();
   }
 
+  // Nivel dos pinos: sempre que algum muda, e de tempos em tempos.
+  String pinos = linhaDePinos();
+  if (pinos != ultimaLinhaDePinos || millis() - ultimoLogPinos >= PINOS_LOG_INTERVALO_MS) {
+    logar(pinos);
+    ultimaLinhaDePinos = pinos;
+    ultimoLogPinos     = millis();
+  }
+
   bool escuroAgora = LDR_ESCURO_E_MAIOR ? (leitura >= LDR_LIMITE_ESCURO)
                                         : (leitura <= LDR_LIMITE_ESCURO);
   bool claroDeNovo = LDR_ESCURO_E_MAIOR ? (leitura < LDR_LIMITE_ESCURO - LDR_HISTERESE)
@@ -313,11 +330,34 @@ void readSensors() {
 
 // ─── Aplicacao de comandos ───────────────────────────────────
 
-// LED: HIGH liga, LOW desliga. Rele: o contrario (ve RELE_LIGADO).
+// LED: HIGH liga, LOW desliga. Rele: o contrario (ve RELE_LIGADO), e para
+// desligar o pino fica solto (ve RELE_DESLIGA_SOLTANDO_O_PINO).
 void escreverDispositivo(const DevicePin& d, bool state) {
+  if (d.rele && !state && RELE_DESLIGA_SOLTANDO_O_PINO) {
+    pinMode(d.pin, INPUT);
+    return;
+  }
   int nivel = d.rele ? (state ? RELE_LIGADO : RELE_DESLIGADO)
                      : (state ? HIGH : LOW);
-  digitalWrite(d.pin, nivel);
+  digitalWrite(d.pin, nivel);   // nivel antes do pinMode: sem pulso no rele
+  pinMode(d.pin, OUTPUT);
+}
+
+// Nivel de um pino para o log. Pino de rele solto aparece como "solto".
+String nivelDoPino(int pin, bool rele) {
+  String nivel = digitalRead(pin) == HIGH ? "HIGH" : "LOW";
+  if (rele && RELE_DESLIGA_SOLTANDO_O_PINO && !estadoLuzInterna) nivel += " (solto)";
+  return nivel;
+}
+
+// Uma linha com o nivel de todos os pinos usados, para conferir a fiacao.
+String linhaDePinos() {
+  return "Pinos: D7 rele=" + nivelDoPino(PIN_RELE_INTERNA, true) +
+         " | D6 ext=" + nivelDoPino(PIN_LED_EXTERNA, false) +
+         " | D0 led alarme=" + nivelDoPino(PIN_LED_ALARME, false) +
+         " | D5 buzzer=" + nivelDoPino(PIN_BUZZER, false) +
+         " | D1 botao=" + nivelDoPino(PIN_BOTAO, false) +
+         " | D2 PIR=" + nivelDoPino(PIN_PIR, false);
 }
 
 void applyCommand(const char* device, bool state) {
@@ -325,7 +365,8 @@ void applyCommand(const char* device, bool state) {
     if (strcmp(devicePins[i].name, device) == 0) {
       escreverDispositivo(devicePins[i], state);
       *(devicePins[i].stateVar) = state;
-      logar(String("Comando aplicado: ") + device + (state ? " = LIGADO" : " = DESLIGADO"));
+      logar(String("Comando aplicado: ") + device + (state ? " = LIGADO" : " = DESLIGADO") +
+            " (pino " + nivelDoPino(devicePins[i].pin, devicePins[i].rele) + ")");
       return;
     }
   }
@@ -433,8 +474,6 @@ void setup() {
   // Tudo comeca desligado. O nivel e escrito ANTES do pinMode para o rele
   // nao dar um clique (pulso de LOW) no instante em que o pino vira saida.
   for (int i = 0; i < DEVICE_COUNT; i++) {
-    escreverDispositivo(devicePins[i], false);
-    pinMode(devicePins[i].pin, OUTPUT);
     escreverDispositivo(devicePins[i], false);
   }
   pinMode(PIN_LED_ALARME, OUTPUT);
