@@ -36,14 +36,13 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
 function buildActivatedBy(d) {
   if (d.trigger === 'voz')         return `🎤 Comando de voz`;
   if (d.trigger === 'botao')       return `🔘 Botão no dashboard`;
+  if (d.trigger === 'botao_fisico') return `🔲 Botão físico apertado`;
   if (d.trigger === 'presenca')    return `👁️ Sensor de presença detectou movimento`;
-  if (d.trigger === 'horario')     return `⏰ Agendamento de horário programado`;
-  if (d.trigger === 'temperatura') return `🌡️ Sensor de temperatura disparou`;
+  if (d.trigger === 'luminosidade') return `🌙 Sensor de luminosidade: escureceu`;
   return `⚙️ ${escapeHtml(d.trigger)}`;
 }
 
 const ACTION_LABELS = {
-  portao: { on: 'ABRIU',    off: 'FECHOU'    },
   alarme: { on: 'ARMOU',    off: 'DESARMOU'  }
 };
 

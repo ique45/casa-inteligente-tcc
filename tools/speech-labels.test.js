@@ -4,18 +4,10 @@ const assert = require('node:assert');
 const { DEVICES, frasePara } = require('../js/devices.js');
 
 test('luz concorda no feminino', () => {
-  assert.strictEqual(frasePara('luz', true), 'Luz ligada');
-  assert.strictEqual(frasePara('luz', false), 'Luz desligada');
-});
-
-test('ventilador concorda no masculino', () => {
-  assert.strictEqual(frasePara('ventilador', true), 'Ventilador ligado');
-  assert.strictEqual(frasePara('ventilador', false), 'Ventilador desligado');
-});
-
-test('portao usa abrir e fechar, nao ligar', () => {
-  assert.strictEqual(frasePara('portao', true), 'Portão aberto');
-  assert.strictEqual(frasePara('portao', false), 'Portão fechado');
+  assert.strictEqual(frasePara('luz', true), 'Luz interna ligada');
+  assert.strictEqual(frasePara('luz', false), 'Luz interna desligada');
+  assert.strictEqual(frasePara('luz_externa', true), 'Luz externa ligada');
+  assert.strictEqual(frasePara('luz_externa', false), 'Luz externa desligada');
 });
 
 test('alarme usa armar e desarmar', () => {

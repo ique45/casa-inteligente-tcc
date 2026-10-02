@@ -241,7 +241,7 @@
       <div class="demo-text">
         <h2>Veja nosso projeto funcionando</h2>
         <p>
-          Do clique no dashboard até o relé acionar: a cadeia completa foi validada com o
+          Do clique no dashboard até o LED acender: a cadeia completa foi validada com o
           firmware real rodando em simulação (Wokwi), sem precisar do hardware físico
           montado. O vídeo ao lado mostra essa demonstração, ponta a ponta.
         </p>
@@ -329,8 +329,8 @@
         <h3>Programação</h3>
         <p>
           O trecho abaixo é o núcleo do firmware: a cada 2 segundos, o ESP8266 monta um JSON
-          com o estado dos relés e a temperatura lida, envia por HTTPS ao backend, e aplica
-          os comandos que ele devolver.
+          com o estado dos LEDs e os eventos dos sensores, envia por HTTPS ao backend, e
+          aplica os comandos que ele devolver.
         </p>
         <div class="code-window">
           <div class="code-dots">
@@ -349,13 +349,13 @@
   doc[<span class="code-str">"uid"</span>]    = UID;
   doc[<span class="code-str">"token"</span>]  = TOKEN;
   doc[<span class="code-str">"online"</span>] = <span class="code-keyword">true</span>;
-  <span class="code-keyword">if</span> (tempValida) doc[<span class="code-str">"temperature"</span>] = currentTemp;
 
   JsonObject devices = doc[<span class="code-str">"devices"</span>].to&lt;JsonObject&gt;();
-  devices[<span class="code-str">"luz"</span>]        = estadoLuz;
-  devices[<span class="code-str">"ventilador"</span>] = estadoVentilador;
-  devices[<span class="code-str">"portao"</span>]     = estadoPortao;
-  devices[<span class="code-str">"alarme"</span>]     = estadoAlarme;
+  devices[<span class="code-str">"luz"</span>]     = estadoLuz;
+  devices[<span class="code-str">"alarme"</span>]  = estadoAlarme;
+
+  JsonArray eventsArray = doc[<span class="code-str">"events"</span>].to&lt;JsonArray&gt;();
+  <span class="code-keyword">for</span> (<span class="code-keyword">int</span> i = 0; i &lt; eventCount; i++) eventsArray.<span class="code-fn">add</span>(events[i]);
 
   String body;
   <span class="code-fn">serializeJson</span>(doc, body);
@@ -375,7 +375,7 @@
             <div class="step-num">1</div>
             <div>
               <strong>Leitura dos Sensores</strong>
-              <p>Temperatura (DHT11) e presença (PIR)</p>
+              <p>Botão, presença (PIR) e luminosidade (LDR)</p>
             </div>
           </div>
           <div class="flow-step">
@@ -389,7 +389,7 @@
             <div class="step-num">3</div>
             <div>
               <strong>Firebase Realtime DB</strong>
-              <p>Estado sincronizado, relés acionados</p>
+              <p>Estado sincronizado, LEDs acionados</p>
             </div>
           </div>
         </div>
