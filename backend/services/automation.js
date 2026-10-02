@@ -18,7 +18,7 @@ function resolveAction(action, currentState) {
  * Busca automações ativas do usuário para um gatilho específico
  * e executa cada uma: atualiza RTDB + grava histórico.
  * @param {string} uid
- * @param {'presenca'|'temperatura'|'horario'} trigger
+ * @param {'presenca'|'botao_fisico'|'luminosidade'} trigger
  */
 async function executeAutomations(uid, trigger) {
   const snap = await db

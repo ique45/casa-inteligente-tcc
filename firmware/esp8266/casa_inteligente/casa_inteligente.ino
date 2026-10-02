@@ -5,17 +5,21 @@
  * ============================================================
  *
  *  O que este programa faz, a cada 2 segundos:
- *    1. Le a temperatura (DHT11) e a presenca (sensor PIR)
- *    2. Envia esses dados e o estado atual dos reles para o backend
+ *    1. Le o push button, a presenca (sensor PIR) e a luminosidade (LDR)
+ *    2. Envia esses eventos e o estado atual das luzes para o backend
  *    3. Recebe do backend a lista de comandos a executar
- *    4. Liga ou desliga os reles conforme os comandos
+ *    4. Liga ou desliga a luz interna, a luz externa e o alarme
+ *
+ *  Mesmas pecas da maquete do projeto do Uno (Projeto_Casa_Inteligente_v3):
+ *    - 4 LEDs internos: por um canal do modulo de rele, que liga os LEDs nos
+ *      5 V. Quatro LEDs passam do que um pino do ESP8266 consegue fornecer.
+ *    - 2 LEDs externos: direto num pino.
+ *    - LED do alarme e buzzer: direto, cada um no seu pino.
  *
  *  Backend: https://casa-inteligente-tcc-production.up.railway.app
  *
  *  Bibliotecas necessarias (Gerenciador de Bibliotecas da IDE Arduino):
  *    - ArduinoJson           (Benoit Blanchon)   v7.x
- *    - DHT sensor library    (Adafruit)
- *    - Adafruit Unified Sensor  (dependencia da anterior)
  *  As bibliotecas ESP8266WiFi, ESP8266HTTPClient e WiFiClientSecure
  *  ja vem com o pacote de placas ESP8266.
  * ============================================================
@@ -25,7 +29,6 @@
 #include <WiFiClientSecure.h>
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
-#include <DHT.h>
 
 // ─── EDITE AQUI ──────────────────────────────────────────────
 const char* WIFI_SSID     = "NomeDaSuaRede";
@@ -36,59 +39,70 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 // ─────────────────────────────────────────────────────────────
 
 // Pinos (numeracao GPIO, nao a numeracao "D" impressa na placa)
-#define PIN_DHT              5   // D1
+// D3, D4 e D8 ficam vazios de proposito: o ESP8266 le esses tres pinos no
+// boot para decidir como iniciar, e um LED, rele ou sensor ligado neles pode
+// impedir a placa de ligar.
+//
+// Push button (pino 7 no Uno): um terminal no D1 e o outro no GND. O pull-up
+// e o interno do ESP8266 (INPUT_PULLUP): solto = HIGH, apertado = LOW.
+#define PIN_BOTAO            5   // D1
+// Sensor de presenca PIR HC-SR501 (no lugar do sensor IR que ficava no pino
+// 12 do Uno). Alimentado em 5 V, mas a saida dele e de 3,3 V: vai direto no
+// pino. HIGH = movimento detectado.
 #define PIN_PIR              4   // D2
-#define PIN_RELE_LUZ        14   // D5
-#define PIN_RELE_VENTILADOR 12   // D6
-#define PIN_RELE_PORTAO     13   // D7
-// O alarme ficava no GPIO15 (D8) e foi movido para o GPIO2 (D4) em 2026-08-27.
-// Motivo: o GPIO15 precisa estar em LOW no momento do reset para o ESP8266 dar
-// boot, e os pinos IN dos modulos de rele sao puxados para cima por resistor.
-// Com o modulo ligado, o D8 fica em HIGH no reset e a placa nao inicia.
-// O GPIO2 tem a regra inversa (precisa estar em HIGH no reset), e como
-// RELAY_OFF = HIGH o pull-up do modulo joga a favor: no boot o rele ja nasce
-// desligado. Efeito colateral inofensivo: o GPIO2 tambem comanda o LED azul
-// embutido no modulo ESP-12E, entao ele acende junto com o rele do alarme.
-#define PIN_RELE_ALARME      2   // D4
+// Sensor de luminosidade (LDR, A0 no Uno) na unica entrada analogica da
+// placa. O NodeMCU tem um divisor interno que aceita de 0 a 3,3 V nesse pino.
+#define PIN_LDR             A0
+// IN1 do modulo de rele, que liga os 4 LEDs internos (pino 13 no Uno).
+#define PIN_RELE_INTERNA    13   // D7
+// Os 2 LEDs externos (pino 8 no Uno).
+#define PIN_LED_EXTERNA     12   // D6
+// LED do alarme e buzzer (os dois no pino 11 no Uno). Aqui ficam em pinos
+// separados: somadas, as duas correntes passariam do limite de um pino.
+// O LED fica no D0 porque esse pino vai a HIGH por um instante no boot: no
+// LED isso e uma piscada invisivel, no buzzer seria um bip a cada reset.
+#define PIN_LED_ALARME      16   // D0
+#define PIN_BUZZER          14   // D5
 
-// Polaridade do modulo de rele.
-// A maioria dos modulos vendidos no Brasil e "ativo em LOW":
-// o rele LIGA quando o pino vai para LOW. Se o seu funcionar
-// ao contrario, basta inverter estes dois valores.
-#define RELAY_ON  LOW
-#define RELAY_OFF HIGH
+// Modulo de rele "ativo em LOW", o mais comum: o rele LIGA quando o pino vai
+// para LOW. Se o seu funcionar ao contrario, inverta estes dois valores.
+#define RELE_LIGADO    LOW
+#define RELE_DESLIGADO HIGH
 
 // Constantes de comportamento
 const unsigned long SYNC_INTERVAL          = 2000;   // ms entre cada sync
 const int           WIFI_TIMEOUT_ATTEMPTS  = 20;     // 20 x 500ms = ~10s
-const unsigned long PIR_COOLDOWN_MS        = 10000;  // 10s entre eventos de presenca
-const float         DEFAULT_TEMP_THRESHOLD = 30.0;   // °C
-// Histerese do evento de temperatura: o gatilho so re-arma quando a
-// temperatura cai abaixo de (tempThreshold - TEMP_HISTERESE). Sem isso,
-// uma leitura oscilando 1 decimo de grau em torno do limite dispararia
-// o evento (e a automacao de "Alternar" nos reles) a cada 2s.
-const float         TEMP_HISTERESE         = 1.0;    // °C
+const unsigned long PRESENCA_COOLDOWN_MS   = 10000;  // 10s entre eventos de presenca
+const unsigned long BOTAO_DEBOUNCE_MS      = 200;    // ignora o "quique" do contato
+
+// Luminosidade. analogRead(A0) vai de 0 a 1023. Com o LDR ligado como no
+// projeto do Uno (LDR no 3V3, resistor de 10k para o GND, ponto do meio no
+// A0) a leitura CAI quando escurece, por isso LDR_ESCURO_E_MAIOR = false.
+// Se usar um modulo de LDR cuja leitura SOBE no escuro, troque para true.
+// Para calibrar, abra o Monitor Serial: a leitura aparece a cada ciclo
+// ("Luminosidade: ..."). 650 e o valor que o grupo usava no Uno.
+const bool          LDR_ESCURO_E_MAIOR     = false;
+const int           LDR_LIMITE_ESCURO      = 650;    // a partir daqui conta como escuro
+// Histerese: o gatilho so re-arma depois que a leitura volta LDR_HISTERESE
+// pontos para o lado claro. Sem isso, uma leitura oscilando em torno do
+// limite dispararia o evento (e a automacao de "Alternar") a cada 2s.
+const int           LDR_HISTERESE          = 50;
 
 // ─── Estado global ───────────────────────────────────────────
-DHT dht(PIN_DHT, DHT11);
-
-bool estadoLuz        = false;
-bool estadoVentilador = false;
-bool estadoPortao     = false;
+bool estadoLuzInterna = false;
+bool estadoLuzExterna = false;
 bool estadoAlarme     = false;
 
-float currentTemp    = 0.0;
-// So fica true depois da primeira leitura valida (nao-NaN) do DHT11. Enquanto
-// for false, o campo "temperature" nem entra no JSON do sync — sem isso, um
-// sensor ausente ou mal conectado faria o firmware enviar 0.0 como se fosse
-// uma leitura real, e o backend gravaria esse 0 no Realtime Database (o guard
-// em backend/routes/arduino.js so filtra valor ausente/invalido, nao um 0
-// "de verdade" vindo do firmware).
-bool  tempValida     = false;
-float tempThreshold  = DEFAULT_TEMP_THRESHOLD;  // atualizado pelo backend
-bool  tempAcimaLimite = false;  // estado do gatilho de temperatura (edge-trigger, ve Secao 4)
+bool estaEscuro = false;  // estado do gatilho de luminosidade (edge-trigger, ve readSensors)
+
+// O sync bloqueia o loop por varios segundos (handshake TLS), entao ler o
+// botao so dentro de readSensors() perderia quase todo aperto. A interrupcao
+// registra o aperto na hora; readSensors() so transforma isso em evento.
+volatile bool          botaoApertado = false;
+volatile unsigned long ultimoAperto  = 0;
 
 unsigned long ultimaPresenca = 0;
+bool          pirAtivo       = false;  // leitura anterior do PIR (detecta a subida)
 unsigned long ultimoSync     = 0;
 
 String events[4];
@@ -105,19 +119,22 @@ int    eventCount = 0;
 // tentativas falhando. Cada ciclo abre e fecha sua propria conexao.
 WiFiClientSecure secureClient;
 
-// Tabela que liga o nome vindo do backend ao pino e a variavel de estado.
+// Tabela que liga o nome vindo do backend aos pinos e a variavel de estado.
 // Para adicionar um dispositivo novo, basta acrescentar uma linha aqui.
+// pin2 e um segundo pino que liga e desliga junto (-1 = nenhum).
+// rele = true quando o pino comanda o modulo de rele (logica invertida).
 struct DevicePin {
   const char* name;
   int         pin;
+  int         pin2;
+  bool        rele;
   bool*       stateVar;
 };
 
 DevicePin devicePins[] = {
-  { "luz",        PIN_RELE_LUZ,        &estadoLuz        },
-  { "ventilador", PIN_RELE_VENTILADOR, &estadoVentilador },
-  { "portao",     PIN_RELE_PORTAO,     &estadoPortao     },
-  { "alarme",     PIN_RELE_ALARME,     &estadoAlarme     },
+  { "luz",         PIN_RELE_INTERNA, -1,         true,  &estadoLuzInterna },
+  { "luz_externa", PIN_LED_EXTERNA,  -1,         false, &estadoLuzExterna },
+  { "alarme",      PIN_LED_ALARME,   PIN_BUZZER, false, &estadoAlarme     },
 };
 const int DEVICE_COUNT = sizeof(devicePins) / sizeof(devicePins[0]);
 
@@ -141,11 +158,20 @@ void connectWiFi() {
     Serial.println(WiFi.localIP());
   } else {
     Serial.println();
-    Serial.println("Sem WiFi. Os reles mantem o ultimo estado e o ESP segue tentando reconectar.");
+    Serial.println("Sem WiFi. Os LEDs mantem o ultimo estado e o ESP segue tentando reconectar.");
   }
 }
 
 // ─── Sensores ────────────────────────────────────────────────
+
+// Roda dentro da interrupcao do botao: precisa ser curta e ficar na RAM.
+void IRAM_ATTR aoApertarBotao() {
+  unsigned long agora = millis();
+  if (agora - ultimoAperto > BOTAO_DEBOUNCE_MS) {
+    botaoApertado = true;
+    ultimoAperto  = agora;
+  }
+}
 
 // Verifica se um evento desse tipo ja esta no buffer aguardando envio.
 // Usado para nunca duplicar o mesmo evento enquanto um sync anterior
@@ -165,52 +191,68 @@ void readSensors() {
   // perdido por falha de rede seria descartado sem nunca ter sido
   // entregue (ve Secao 3 do spec / achado 3 da revisao).
 
-  // Temperatura. O DHT11 as vezes devolve NaN numa leitura isolada;
-  // nesse caso mantemos o ultimo valor valido.
-  float temp = dht.readTemperature();
-  if (!isnan(temp)) {
-    currentTemp = temp;
-    tempValida  = true;
-  }
-
-  // Evento "temperatura" e edge-triggered (dispara so na transicao de
-  // abaixo para acima do limite), com histerese para re-armar. Isso evita
-  // que o evento seja gerado a cada ciclo de 2s enquanto a temperatura
-  // fica acima do limite, o que faria uma automacao de "Alternar" o rele
-  // ligar/desligar sem parar (ve achado 2 da revisao). tempThreshold pode
-  // mudar em tempo real (o backend devolve um novo valor a cada sync); a
-  // logica abaixo usa sempre o valor atual, entao um ajuste de limite se
-  // reflete no proximo ciclo sem precisar de estado adicional.
-  if (currentTemp > tempThreshold) {
-    if (!tempAcimaLimite) {
-      tempAcimaLimite = true;
-      if (!eventoJaPendente("temperatura") && eventCount < 4) {
-        events[eventCount++] = "temperatura";
-      }
+  // Botao. A flag e ligada pela interrupcao; aqui ela so vira evento. Com o
+  // buffer cheio a flag fica ligada e o evento sai no proximo ciclo.
+  if (botaoApertado && eventCount < 4) {
+    if (!eventoJaPendente("botao_fisico")) {
+      events[eventCount++] = "botao_fisico";
     }
-  } else if (currentTemp < tempThreshold - TEMP_HISTERESE) {
-    tempAcimaLimite = false;
+    botaoApertado = false;
   }
 
-  // Presenca. O PIR oscila enquanto ha movimento, entao aplicamos um
-  // cooldown para nao enviar dezenas de eventos por minuto.
-  if (digitalRead(PIN_PIR) == HIGH) {
+  // Presenca. O PIR fica em HIGH enquanto ha movimento, por varios segundos
+  // seguidos. O evento sai so na subida (LOW -> HIGH): sem isso, uma pessoa
+  // andando na frente do sensor alternaria o alarme a cada ciclo. O cooldown
+  // segura subidas muito proximas, quando o PIR oscila.
+  bool pirAgora = digitalRead(PIN_PIR) == HIGH;
+  if (pirAgora && !pirAtivo) {
     unsigned long agora = millis();
-    if (agora - ultimaPresenca > PIR_COOLDOWN_MS) {
-      if (!eventoJaPendente("presenca") && eventCount < 4) {
-        events[eventCount++] = "presenca";
-        ultimaPresenca = agora;
+    if (agora - ultimaPresenca > PRESENCA_COOLDOWN_MS &&
+        !eventoJaPendente("presenca") && eventCount < 4) {
+      events[eventCount++] = "presenca";
+      ultimaPresenca = agora;
+    }
+  }
+  pirAtivo = pirAgora;
+
+  // Luminosidade. O evento "luminosidade" e edge-triggered: dispara so na
+  // passagem de claro para escuro, com histerese para re-armar. Isso evita
+  // gerar o evento a cada ciclo de 2s enquanto continua escuro, o que faria
+  // uma automacao de "Alternar" ligar/desligar a luz sem parar.
+  int leitura = analogRead(PIN_LDR);
+  Serial.print("Luminosidade: ");
+  Serial.println(leitura);
+
+  bool escuroAgora = LDR_ESCURO_E_MAIOR ? (leitura >= LDR_LIMITE_ESCURO)
+                                        : (leitura <= LDR_LIMITE_ESCURO);
+  bool claroDeNovo = LDR_ESCURO_E_MAIOR ? (leitura < LDR_LIMITE_ESCURO - LDR_HISTERESE)
+                                        : (leitura > LDR_LIMITE_ESCURO + LDR_HISTERESE);
+  if (escuroAgora) {
+    if (!estaEscuro) {
+      estaEscuro = true;
+      if (!eventoJaPendente("luminosidade") && eventCount < 4) {
+        events[eventCount++] = "luminosidade";
       }
     }
+  } else if (claroDeNovo) {
+    estaEscuro = false;
   }
 }
 
 // ─── Aplicacao de comandos ───────────────────────────────────
 
+// LED e buzzer: HIGH liga, LOW desliga. Rele: o contrario (ve RELE_LIGADO).
+void escreverDispositivo(const DevicePin& d, bool state) {
+  int nivel = d.rele ? (state ? RELE_LIGADO : RELE_DESLIGADO)
+                     : (state ? HIGH : LOW);
+  digitalWrite(d.pin, nivel);
+  if (d.pin2 >= 0) digitalWrite(d.pin2, nivel);
+}
+
 void applyCommand(const char* device, bool state) {
   for (int i = 0; i < DEVICE_COUNT; i++) {
     if (strcmp(devicePins[i].name, device) == 0) {
-      digitalWrite(devicePins[i].pin, state ? RELAY_ON : RELAY_OFF);
+      escreverDispositivo(devicePins[i], state);
       *(devicePins[i].stateVar) = state;
 
       Serial.print("Comando aplicado: ");
@@ -244,21 +286,14 @@ void syncWithBackend() {
 
   // Monta o corpo da requisicao
   JsonDocument doc;
-  doc["uid"]         = UID;
-  doc["token"]       = TOKEN;
-  doc["online"]      = true;
-  // So envia "temperature" depois de uma leitura valida do DHT11 (ve
-  // declaracao de tempValida). Sem essa checagem, um sensor ausente ou
-  // mal conectado mandaria 0.0 como se fosse uma leitura real.
-  if (tempValida) {
-    doc["temperature"] = currentTemp;
-  }
+  doc["uid"]    = UID;
+  doc["token"]  = TOKEN;
+  doc["online"] = true;
 
-  JsonObject devices     = doc["devices"].to<JsonObject>();
-  devices["luz"]         = estadoLuz;
-  devices["ventilador"]  = estadoVentilador;
-  devices["portao"]      = estadoPortao;
-  devices["alarme"]      = estadoAlarme;
+  JsonObject devices = doc["devices"].to<JsonObject>();
+  for (int i = 0; i < DEVICE_COUNT; i++) {
+    devices[devicePins[i].name] = *(devicePins[i].stateVar);
+  }
 
   JsonArray eventsArray = doc["events"].to<JsonArray>();
   for (int i = 0; i < eventCount; i++) {
@@ -283,13 +318,6 @@ void syncWithBackend() {
       // garantia de que o backend processou os eventos. Mantem no buffer
       // para tentar de novo no proximo ciclo.
     } else {
-      // Atualiza o limite de temperatura devolvido pelo backend a cada sync
-      // (users/{uid}.tempThreshold, se o documento existir); se o campo nao
-      // vier na resposta, usa o padrao local (DEFAULT_TEMP_THRESHOLD). Hoje
-      // nenhuma tela do site escreve esse campo, entao na pratica o default
-      // sempre se aplica (ve js/automation.js: "O limite e definido no codigo").
-      tempThreshold = resposta["tempThreshold"] | DEFAULT_TEMP_THRESHOLD;
-
       // Executa os comandos enviados pelo site e pelas automacoes
       for (JsonObject cmd : resposta["commands"].as<JsonArray>()) {
         const char* device = cmd["device"];
@@ -320,16 +348,18 @@ void setup() {
   Serial.println();
   Serial.println("=== Casa Inteligente - iniciando ===");
 
-  // Coloca os reles em estado desligado ANTES de configurar como saida,
-  // para o modulo nao dar um pulso indesejado no boot.
+  // Tudo comeca desligado. O nivel e escrito ANTES do pinMode para o rele
+  // nao dar um clique (pulso de LOW) no instante em que o pino vira saida.
   for (int i = 0; i < DEVICE_COUNT; i++) {
-    digitalWrite(devicePins[i].pin, RELAY_OFF);
+    escreverDispositivo(devicePins[i], false);
     pinMode(devicePins[i].pin, OUTPUT);
-    digitalWrite(devicePins[i].pin, RELAY_OFF);
+    if (devicePins[i].pin2 >= 0) pinMode(devicePins[i].pin2, OUTPUT);
+    escreverDispositivo(devicePins[i], false);
   }
 
   pinMode(PIN_PIR, INPUT);
-  dht.begin();
+  pinMode(PIN_BOTAO, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(PIN_BOTAO), aoApertarBotao, FALLING);
 
   connectWiFi();
 
@@ -343,7 +373,7 @@ void setup() {
 
 void loop() {
   // Se o WiFi caiu, tenta reconectar e pula este ciclo.
-  // Os reles continuam no ultimo estado conhecido.
+  // Os LEDs continuam no ultimo estado conhecido.
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi desconectado, tentando reconectar...");
     WiFi.reconnect();

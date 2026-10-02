@@ -1,8 +1,7 @@
 const DEVICES = [
-  { id: 'luz',        name: 'Luz',        icon: '💡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: { on: 'Ligando...',   off: 'Desligando...' }, speechOn: 'ligada',  speechOff: 'desligada'  },
-  { id: 'ventilador', name: 'Ventilador', icon: '🌀', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: { on: 'Ligando...',   off: 'Desligando...' }, speechOn: 'ligado',  speechOff: 'desligado'  },
-  { id: 'portao',     name: 'Portão',     icon: '🚪', labelOn: 'Aberto',  labelOff: 'Fechado',   labelTransition: { on: 'Abrindo...',   off: 'Fechando...'   }, speechOn: 'aberto',  speechOff: 'fechado'    },
-  { id: 'alarme',     name: 'Alarme',     icon: '🔔', labelOn: 'Armado',  labelOff: 'Desarmado', labelTransition: { on: 'Armando...',   off: 'Desarmando...' }, speechOn: 'armado',  speechOff: 'desarmado'  }
+  { id: 'luz',         name: 'Luz interna', icon: '💡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: { on: 'Ligando...',   off: 'Desligando...' }, speechOn: 'ligada',  speechOff: 'desligada'  },
+  { id: 'luz_externa', name: 'Luz externa', icon: '🏡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: { on: 'Ligando...',   off: 'Desligando...' }, speechOn: 'ligada',  speechOff: 'desligada'  },
+  { id: 'alarme',      name: 'Alarme',      icon: '🔔', labelOn: 'Armado',  labelOff: 'Desarmado', labelTransition: { on: 'Armando...',   off: 'Desarmando...' }, speechOn: 'armado',  speechOff: 'desarmado'  }
 ];
 
 // "Luz ligada", não "Luz ligado" — os rótulos visuais (labelOn) não concordam
@@ -18,28 +17,26 @@ function frasePara(deviceId, isOn) {
 // "Quando: / O sistema vai:" de uma automação salva.
 
 const TRIGGER_INFO = {
-  voz:         { label: 'Voz',           icon: '🎤' },
-  botao:       { label: 'Botão no dashboard', icon: '🔘' },
-  presenca:    { label: 'Presença',      icon: '👁️' },
-  temperatura: { label: 'Temperatura',   icon: '🌡️' },
-  horario:     { label: 'Horário',       icon: '⏰' }
+  voz:          { label: 'Voz',                icon: '🎤' },
+  botao:        { label: 'Botão no dashboard', icon: '🔘' },
+  botao_fisico: { label: 'Botão físico',       icon: '🔲' },
+  presenca:     { label: 'Presença',           icon: '👁️' },
+  luminosidade: { label: 'Escureceu',          icon: '🌙' }
 };
 
 // Pares de verbos que o formulário oferece para a automação de voz. O
 // primeiro de cada lista é o padrão, já escolhido ao abrir a etapa de voz.
 const VOICE_VERBS = {
-  luz:        [{ on: 'Acender', off: 'Apagar' },   { on: 'Ligar', off: 'Desligar' }],
-  ventilador: [{ on: 'Ligar',   off: 'Desligar' }],
-  portao:     [{ on: 'Abrir',   off: 'Fechar' }],
+  luz:         [{ on: 'Acender', off: 'Apagar' },   { on: 'Ligar', off: 'Desligar' }],
+  luz_externa: [{ on: 'Acender', off: 'Apagar' },   { on: 'Ligar', off: 'Desligar' }],
   alarme:     [{ on: 'Armar',   off: 'Desarmar' }, { on: 'Ativar', off: 'Desativar' }]
 };
 
 // Toda automação alterna. O texto explica o que "alternar" faz em cada
 // dispositivo, concordando em gênero ("desligada" para luz).
 const ALTERNAR_DESC = {
-  luz:        'liga se estiver desligada, desliga se estiver ligada',
-  ventilador: 'liga se estiver desligado, desliga se estiver ligado',
-  portao:     'abre se estiver fechado, fecha se estiver aberto',
+  luz:         'liga se estiver desligada, desliga se estiver ligada',
+  luz_externa: 'liga se estiver desligada, desliga se estiver ligada',
   alarme:     'arma se estiver desarmado, desarma se estiver armado'
 };
 
@@ -69,8 +66,8 @@ function normalizarFrase(texto) {
     .join(' ');
 }
 
-// Compara por palavra inteira: "desligar ventilador" contém a substring
-// "ligar ventilador", mas não pode acionar o comando de ligar.
+// Compara por palavra inteira: "desligar alarme" contém a substring
+// "ligar alarme", mas não pode acionar o comando de ligar.
 function _contemFrase(fala, frase) {
   return (' ' + fala + ' ').includes(' ' + frase + ' ');
 }
@@ -151,9 +148,9 @@ function describeAutomation(d) {
                ` ou <strong>"${escapeHtml(d.voiceOff || '')}"</strong> (desliga)`;
   }
   else if (d.trigger === 'botao') whenText = `você clicar no botão do dashboard`;
+  else if (d.trigger === 'botao_fisico') whenText = `você apertar o botão físico`;
   else if (d.trigger === 'presenca') whenText = `o sensor detectar presença`;
-  else if (d.trigger === 'temperatura') whenText = `o sensor de temperatura disparar`;
-  else if (d.trigger === 'horario') whenText = `chegar o horário programado`;
+  else if (d.trigger === 'luminosidade') whenText = `o sensor de luminosidade perceber que escureceu`;
   else whenText = escapeHtml(d.trigger);
 
   const nome = `<strong>${escapeHtml(d.deviceName)}</strong>`;

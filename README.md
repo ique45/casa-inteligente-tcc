@@ -4,8 +4,8 @@ Sistema de automação residencial voltado à **acessibilidade**, desenvolvido c
 Trabalho de Conclusão de Curso da turma 3 AMS de Desenvolvimento de Sistemas.
 
 O objetivo é dar mais autonomia a idosos e pessoas com mobilidade reduzida,
-permitindo controlar luz, ventilador, portão e alarme pelo site, por comando de
-voz ou automaticamente, a partir de sensores de presença e temperatura.
+permitindo controlar a luz e o alarme pelo site, por comando de voz, por um botão
+físico ou automaticamente, a partir dos sensores de presença e de luminosidade.
 
 ## Arquitetura
 
@@ -13,16 +13,16 @@ voz ou automaticamente, a partir de sensores de presença e temperatura.
 ┌──────────────┐     ┌──────────────────┐     ┌──────────────┐     ┌───────────┐
 │     Site     │◀───▶│     Firebase     │◀───▶│    Backend   │◀───▶│  ESP8266  │
 │ HTML/CSS/JS  │     │ Auth · Firestore │     │   Express    │     │  NodeMCU  │
-│              │     │       RTDB       │     │  (Railway)   │     │  + reles  │
+│              │     │       RTDB       │     │  (Railway)   │     │  + LEDs   │
 └──────────────┘     └──────────────────┘     └──────────────┘     └───────────┘
 ```
 
 1. O usuário aciona um dispositivo no site; o comando é gravado no Realtime Database.
-2. O ESP8266 consulta o backend a cada 2 segundos, enviando temperatura, presença
-   e o estado atual dos relés.
+2. O ESP8266 consulta o backend a cada 2 segundos, enviando os eventos do botão
+   físico, do sensor de presença e do sensor de luminosidade, e o estado atual dos
+   LEDs.
 3. O backend responde com os comandos pendentes — do site e das automações — e o
-   ESP8266 aciona os relés. A temperatura recebida é gravada no Realtime Database
-   (`arduino_status/{uid}`).
+   ESP8266 acende ou apaga os LEDs (o alarme liga LED e buzzer juntos).
 4. Cada ação é registrada no histórico, no Firestore.
 
 ## Tecnologias
@@ -121,8 +121,6 @@ https://arduino.esp8266.com/stable/package_esp8266com_index.json
 | Biblioteca | Versão testada |
 |---|---|
 | ArduinoJson | **7.x** — a v6 não compila com `JsonDocument` |
-| DHT sensor library (Adafruit) | 1.4.7 |
-| Adafruit Unified Sensor | 1.1.15 |
 
 O `TOKEN` do bloco `EDITE AQUI` precisa ser o mesmo valor da variável
 `ARDUINO_SECRET` configurada **no Railway** — não a do `.env` local. Se os dois
@@ -199,13 +197,10 @@ regras.
   executado em uma placa real. Enquanto não houver uma placa conectada, o
   dashboard indica que o hardware não está conectado e os comandos ficam
   guardados no Realtime Database, aguardando.
-- **Automações por horário não disparam.** O site permite criá-las e o backend
-  aceita o gatilho, mas nenhuma camada gera esse evento — não existe agendador no
-  backend nem relógio no firmware. Apenas os gatilhos de presença e temperatura
-  funcionam de ponta a ponta. Documentado em
-  `docs/superpowers/specs/2026-05-29-firmware-esp8266-design.md`.
-- **Temperatura gravada, mas não exibida.** O backend persiste a leitura em
-  `arduino_status/{uid}`, mas nenhuma tela do site lê ou mostra esse valor hoje.
+- **Nível de escuro definido no firmware.** O sensor de luminosidade dispara quando
+  a leitura passa de `LDR_LIMITE_ESCURO`; o valor e o sentido da leitura
+  (`LDR_ESCURO_E_MAIOR`) dependem do sensor e são calibrados pelo Monitor Serial,
+  não pelo site.
 - **Acessibilidade não testada com usuários nem leitor de tela real.** O tema
   claro de alto contraste, a escala de texto, a confirmação falada e os atributos
   `aria-*` foram verificados no navegador (contraste calculado, navegação por
@@ -213,19 +208,17 @@ regras.
   pessoa do público-alvo. São boa prática aplicada com cuidado, não comportamento
   medido. A confirmação falada depende de existir voz **pt-BR** instalada no
   navegador; sem ela o recurso aparece desabilitado no perfil.
-- **Relé do alarme movido do D8 para o D4.** O GPIO15 (D8) precisa estar em LOW no
-  boot do ESP8266, e os pinos IN dos módulos de relé são puxados para cima por
-  resistor — com o módulo ligado, a placa não iniciaria. O GPIO2 (D4) tem a regra
-  inversa e funciona a favor da polaridade `RELAY_OFF = HIGH`. Ainda não validado
-  em hardware. Ver comentário em
-  `firmware/esp8266/casa_inteligente/casa_inteligente.ino`.
+- **Sem relé, LEDs direto nos pinos.** A luz e o alarme são LEDs ligados direto
+  nas saídas do NodeMCU, cada um com seu resistor; o buzzer do alarme tem pino
+  próprio. Os pinos D3, D4 e D8 ficam vazios porque o ESP8266 os lê no boot.
+  Ligação completa em `docs/montagem.html`.
 
 ## Roteiro de demonstração
 
 1. **`index.html`** — apresentação do projeto, o problema e a proposta.
 2. **"Acessar o Sistema"** — leva à tela de login (e-mail/senha ou Google).
 3. **Seleção de perfil** — escolha do perfil de acessibilidade do usuário.
-4. **Dashboard** — os quatro dispositivos, o estado do hardware e os comandos de voz.
+4. **Dashboard** — a luz e o alarme, o estado do hardware e os comandos de voz.
 5. **Automações** — criar uma regra: "quando houver presença, ligar a luz".
 6. **Histórico** — todos os acionamentos registrados, com data e origem.
 

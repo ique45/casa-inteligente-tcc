@@ -16,7 +16,7 @@ function auto(id, voiceOn, voiceOff, extra) {
 // ---- VOICE_VERBS / montarComandos ----
 
 test('todo dispositivo tem pelo menos um par de verbos', () => {
-  for (const id of ['luz', 'ventilador', 'portao', 'alarme']) {
+  for (const id of ['luz', 'luz_externa', 'alarme']) {
     assert.ok(VOICE_VERBS[id] && VOICE_VERBS[id].length > 0, `${id} sem verbos`);
     for (const par of VOICE_VERBS[id]) assert.ok(par.on && par.off);
   }
@@ -24,8 +24,6 @@ test('todo dispositivo tem pelo menos um par de verbos', () => {
 
 test('primeiro par de cada dispositivo', () => {
   assert.deepStrictEqual(VOICE_VERBS.luz[0], { on: 'Acender', off: 'Apagar' });
-  assert.deepStrictEqual(VOICE_VERBS.ventilador[0], { on: 'Ligar', off: 'Desligar' });
-  assert.deepStrictEqual(VOICE_VERBS.portao[0], { on: 'Abrir', off: 'Fechar' });
   assert.deepStrictEqual(VOICE_VERBS.alarme[0], { on: 'Armar', off: 'Desarmar' });
 });
 
@@ -35,8 +33,8 @@ test('montarComandos poe o nome depois do verbo', () => {
 });
 
 test('montarComandos apara espacos e preserva acentos do nome', () => {
-  assert.deepStrictEqual(montarComandos({ on: 'Abrir', off: 'Fechar' }, '  Portão   Garagem '),
-    { voiceOn: 'Abrir Portão Garagem', voiceOff: 'Fechar Portão Garagem' });
+  assert.deepStrictEqual(montarComandos({ on: 'Acender', off: 'Apagar' }, '  Luz   Escritório '),
+    { voiceOn: 'Acender Luz Escritório', voiceOff: 'Apagar Luz Escritório' });
 });
 
 test('montarComandos com nome vazio devolve so o verbo', () => {
@@ -47,13 +45,13 @@ test('montarComandos com nome vazio devolve so o verbo', () => {
 // ---- normalizarFrase ----
 
 test('normalizarFrase tira acento, maiuscula e pontuacao', () => {
-  assert.strictEqual(normalizarFrase('Abrir o Portão!'), 'abrir portao');
+  assert.strictEqual(normalizarFrase('Acender a Luz do Escritório!'), 'acender luz escritorio');
   assert.strictEqual(normalizarFrase('Acender luz quarto.'), 'acender luz quarto');
 });
 
 test('normalizarFrase tira artigos e preposicoes soltos', () => {
   assert.strictEqual(normalizarFrase('Acender a luz do quarto'), 'acender luz quarto');
-  assert.strictEqual(normalizarFrase('ligar os ventiladores da sala'), 'ligar ventiladores sala');
+  assert.strictEqual(normalizarFrase('ligar as luzes da sala'), 'ligar luzes sala');
 });
 
 test('normalizarFrase nao corta artigo dentro de palavra', () => {
@@ -75,7 +73,7 @@ test('frases que so diferem em pontuacao normalizam igual', () => {
 
 const LISTA = [
   auto('a1', 'Acender Luz Quarto', 'Apagar Luz Quarto', { deviceName: 'Luz Quarto' }),
-  auto('a2', 'Abrir Portão', 'Fechar Portão', { deviceType: 'portao', deviceName: 'Portão' })
+  auto('a2', 'Armar Alarme Entrada', 'Desarmar Alarme Entrada', { deviceType: 'alarme', deviceName: 'Alarme Entrada' })
 ];
 
 test('frase exata liga', () => {
@@ -94,24 +92,24 @@ test('frase de desligar desliga', () => {
 test('fala com artigos, acento diferente e ponto final casa', () => {
   const r = encontrarComando('Acender a luz do quarto.', LISTA);
   assert.strictEqual(r && r.automation.id, 'a1');
-  const p = encontrarComando('abrir o portao', LISTA);
+  const p = encontrarComando('armar o alarme da entrada', LISTA);
   assert.strictEqual(p && p.automation.id, 'a2');
 });
 
 test('fala com palavras extras em volta casa', () => {
-  const r = encontrarComando('por favor fechar o portão agora', LISTA);
+  const r = encontrarComando('por favor desarmar o alarme da entrada agora', LISTA);
   assert.strictEqual(r.automation.id, 'a2');
   assert.strictEqual(r.state, false);
 });
 
 test('desligar nao casa com o comando de ligar', () => {
-  const lista = [auto('v1', 'Ligar Ventilador', 'Parar Ventilador', { deviceType: 'ventilador' })];
-  assert.strictEqual(encontrarComando('desligar ventilador', lista), null);
+  const lista = [auto('v1', 'Ligar Alarme', 'Parar Alarme', { deviceType: 'alarme' })];
+  assert.strictEqual(encontrarComando('desligar alarme', lista), null);
 });
 
 test('desligar casa com desligar mesmo existindo ligar', () => {
-  const lista = [auto('v1', 'Ligar Ventilador', 'Desligar Ventilador', { deviceType: 'ventilador' })];
-  const r = encontrarComando('desligar ventilador', lista);
+  const lista = [auto('v1', 'Ligar Alarme', 'Desligar Alarme', { deviceType: 'alarme' })];
+  const r = encontrarComando('desligar alarme', lista);
   assert.strictEqual(r.state, false);
 });
 
@@ -172,7 +170,6 @@ test('comandoJaUsado ignora frase vazia e automacao que nao e de voz', () => {
 
 test('descAlternar concorda com o dispositivo', () => {
   assert.strictEqual(descAlternar('luz'), 'liga se estiver desligada, desliga se estiver ligada');
-  assert.strictEqual(descAlternar('portao'), 'abre se estiver fechado, fecha se estiver aberto');
   assert.strictEqual(descAlternar('alarme'), 'arma se estiver desarmado, desarma se estiver armado');
   assert.strictEqual(descAlternar('xyz'), 'liga se estiver desligado, desliga se estiver ligado');
 });
@@ -237,7 +234,7 @@ test('detectarPar sem nenhuma frase do par marca as duas como editadas', () => {
 
 test('validarComandos aceita dois comandos de duas palavras ou mais', () => {
   assert.strictEqual(validarComandos('Acender Luz Quarto', 'Apagar Luz Quarto'), null);
-  assert.strictEqual(validarComandos('Abrir portão', 'Fechar portão'), null);
+  assert.strictEqual(validarComandos('Armar alarme', 'Desarmar alarme'), null);
 });
 
 test('validarComandos exige os dois preenchidos', () => {
@@ -276,6 +273,6 @@ test('automacao ativa nao conta como desativada', () => {
 
 test('fala que nao casa com nenhuma automacao desativada devolve null', () => {
   const lista = [auto('a1', 'Acender Luz Quarto', 'Apagar Luz Quarto', { enabled: false })];
-  assert.strictEqual(comandoDesativado('abrir portao', lista), null);
+  assert.strictEqual(comandoDesativado('armar alarme', lista), null);
   assert.strictEqual(comandoDesativado('', lista), null);
 });

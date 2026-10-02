@@ -78,7 +78,7 @@ describe('POST /arduino/sync', () => {
     const res = await request(app).post('/arduino/sync').send({
       uid: 'uid123',
       token: 'test-secret',
-      devices: { luz: true, ventilador: false },
+      devices: { luz: true, alarme: false },
       events: [],
       online: true
     });
@@ -144,7 +144,31 @@ describe('POST /arduino/sync', () => {
     expect(luzCmds[0].state).toBe(false); // site-command (false) vence automação (true)
   });
 
-  test('persiste temperature válida em arduino_status', async () => {
+  test.each(['botao_fisico', 'luminosidade'])('chama executeAutomations com evento %s', async (evento) => {
+    const { executeAutomations } = require('../services/automation');
+    executeAutomations.mockClear();
+    const res = await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret',
+      devices: {}, events: [evento], online: true
+    });
+    expect(res.status).toBe(200);
+    expect(executeAutomations).toHaveBeenCalledWith('uid123', evento);
+  });
+
+  test('ignora dispositivo que não existe mais (ventilador)', async () => {
+    const { rtdb } = require('../firebase');
+    rtdb.ref.mockClear();
+    const res = await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret',
+      devices: { luz: true, ventilador: true }, events: [], online: true
+    });
+    expect(res.status).toBe(200);
+    const caminhos = rtdb.ref.mock.calls.map(c => c[0]);
+    expect(caminhos).toContain('devices/uid123/luz');
+    expect(caminhos).not.toContain('devices/uid123/ventilador');
+  });
+
+  test('arduino_status guarda só online e lastSeen', async () => {
     const { rtdb } = require('../firebase');
     const updateStatusMock = jest.fn().mockResolvedValue();
     rtdb.ref.mockImplementation((path) => {
@@ -158,61 +182,7 @@ describe('POST /arduino/sync', () => {
       devices: {}, events: [], online: true, temperature: 25.5
     });
     expect(res.status).toBe(200);
-    expect(updateStatusMock).toHaveBeenCalledWith(
-      expect.objectContaining({ temperature: 25.5 })
-    );
-  });
-
-  test('não persiste temperature ausente ou inválida', async () => {
-    const { rtdb } = require('../firebase');
-    const updateStatusMock = jest.fn().mockResolvedValue();
-    rtdb.ref.mockImplementation((path) => {
-      if (path === 'arduino_status/uid123') {
-        return { update: updateStatusMock };
-      }
-      return defaultMockRef();
-    });
-
-    // Ausente
-    const res1 = await request(app).post('/arduino/sync').send({
-      uid: 'uid123', token: 'test-secret',
-      devices: {}, events: [], online: true
-    });
-    expect(res1.status).toBe(200);
-    expect(updateStatusMock).toHaveBeenCalledTimes(1);
-    expect(updateStatusMock.mock.calls[0][0]).not.toHaveProperty('temperature');
-
-    // Inválida (string)
-    const res2 = await request(app).post('/arduino/sync').send({
-      uid: 'uid123', token: 'test-secret',
-      devices: {}, events: [], online: true, temperature: 'quente'
-    });
-    expect(res2.status).toBe(200);
-    expect(updateStatusMock).toHaveBeenCalledTimes(2);
-    expect(updateStatusMock.mock.calls[1][0]).not.toHaveProperty('temperature');
-  });
-
-  test('não persiste temperature: null', async () => {
-    // Caso à parte do teste acima: null é o valor que de fato pode chegar
-    // pela rede quando o campo é enviado explicitamente como nulo — é
-    // exatamente o que o `typeof temperature === 'number'` do guard existe
-    // para barrar (`typeof null === 'object'`, não passa no guard).
-    const { rtdb } = require('../firebase');
-    const updateStatusMock = jest.fn().mockResolvedValue();
-    rtdb.ref.mockImplementation((path) => {
-      if (path === 'arduino_status/uid123') {
-        return { update: updateStatusMock };
-      }
-      return defaultMockRef();
-    });
-
-    const res = await request(app).post('/arduino/sync').send({
-      uid: 'uid123', token: 'test-secret',
-      devices: {}, events: [], online: true, temperature: null
-    });
-    expect(res.status).toBe(200);
-    expect(updateStatusMock).toHaveBeenCalledTimes(1);
-    expect(updateStatusMock.mock.calls[0][0]).not.toHaveProperty('temperature');
+    expect(Object.keys(updateStatusMock.mock.calls[0][0]).sort()).toEqual(['lastSeen', 'online']);
   });
 
   test('ignora event inválido', async () => {

@@ -1,10 +1,7 @@
 const TRIGGERS_BY_DEVICE = {
-  luz:        ['voz', 'botao', 'presenca'],
-  // Sem "presenca": um portão não deve abrir sozinho só porque detectou
-  // alguém por perto — risco de segurança.
-  portao:     ['voz', 'botao'],
-  ventilador: ['voz', 'botao', 'temperatura', 'horario'],
-  alarme:     ['botao', 'presenca', 'horario']
+  luz:         ['voz', 'botao', 'botao_fisico', 'presenca', 'luminosidade'],
+  luz_externa: ['voz', 'botao', 'botao_fisico', 'presenca', 'luminosidade'],
+  alarme:      ['botao', 'botao_fisico', 'presenca']
 };
 
 // TRIGGER_INFO, VOICE_VERBS, montarComandos() e describeAutomation() vêm de
@@ -92,9 +89,9 @@ function getTriggerNote(triggerId, deviceId) {
     return `O botão no dashboard sempre alterna o estado: ${descAlternar(deviceId)}.`;
   }
   const NOTAS = {
-    presenca:    'Requer sensor de presença (PIR) conectado ao Arduino. Sem o sensor físico, essa automação não vai disparar.',
-    temperatura: 'Requer sensor de temperatura conectado ao Arduino. O limite é definido no código — não é possível ajustar aqui.',
-    horario:     'O horário é definido no código do Arduino. Para alterar, peça ao responsável pela configuração do dispositivo.'
+    botao_fisico: 'Requer o botão (push button) ligado à placa. Cada apertada alterna o estado.',
+    presenca:     'Requer o sensor de presença (PIR) conectado à placa. Sem o sensor físico, essa automação não vai disparar.',
+    luminosidade: 'Requer sensor de luminosidade conectado à placa. Dispara quando o ambiente escurece; o nível de escuro é definido no código — não é possível ajustar aqui.'
   };
   return NOTAS[triggerId] || null;
 }
@@ -295,12 +292,12 @@ function updatePreview() {
     text = `Ao falar "<strong>${on}</strong>", liga ${nome}; ao falar "<strong>${off}</strong>", desliga.`;
   } else if (trigger === 'botao') {
     text = `Ao clicar no botão do dashboard, ${alternar}`;
+  } else if (trigger === 'botao_fisico') {
+    text = `Ao apertar o botão físico, ${alternar}`;
   } else if (trigger === 'presenca') {
     text = `Ao detectar presença, ${alternar}`;
-  } else if (trigger === 'temperatura') {
-    text = `Quando o sensor de temperatura disparar, ${alternar}`;
-  } else if (trigger === 'horario') {
-    text = `No horário programado no Arduino, ${alternar}`;
+  } else if (trigger === 'luminosidade') {
+    text = `Quando escurecer, ${alternar}`;
   } else {
     text = `<strong>${escapeHtml(d.name)}</strong> — escolha o gatilho`;
   }

@@ -30,6 +30,10 @@
     --wire-blue:   #2C6FB5;
     --wire-yellow: #D9A61C;
     --wire-green:  #3E9B4F;
+    --wire-purple: #7A4FB5;
+
+    --bb:          #F6F3EA;
+    --bb-hole:     #CFC7B4;
 
     --done:        #0D6E6B;
 
@@ -64,6 +68,10 @@
       --wire-blue:   #6BA6DE;
       --wire-yellow: #E8C356;
       --wire-green:  #6EC47C;
+      --wire-purple: #B08AE6;
+
+      --bb:          #252C33;
+      --bb-hole:     #47515B;
 
       --done:        #4FC3BC;
     }
@@ -94,6 +102,10 @@
     --wire-blue:   #6BA6DE;
     --wire-yellow: #E8C356;
     --wire-green:  #6EC47C;
+    --wire-purple: #B08AE6;
+
+    --bb:          #252C33;
+    --bb-hole:     #47515B;
 
     --done:        #4FC3BC;
   }
@@ -513,6 +525,138 @@
 
   .rail ul { font-size: 0.88rem; color: var(--ink-soft); gap: 0.25rem; }
 
+
+  /* ── Esquema da protoboard ─────────────────────────── */
+
+  /* Mais largo que a coluna de texto: o desenho precisa de espaço. */
+  .esquema-wrap {
+    width: min(62rem, calc(100vw - 2.3rem));
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 5px;
+    padding: 0.5rem;
+  }
+
+  .esquema { display: block; width: 100%; min-width: 720px; height: auto; }
+
+  .esquema .bb    { fill: var(--bb); stroke: var(--line); }
+  .esquema .furo  { fill: var(--bb-hole); }
+  .esquema .vala  { fill: var(--bb-hole); opacity: 0.6; }
+  .esquema .trilho { stroke-width: 2; opacity: 0.55; }
+  .esquema .trilho-3v3 { stroke: var(--wire-orange); }
+  .esquema .trilho-gnd { stroke: var(--wire-black); }
+
+  .esquema .w { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+  .esquema .w-3v3   { stroke: var(--wire-orange); }
+  .esquema .w-gnd   { stroke: var(--wire-black); }
+  .esquema .w-botao { stroke: var(--wire-yellow); }
+  .esquema .w-ir    { stroke: var(--wire-green); }
+  .esquema .w-ldr   { stroke: var(--wire-purple); }
+  .esquema .w-led   { stroke: var(--wire-blue); }
+  .esquema .no      { fill: var(--wire-purple); }
+  .esquema .trilho-5v  { stroke: var(--wire-red); }
+  .esquema .w-5v    { stroke: var(--wire-red); }
+  .esquema .no-gnd  { fill: var(--wire-black); }
+  .esquema .maquete { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .esquema .rele-cubo { fill: #2C6FB5; stroke: #A9C8EA; }
+  .esquema .borne   { fill: #3FA34D; stroke: #1E5E28; stroke-width: 1.5; }
+  .esquema .t-inicio { text-anchor: start; }
+  .esquema .t-peq-mod { font-size: 9px; font-weight: 500; }
+  .esquema .w-pir   { stroke: var(--wire-green); }
+  .esquema .pir      { fill: #2E7D4F; }
+  .esquema .pir-domo { fill: #F4F1E8; stroke: #C9C2B0; stroke-width: 1.5; }
+  .esquema .num circle { fill: var(--ink); stroke: var(--surface); stroke-width: 2; }
+  .esquema .num text   { fill: var(--surface); font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-anchor: middle; }
+
+  .esquema .perna       { fill: #8B959F; }
+  .esquema .perna-usada { fill: #F2C230; stroke: var(--ink); stroke-width: 1.5; }
+  .esquema .perna-fio   { stroke: #9AA5AE; stroke-width: 2.5; fill: none; }
+  .esquema .ponta       { fill: var(--ink); }
+  .esquema .faixa-usada { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
+
+  .detalhes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 1rem;
+  }
+  .detalhe {
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 5px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .detalhe .detalhe-svg { min-width: 0; width: 100%; }
+  .detalhe figcaption { font-size: 0.9rem; color: var(--ink-soft); display: flex; flex-direction: column; gap: 0.35rem; }
+  .detalhe figcaption strong:first-child { color: var(--ink); }
+  .detalhe ul { gap: 0.3rem; }
+
+  /* Número da ligação na lista, igual ao do esquema. */
+  .n {
+    display: inline-grid;
+    place-content: center;
+    min-width: 1.45rem;
+    height: 1.45rem;
+    padding: 0 0.2rem;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--surface);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 600;
+    box-sizing: border-box;
+  }
+
+  .esquema .mcu    { fill: #1E2B36; }
+  .esquema .shield { fill: #9AA5AE; }
+  .esquema .usb    { fill: #B8C0C7; }
+  .esquema .antena { fill: none; stroke: #C9A227; stroke-width: 2; }
+  .esquema .pino   { fill: #6B7782; }
+  .esquema .pino-usado    { fill: #F2C230; stroke: #FFFFFF; stroke-width: 1.5; }
+  .esquema .pino-proibido { fill: #E0443A; }
+
+  .esquema text { font-family: var(--font-body); }
+  .esquema .t       { font-size: 13px; fill: var(--ink); font-weight: 500; }
+  .esquema .t-peq   { font-size: 11px; fill: var(--ink-soft); }
+  .esquema .t-centro { text-anchor: middle; }
+  .esquema .t-fim   { text-anchor: end; font-weight: 700; }
+  .esquema .t-trilho { font-family: var(--font-mono); font-size: 10px; fill: var(--muted); }
+  .esquema .t-pino  { font-family: var(--font-mono); font-size: 8.5px; fill: #AEB9C2; text-anchor: middle; }
+  .esquema .t-usado { fill: #FFE38A; font-weight: 600; }
+  .esquema .t-proibido { fill: #FF9B92; }
+  .esquema .t-proibido-legenda { fill: var(--danger); font-weight: 600; }
+  .esquema .t-chip  { font-family: var(--font-mono); font-size: 10px; fill: #1E2B36; text-anchor: middle; font-weight: 600; }
+  .esquema .t-placa { font-family: var(--font-display); font-size: 16px; fill: #FFFFFF; text-anchor: middle; font-weight: 700; }
+
+  .esquema .modulo { fill: #1F5E9C; }
+  .esquema .ir-led { fill: #DDE3E8; stroke: #9AA5AE; }
+  .esquema .ir-led-escuro { fill: #2A2F35; }
+  .esquema .t-modulo { font-size: 11px; fill: #FFFFFF; text-anchor: middle; font-weight: 600; }
+  .esquema .t-modulo-pino { font-family: var(--font-mono); font-size: 9px; fill: #D6E4F2; text-anchor: end; }
+
+  .esquema .comp      { fill: #2A2F35; stroke: #8B959F; stroke-width: 1.5; }
+  .esquema .botao-cap { fill: #5A6470; stroke: #8B959F; stroke-width: 2; }
+  .esquema .resistor  { fill: #D9C39A; stroke: #8C7A55; }
+  .esquema .faixa-vermelha { fill: #C62828; }
+  .esquema .faixa-marrom   { fill: #6D4C41; }
+  .esquema .faixa-preta    { fill: #1A1A1A; }
+  .esquema .faixa-laranja  { fill: #EF7D1A; }
+  .esquema .led       { stroke-width: 1.5; }
+  .esquema .led-amarelo  { fill: #F2C230; stroke: #A9840F; }
+  .esquema .led-vermelho { fill: #E0443A; stroke: #9B231C; }
+  .esquema .buzzer      { fill: #23282E; stroke: #5A6470; stroke-width: 2; }
+  .esquema .buzzer-furo { fill: #5A6470; }
+  .esquema .ldr       { fill: #E9D7B0; stroke: #A08C62; }
+  .esquema .ldr-trilha { fill: none; stroke: #B5462F; stroke-width: 2; }
+
   /* ── Divisor de seção ──────────────────────────────── */
 
   .rule { height: 1px; background: var(--line); border: none; margin: 0; }
@@ -533,13 +677,13 @@
     <div class="eyebrow">TCC · 3 AMS Desenvolvimento de Sistemas</div>
     <h1>Montagem da Casa Inteligente</h1>
     <p class="standfirst">
-      Ligação pino a pino do NodeMCU ESP8266 com o módulo de relé, o sensor de
-      temperatura e o sensor de presença. Siga na ordem — os passos existem nessa
-      sequência por motivo elétrico, não por organização.
+      Como ligar a maquete do projeto do Uno no NodeMCU ESP8266. Os 4 LEDs internos
+      passam por um relé; os LEDs externos, o LED do alarme e o buzzer vão direto
+      nos pinos; o sensor de presença agora é um PIR.
     </p>
     <div class="meta-strip">
       <span>Placa: NodeMCU 1.0 (ESP-12E)</span>
-      <span>4 relés · 2 sensores</span>
+      <span>24 ligações</span>
       <span>~40 min</span>
     </div>
   </header>
@@ -547,337 +691,658 @@
   <div class="alert stop">
     <div class="alert-title">Antes de encostar em qualquer fio</div>
     <p>
-      Nada de USB no notebook, nada de carregador na tomada. Toda a montagem é
-      feita com o circuito sem energia. Você só liga na hora que o
-      <strong>Passo 7</strong> mandar.
+      Cabo USB fora do notebook. Toda a montagem é feita com o circuito sem
+      energia. Você só liga na <strong>conferência</strong>, depois da ligação 24.
     </p>
   </div>
+
+  <!-- ─────────────── Do Uno para o NodeMCU ─────────────── -->
+
+  <section>
+    <h2>Do Uno para o NodeMCU</h2>
+    <p>
+      As peças são as da maquete. Muda onde cada fio encaixa, e quem decide o que
+      acontece: no Uno era o próprio código; agora são as automações do site.
+    </p>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Peça</th><th>No Uno</th><th>No NodeMCU</th><th>Aciona</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Push button</td><td class="mono">7</td><td class="mono">D1</td><td>4 LEDs internos</td></tr>
+          <tr><td>4 LEDs internos</td><td class="mono">13</td><td class="mono">relé (IN1 no D7)</td><td>—</td></tr>
+          <tr><td>LDR</td><td class="mono">A0</td><td class="mono">A0</td><td>2 LEDs externos</td></tr>
+          <tr><td>2 LEDs externos</td><td class="mono">8</td><td class="mono">D6</td><td>—</td></tr>
+          <tr><td>Sensor de presença PIR <em>(no lugar do IR)</em></td><td class="mono">12</td><td class="mono">D2</td><td>LED do alarme e buzzer</td></tr>
+          <tr><td>LED do alarme</td><td class="mono">11</td><td class="mono">D0</td><td>—</td></tr>
+          <tr><td>Buzzer</td><td class="mono">11</td><td class="mono">D5</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="alert care">
+      <div class="alert-title">Por que os LEDs internos precisam do relé</div>
+      <p>
+        Cada pino do NodeMCU fornece uns 12 mA, em 3,3 V — menos da metade do Uno.
+        Dá para um ou dois LEDs, não para quatro. O relé é um interruptor: o pino só
+        manda ele fechar, e quem alimenta os 4 LEDs são os 5 V da USB, com o mesmo
+        brilho que tinham no Uno.
+      </p>
+    </div>
+  </section>
 
   <!-- ─────────────── Conceito ─────────────── -->
 
   <section>
-    <h2>Duas alimentações, um terra</h2>
+    <h2>5 V nos trilhos, 3,3 V só no LDR</h2>
     <p>
-      A parte mais importante de entender antes de montar: existem
-      <strong>dois circuitos de energia separados</strong> nesta montagem, e eles
-      se encontram num único ponto.
+      Os quatro trilhos (as linhas compridas nas bordas da protoboard) ficam com
+      <strong>5 V</strong> e <strong>GND</strong>. Os 5 V vêm do pino
+      <code>VIN</code>, que repassa o que chega pela USB. É o que o PIR, o relé e
+      os LEDs internos precisam. A única peça em 3,3 V é o LDR, ligado direto no
+      pino <code>3V3</code>.
     </p>
-
-    <div class="rails">
-      <div class="rail" style="--wire: var(--wire-orange);">
-        <div class="rail-label">Circuito 1 · Cérebro</div>
-        <h3>3,3 V, vindo da USB</h3>
-        <p>O notebook alimenta só o NodeMCU. Consumo baixo, sobra folga.</p>
-        <ul>
-          <li>NodeMCU</li>
-          <li>Sensor DHT11</li>
-        </ul>
-      </div>
-      <div class="rail" style="--wire: var(--wire-red);">
-        <div class="rail-label">Circuito 2 · Músculo</div>
-        <h3>5 V, vindo do carregador</h3>
-        <p>Os eletroímãs dos relés puxam ~70 mA cada. Isso não sai da USB.</p>
-        <ul>
-          <li>Módulo de relé (VCC)</li>
-          <li>Sensor PIR</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="alert care">
-      <div class="alert-title">O ponto de encontro</div>
-      <p>
-        Os dois circuitos precisam compartilhar o <strong>GND</strong>. Sem isso,
-        cada lado tem seu próprio "zero volts" e o relé simplesmente não entende a
-        ordem que o NodeMCU manda. É o erro nº 1 de quem monta isso pela primeira
-        vez, e ele não dá erro nenhum na tela — só não funciona.
-      </p>
-    </div>
-  </section>
-
-  <hr class="rule">
-
-  <!-- ─────────────── Legenda ─────────────── -->
-
-  <section>
-    <h2>Código de cores dos fios</h2>
-    <p>
-      Não é enfeite: a cor diz a função. Se alguém da equipe precisar conferir a
-      montagem depois, ou se um fio soltar no dia da apresentação, a cor sozinha
-      já diz onde ele voltava.
-    </p>
-    <div class="legend">
-      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-red);"></span> +5 V (força)</div>
-      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-black);"></span> GND (terra comum)</div>
-      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-orange);"></span> 3,3 V</div>
-      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-blue);"></span> Comando de relé</div>
-      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-yellow);"></span> Dado do DHT11</div>
-      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-green);"></span> Saída do PIR</div>
-    </div>
-  </section>
-
-  <hr class="rule">
-
-  <!-- ─────────────── Passo 1 ─────────────── -->
-
-  <section>
-    <h2><span class="stepno">01</span> O terra comum</h2>
-    <p>
-      Comece por aqui, sempre. Escolha uma das linhas azuis (negativas) da
-      protoboard e trate ela como <strong>o</strong> terra do projeto inteiro. Tudo
-      que tiver GND vai nessa linha.
-    </p>
-
-    <div class="wiring">
-      <label class="conn" style="--wire: var(--wire-black);">
-        <input type="checkbox" class="conn-check" data-id="gnd-nodemcu">
-        <span class="conn-body">
-          <span class="pin">NodeMCU GND</span><span class="arrow">→</span><span class="pin">linha azul da protoboard</span>
-        </span>
-        <span class="conn-note">O NodeMCU tem mais de um pino GND. Qualquer um serve.</span>
-      </label>
-
-      <label class="conn" style="--wire: var(--wire-black);">
-        <input type="checkbox" class="conn-check" data-id="gnd-fonte">
-        <span class="conn-body">
-          <span class="pin">Fio preto do adaptador USB</span><span class="arrow">→</span><span class="pin">mesma linha azul</span>
-        </span>
-        <span class="conn-note">Este é o fio que faz os dois circuitos se entenderem. Não pule.</span>
-      </label>
-
-      <label class="conn" style="--wire: var(--wire-black);">
-        <input type="checkbox" class="conn-check" data-id="gnd-rele">
-        <span class="conn-body">
-          <span class="pin">Módulo de relé GND</span><span class="arrow">→</span><span class="pin">mesma linha azul</span>
-        </span>
-      </label>
-    </div>
-  </section>
-
-  <!-- ─────────────── Passo 2 ─────────────── -->
-
-  <section>
-    <h2><span class="stepno">02</span> O trilho de 5 V</h2>
-    <p>
-      Agora a linha vermelha (positiva) da protoboard. Ela vai receber os 5 V do
-      carregador — e <em>só</em> do carregador. Nada de 5 V vindo do NodeMCU.
-    </p>
-
-    <div class="wiring">
-      <label class="conn" style="--wire: var(--wire-red);">
-        <input type="checkbox" class="conn-check" data-id="v5-adaptador">
-        <span class="conn-body">
-          <span class="pin">Fio vermelho do adaptador USB</span><span class="arrow">→</span><span class="pin">linha vermelha da protoboard</span>
-        </span>
-        <span class="conn-note">O adaptador ainda está fora da tomada. Só o fio, por enquanto.</span>
-      </label>
-
-      <label class="conn" style="--wire: var(--wire-red);">
-        <input type="checkbox" class="conn-check" data-id="v5-rele">
-        <span class="conn-body">
-          <span class="pin">linha vermelha</span><span class="arrow">→</span><span class="pin">Módulo de relé VCC</span>
-        </span>
-      </label>
-    </div>
-
     <div class="alert stop">
-      <div class="alert-title">Nunca ligue o VCC do relé no NodeMCU</div>
+      <div class="alert-title">5 V nunca entra num pino D ou no A0</div>
       <p>
-        Tem um pino <code>VIN</code> ou <code>VU</code> na placa que entrega 5 V, e
-        é tentador usar. Não use. Os quatro eletroímãs juntos passam de 280 mA e
-        essa corrente atravessaria o conector micro-USB e as trilhas da placa. Na
-        melhor das hipóteses o NodeMCU reinicia no meio da demonstração.
+        O NodeMCU não tolera 5 V nas entradas. O PIR pode ficar nos 5 V porque a
+        saída dele já sai em 3,3 V. Já o LDR vai no <code>3V3</code>: nos 5 V, o
+        <code>A0</code> receberia mais do que aguenta.
       </p>
     </div>
   </section>
 
-  <!-- ─────────────── Passo 3 ─────────────── -->
+  <hr class="rule">
+
+  <!-- ─────────────── Esquema ─────────────── -->
 
   <section>
-    <h2><span class="stepno">03</span> O NodeMCU na protoboard</h2>
+    <h2>O esquema</h2>
     <p>
-      Encaixe a placa <strong>na divisória central</strong> da protoboard, com as
-      duas fileiras de pinos em lados opostos do canal. Se você encaixar de um lado
-      só, os pinos ficam curto-circuitados entre si.
-    </p>
-    <p>
-      O NodeMCU é largo: ele vai ocupar quase toda a largura e sobrar pouquíssimo
-      espaço de um dos lados. É normal. Deixe o conector micro-USB virado para a
-      borda da protoboard, para o cabo entrar sem forçar.
+      Visto de cima, com a antena do NodeMCU para a esquerda e o USB para a
+      direita. Cada fio tem um <strong>número</strong>: é a ordem da lista logo
+      abaixo. As caixas tracejadas são peças já montadas na maquete — só os fios
+      delas vêm para a protoboard.
     </p>
 
+    <div class="esquema-wrap">
+      <svg class="esquema" viewBox="0 0 960 760" role="img" aria-labelledby="esq-titulo esq-desc">
+        <title id="esq-titulo">Esquema de ligação da maquete no NodeMCU</title>
+        <desc id="esq-desc">NodeMCU no centro da protoboard. Os quatro trilhos com 5 V do pino VIN e GND; os trilhos + de cima e de baixo ligados por um jumper na ponta direita. Push button entre D1 e GND. PIR com VCC nos 5 V, OUT no D2 e GND no GND. LED do alarme no D0 e buzzer no D5. Os 2 LEDs externos da maquete no D6. Módulo de relé com IN1 no D7, VCC nos 5 V e GND no GND; o contato COM recebe 5 V e o NO alimenta os 4 LEDs internos da maquete. LDR entre o 3V3 e o A0, com resistor de 10 quilo-ohms entre A0 e GND. Pinos D3, D4 e D8 ficam vazios.</desc>
+        <defs>
+          <pattern id="furos" width="13" height="13" patternUnits="userSpaceOnUse">
+            <circle cx="6.5" cy="6.5" r="1.7" class="furo"/>
+          </pattern>
+        </defs>
+
+        <!-- protoboard -->
+        <rect x="20" y="20" width="920" height="720" rx="10" class="bb"/>
+        <rect x="30" y="82" width="900" height="252" fill="url(#furos)"/>
+        <rect x="30" y="366" width="900" height="312" fill="url(#furos)"/>
+        <rect x="30" y="343" width="900" height="14" rx="3" class="vala"/>
+
+        <!-- trilhos -->
+        <line x1="30" y1="40" x2="930" y2="40" class="trilho trilho-5v"/>
+        <line x1="30" y1="62" x2="930" y2="62" class="trilho trilho-gnd"/>
+        <line x1="30" y1="698" x2="930" y2="698" class="trilho trilho-5v"/>
+        <line x1="30" y1="720" x2="930" y2="720" class="trilho trilho-gnd"/>
+        <text x="80" y="35" class="t t-trilho">5 V +</text>
+        <text x="80" y="57" class="t t-trilho">GND −</text>
+        <text x="80" y="693" class="t t-trilho">5 V + (VIN)</text>
+        <text x="80" y="715" class="t t-trilho">GND −</text>
+
+        <!-- NodeMCU -->
+        <rect x="245" y="296" width="415" height="108" rx="6" class="mcu"/>
+        <rect x="652" y="333" width="26" height="34" rx="3" class="usb"/>
+        <path d="M252 318 h10 v10 h-10 v10 h10 v10 h-10 v10 h10 v10 h-10" class="antena"/>
+        <rect x="285" y="336" width="110" height="30" rx="2" class="shield"/>
+        <text x="340" y="355" class="t-chip">ESP-12E</text>
+        <text x="520" y="356" class="t-placa">NodeMCU</text>
+
+        <!-- fileira de cima: D0 D1 D2 D3 D4 3V3 GND D5 D6 D7 D8 RX TX GND 3V3 -->
+        <g>
+          <circle cx="270" cy="310" r="5" class="pino pino-usado"/>
+          <circle cx="296" cy="310" r="5" class="pino pino-usado"/>
+          <circle cx="322" cy="310" r="5" class="pino pino-usado"/>
+          <circle cx="348" cy="310" r="5" class="pino pino-proibido"/>
+          <circle cx="374" cy="310" r="5" class="pino pino-proibido"/>
+          <circle cx="400" cy="310" r="5" class="pino"/>
+          <circle cx="426" cy="310" r="5" class="pino pino-usado"/>
+          <circle cx="452" cy="310" r="5" class="pino pino-usado"/>
+          <circle cx="478" cy="310" r="5" class="pino pino-usado"/>
+          <circle cx="504" cy="310" r="5" class="pino pino-usado"/>
+          <circle cx="530" cy="310" r="5" class="pino pino-proibido"/>
+          <circle cx="556" cy="310" r="5" class="pino"/>
+          <circle cx="582" cy="310" r="5" class="pino"/>
+          <circle cx="608" cy="310" r="5" class="pino"/>
+          <circle cx="634" cy="310" r="5" class="pino"/>
+          <text x="270" y="328" class="t-pino t-usado">D0</text>
+          <text x="296" y="328" class="t-pino t-usado">D1</text>
+          <text x="322" y="328" class="t-pino t-usado">D2</text>
+          <text x="348" y="328" class="t-pino t-proibido">D3</text>
+          <text x="374" y="328" class="t-pino t-proibido">D4</text>
+          <text x="400" y="328" class="t-pino">3V3</text>
+          <text x="426" y="328" class="t-pino t-usado">GND</text>
+          <text x="452" y="328" class="t-pino t-usado">D5</text>
+          <text x="478" y="328" class="t-pino t-usado">D6</text>
+          <text x="504" y="328" class="t-pino t-usado">D7</text>
+          <text x="530" y="328" class="t-pino t-proibido">D8</text>
+          <text x="556" y="328" class="t-pino">RX</text>
+          <text x="582" y="328" class="t-pino">TX</text>
+          <text x="608" y="328" class="t-pino">GND</text>
+          <text x="634" y="328" class="t-pino">3V3</text>
+        </g>
+
+        <!-- fileira de baixo: A0 RSV RSV SD3 SD2 SD1 CMD SD0 CLK GND 3V3 EN RST GND VIN -->
+        <g>
+          <circle cx="270" cy="390" r="5" class="pino pino-usado"/>
+          <circle cx="296" cy="390" r="5" class="pino"/>
+          <circle cx="322" cy="390" r="5" class="pino"/>
+          <circle cx="348" cy="390" r="5" class="pino"/>
+          <circle cx="374" cy="390" r="5" class="pino"/>
+          <circle cx="400" cy="390" r="5" class="pino"/>
+          <circle cx="426" cy="390" r="5" class="pino"/>
+          <circle cx="452" cy="390" r="5" class="pino"/>
+          <circle cx="478" cy="390" r="5" class="pino"/>
+          <circle cx="504" cy="390" r="5" class="pino"/>
+          <circle cx="530" cy="390" r="5" class="pino pino-usado"/>
+          <circle cx="556" cy="390" r="5" class="pino"/>
+          <circle cx="582" cy="390" r="5" class="pino"/>
+          <circle cx="608" cy="390" r="5" class="pino pino-usado"/>
+          <circle cx="634" cy="390" r="5" class="pino pino-usado"/>
+          <text x="270" y="379" class="t-pino t-usado">A0</text>
+          <text x="296" y="379" class="t-pino">RSV</text>
+          <text x="322" y="379" class="t-pino">RSV</text>
+          <text x="348" y="379" class="t-pino">SD3</text>
+          <text x="374" y="379" class="t-pino">SD2</text>
+          <text x="400" y="379" class="t-pino">SD1</text>
+          <text x="426" y="379" class="t-pino">CMD</text>
+          <text x="452" y="379" class="t-pino">SD0</text>
+          <text x="478" y="379" class="t-pino">CLK</text>
+          <text x="504" y="379" class="t-pino">GND</text>
+          <text x="530" y="379" class="t-pino t-usado">3V3</text>
+          <text x="556" y="379" class="t-pino">EN</text>
+          <text x="582" y="379" class="t-pino">RST</text>
+          <text x="608" y="379" class="t-pino t-usado">GND</text>
+          <text x="634" y="379" class="t-pino t-usado">VIN</text>
+        </g>
+
+        <!-- 1-4: alimentação dos trilhos -->
+        <path d="M426 288 V62" class="w w-gnd"/>
+        <path d="M608 412 V720" class="w w-gnd"/>
+        <path d="M634 412 V698" class="w w-5v"/>
+        <path d="M925 40 V698" class="w w-5v"/>
+
+        <!-- 5-6: push button atravessando a divisória (pernas 2 e 3, em diagonal) -->
+        <path d="M296 288 V250 H226 V264 a6 6 0 0 0 0 12 V322" class="w w-botao"/>
+        <path d="M194 378 V720" class="w w-gnd"/>
+        <rect x="188" y="330" width="44" height="40" rx="4" class="comp"/>
+        <circle cx="210" cy="350" r="10" class="botao-cap"/>
+        <circle cx="194" cy="327" r="4" class="perna"/>
+        <circle cx="226" cy="327" r="4" class="perna-usada"/>
+        <circle cx="194" cy="373" r="4" class="perna-usada"/>
+        <circle cx="226" cy="373" r="4" class="perna"/>
+        <text x="186" y="322" class="t t-peq t-fim">1</text>
+        <text x="233" y="322" class="t t-peq">2</text>
+        <text x="186" y="388" class="t t-peq t-fim">3</text>
+        <text x="233" y="388" class="t t-peq">4</text>
+        <text x="176" y="354" class="t t-fim">Push button</text>
+
+        <!-- 7-9: PIR -->
+        <path d="M190 104 H215 V40" class="w w-5v"/>
+        <path d="M190 122 H322 V288" class="w w-pir"/>
+        <path d="M190 140 H198 V168 H64 V62" class="w w-gnd"/>
+        <rect x="74" y="92" width="116" height="62" rx="5" class="pir"/>
+        <circle cx="96" cy="123" r="16" class="pir-domo"/>
+        <text x="144" y="119" class="t-modulo">PIR</text>
+        <text x="144" y="133" class="t-modulo t-peq-mod">HC-SR501</text>
+        <text x="186" y="107" class="t-modulo-pino ">VCC</text>
+        <text x="186" y="125" class="t-modulo-pino ">OUT</text>
+        <text x="186" y="143" class="t-modulo-pino ">GND</text>
+
+        <!-- 21-22: LED do alarme (D0), deitado -->
+        <path d="M270 288 V270 H182" class="w w-led"/>
+        <path d="M150 270 H36 V62" class="w w-gnd"/>
+        <path d="M182 258 H162 a12 12 0 0 0 0 24 H182 Z" class="led led-vermelho"/>
+        <text x="196" y="264" class="t t-peq">+</text>
+        <text x="62" y="258" class="t">LED do alarme</text>
+
+        <!-- 23-24: buzzer (D5) -->
+        <path d="M452 288 V240 H560 V198" class="w w-led"/>
+        <path d="M560 146 V62" class="w w-gnd"/>
+        <circle cx="560" cy="172" r="26" class="buzzer"/>
+        <circle cx="560" cy="172" r="6" class="buzzer-furo"/>
+        <text x="548" y="214" class="t t-peq t-fim">+</text>
+        <text x="596" y="176" class="t">Buzzer</text>
+
+        <!-- 19-20: 2 LEDs externos da maquete (D6) -->
+        <path d="M478 288 V258 H705 V194" class="w w-led"/>
+        <path d="M705 112 V62" class="w w-gnd"/>
+        <rect x="650" y="112" width="110" height="82" rx="6" class="maquete"/>
+        <path d="M671 160 V146 a9 9 0 0 1 18 0 V160 Z" class="led led-amarelo"/>
+        <path d="M721 160 V146 a9 9 0 0 1 18 0 V160 Z" class="led led-amarelo"/>
+        <text x="705" y="132" class="t t-peq t-centro">maquete</text>
+        <text x="705" y="182" class="t t-peq t-centro">2 LEDs externos</text>
+        <text x="714" y="216" class="t t-peq">fio do pino 8</text>
+
+        <!-- 13-18: módulo de relé (D7) e LEDs internos -->
+        <path d="M504 288 V280 H690 V465 H720" class="w w-led"/>
+        <path d="M720 490 H700 V698" class="w w-5v"/>
+        <path d="M720 515 H712 V720" class="w w-gnd"/>
+        <rect x="720" y="445" width="160" height="95" rx="5" class="modulo"/>
+        <rect x="790" y="462" width="54" height="42" rx="3" class="rele-cubo"/>
+        <text x="817" y="488" class="t-modulo">RELÉ</text>
+        <text x="734" y="468" class="t-modulo-pino t-inicio">IN1</text>
+        <text x="734" y="493" class="t-modulo-pino t-inicio">VCC</text>
+        <text x="734" y="518" class="t-modulo-pino t-inicio">GND</text>
+        <text x="800" y="532" class="t-modulo t-peq-mod">canal 1</text>
+        <circle cx="770" cy="540" r="5" class="borne"/>
+        <circle cx="860" cy="540" r="5" class="borne"/>
+        <text x="762" y="562" class="t t-peq t-fim">COM</text>
+        <text x="876" y="562" class="t t-peq">NO</text>
+        <path d="M770 545 V698" class="w w-5v"/>
+        <path d="M860 545 V590" class="w w-5v"/>
+        <path d="M905 650 V720" class="w w-gnd"/>
+        <rect x="815" y="590" width="100" height="60" rx="6" class="maquete"/>
+        <path d="M826 628 V616 a8 8 0 0 1 16 0 V628 Z" class="led led-amarelo"/>
+        <path d="M848 628 V616 a8 8 0 0 1 16 0 V628 Z" class="led led-amarelo"/>
+        <path d="M870 628 V616 a8 8 0 0 1 16 0 V628 Z" class="led led-amarelo"/>
+        <path d="M892 628 V616 a8 8 0 0 1 16 0 V628 Z" class="led led-amarelo"/>
+        <text x="865" y="603" class="t t-peq t-centro">maquete</text>
+        <text x="865" y="642" class="t t-peq t-centro">4 LEDs internos</text>
+        <text x="842" y="584" class="t t-peq t-fim">fio do pino 13</text>
+
+        <!-- 10-12: LDR + resistor de 10k (A0) -->
+        <path d="M270 412 V500" class="w w-ldr"/>
+        <path d="M270 470 H300" class="w w-ldr"/>
+        <path d="M420 470 H530 V412" class="w w-3v3"/>
+        <rect x="300" y="458" width="120" height="24" rx="12" class="ldr"/>
+        <path d="M318 470 l7 -6 l7 12 l7 -12 l7 12 l7 -12 l7 12 l7 -12 l7 12 l7 -12 l7 12 l7 -12 l7 6" class="ldr-trilha"/>
+        <text x="360" y="450" class="t t-centro">LDR</text>
+        <text x="306" y="500" class="t t-peq">perna 2</text>
+        <text x="414" y="500" class="t t-peq t-fim">perna 1</text>
+        <rect x="262" y="500" width="16" height="40" rx="4" class="resistor"/>
+        <rect x="262" y="508" width="16" height="3" class="faixa-marrom"/>
+        <rect x="262" y="514" width="16" height="3" class="faixa-preta"/>
+        <rect x="262" y="520" width="16" height="3" class="faixa-laranja"/>
+        <text x="286" y="525" class="t t-peq">10 kΩ</text>
+        <path d="M270 540 V720" class="w w-gnd"/>
+        <circle cx="270" cy="470" r="5" class="no"/>
+        <text x="236" y="474" class="t t-peq t-fim">A0</text>
+
+        <!-- pinos proibidos -->
+        <text x="420" y="620" class="t t-peq t-proibido-legenda">✕ D3, D4 e D8: deixar vazios</text>
+
+        <!-- números das ligações -->
+        <g class="num">
+          <circle cx="426" cy="200" r="10"/><text x="426" y="204">1</text>
+          <circle cx="608" cy="610" r="10"/><text x="608" y="614">2</text>
+          <circle cx="634" cy="540" r="10"/><text x="634" y="544">3</text>
+          <circle cx="925" cy="330" r="10"/><text x="925" y="334">4</text>
+          <circle cx="262" cy="250" r="10"/><text x="262" y="254">5</text>
+          <circle cx="194" cy="600" r="10"/><text x="194" y="604">6</text>
+          <circle cx="215" cy="78" r="10"/><text x="215" y="82">7</text>
+          <circle cx="262" cy="122" r="10"/><text x="262" y="126">8</text>
+          <circle cx="120" cy="168" r="10"/><text x="120" y="172">9</text>
+          <circle cx="480" cy="470" r="10"/><text x="480" y="474">10</text>
+          <circle cx="270" cy="440" r="10"/><text x="270" y="444">11</text>
+          <circle cx="270" cy="600" r="10"/><text x="270" y="604">12</text>
+          <circle cx="700" cy="590" r="10"/><text x="700" y="594">13</text>
+          <circle cx="712" cy="660" r="10"/><text x="712" y="664">14</text>
+          <circle cx="690" cy="400" r="10"/><text x="690" y="404">15</text>
+          <circle cx="770" cy="630" r="10"/><text x="770" y="634">16</text>
+          <circle cx="860" cy="568" r="10"/><text x="860" y="572">17</text>
+          <circle cx="905" cy="676" r="10"/><text x="905" y="680">18</text>
+          <circle cx="610" cy="258" r="10"/><text x="610" y="262">19</text>
+          <circle cx="705" cy="88" r="10"/><text x="705" y="92">20</text>
+          <circle cx="226" cy="270" r="10"/><text x="226" y="274">21</text>
+          <circle cx="100" cy="270" r="10"/><text x="100" y="274">22</text>
+          <circle cx="510" cy="240" r="10"/><text x="510" y="244">23</text>
+          <circle cx="560" cy="104" r="10"/><text x="560" y="108">24</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="legend">
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-red);"></span> 5 V</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-orange);"></span> 3,3 V (só o LDR)</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-black);"></span> GND (terra)</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-yellow);"></span> Push button</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-green);"></span> Saída do PIR</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-purple);"></span> LDR (analógico)</div>
+      <div class="legend-row"><span class="swatch" style="--wire: var(--wire-blue);"></span> Comando: LEDs, buzzer e relé</div>
+    </div>
+
+    <h3 style="margin-top: 0.6rem;">Detalhe dos terminais: push button e LDR</h3>
+    <p>
+      Vista de perto da protoboard. As faixas destacadas são as colunas de 5 furos
+      usadas: tudo que está na mesma faixa fica ligado entre si.
+    </p>
+
+    <div class="detalhes">
+      <figure class="detalhe">
+        <svg class="esquema detalhe-svg" viewBox="0 0 360 300" role="img" aria-labelledby="det-botao-t det-botao-d">
+          <title id="det-botao-t">Terminais do push button</title>
+          <desc id="det-botao-d">Push button de 4 pernas atravessando a divisória central da protoboard. Pernas 1 e 2 na metade de cima, 3 e 4 na de baixo. A perna 2, em cima à direita, vai para o D1. A perna 3, embaixo à esquerda, vai para o trilho de GND. As pernas 1 e 4 ficam livres.</desc>
+          <rect x="10" y="10" width="340" height="280" rx="8" class="bb"/>
+          <!-- faixas usadas -->
+          <rect x="139" y="40" width="18" height="108" rx="9" class="faixa-usada"/>
+          <rect x="87" y="168" width="18" height="108" rx="9" class="faixa-usada"/>
+          <!-- furos -->
+          <g>
+            <circle cx="70" cy="50" r="2.4" class="furo"/><circle cx="96" cy="50" r="2.4" class="furo"/><circle cx="122" cy="50" r="2.4" class="furo"/><circle cx="148" cy="50" r="2.4" class="furo"/><circle cx="174" cy="50" r="2.4" class="furo"/><circle cx="200" cy="50" r="2.4" class="furo"/>
+            <circle cx="70" cy="72" r="2.4" class="furo"/><circle cx="96" cy="72" r="2.4" class="furo"/><circle cx="122" cy="72" r="2.4" class="furo"/><circle cx="148" cy="72" r="2.4" class="furo"/><circle cx="174" cy="72" r="2.4" class="furo"/><circle cx="200" cy="72" r="2.4" class="furo"/>
+            <circle cx="70" cy="94" r="2.4" class="furo"/><circle cx="96" cy="94" r="2.4" class="furo"/><circle cx="122" cy="94" r="2.4" class="furo"/><circle cx="148" cy="94" r="2.4" class="furo"/><circle cx="174" cy="94" r="2.4" class="furo"/><circle cx="200" cy="94" r="2.4" class="furo"/>
+            <circle cx="70" cy="116" r="2.4" class="furo"/><circle cx="96" cy="116" r="2.4" class="furo"/><circle cx="122" cy="116" r="2.4" class="furo"/><circle cx="148" cy="116" r="2.4" class="furo"/><circle cx="174" cy="116" r="2.4" class="furo"/><circle cx="200" cy="116" r="2.4" class="furo"/>
+            <circle cx="70" cy="138" r="2.4" class="furo"/><circle cx="96" cy="138" r="2.4" class="furo"/><circle cx="122" cy="138" r="2.4" class="furo"/><circle cx="148" cy="138" r="2.4" class="furo"/><circle cx="174" cy="138" r="2.4" class="furo"/><circle cx="200" cy="138" r="2.4" class="furo"/>
+            <circle cx="70" cy="178" r="2.4" class="furo"/><circle cx="96" cy="178" r="2.4" class="furo"/><circle cx="122" cy="178" r="2.4" class="furo"/><circle cx="148" cy="178" r="2.4" class="furo"/><circle cx="174" cy="178" r="2.4" class="furo"/><circle cx="200" cy="178" r="2.4" class="furo"/>
+            <circle cx="70" cy="200" r="2.4" class="furo"/><circle cx="96" cy="200" r="2.4" class="furo"/><circle cx="122" cy="200" r="2.4" class="furo"/><circle cx="148" cy="200" r="2.4" class="furo"/><circle cx="174" cy="200" r="2.4" class="furo"/><circle cx="200" cy="200" r="2.4" class="furo"/>
+            <circle cx="70" cy="222" r="2.4" class="furo"/><circle cx="96" cy="222" r="2.4" class="furo"/><circle cx="122" cy="222" r="2.4" class="furo"/><circle cx="148" cy="222" r="2.4" class="furo"/><circle cx="174" cy="222" r="2.4" class="furo"/><circle cx="200" cy="222" r="2.4" class="furo"/>
+            <circle cx="70" cy="244" r="2.4" class="furo"/><circle cx="96" cy="244" r="2.4" class="furo"/><circle cx="122" cy="244" r="2.4" class="furo"/><circle cx="148" cy="244" r="2.4" class="furo"/><circle cx="174" cy="244" r="2.4" class="furo"/><circle cx="200" cy="244" r="2.4" class="furo"/>
+            <circle cx="70" cy="266" r="2.4" class="furo"/><circle cx="96" cy="266" r="2.4" class="furo"/><circle cx="122" cy="266" r="2.4" class="furo"/><circle cx="148" cy="266" r="2.4" class="furo"/><circle cx="174" cy="266" r="2.4" class="furo"/><circle cx="200" cy="266" r="2.4" class="furo"/>
+          </g>
+          <rect x="56" y="151" width="160" height="14" rx="3" class="vala"/>
+          <text x="222" y="162" class="t t-peq">divisória</text>
+
+          <!-- botão -->
+          <rect x="84" y="126" width="76" height="64" rx="5" class="comp"/>
+          <circle cx="122" cy="158" r="17" class="botao-cap"/>
+          <circle cx="96" cy="138" r="5.5" class="perna"/>
+          <circle cx="148" cy="138" r="5.5" class="perna-usada"/>
+          <circle cx="96" cy="178" r="5.5" class="perna-usada"/>
+          <circle cx="148" cy="178" r="5.5" class="perna"/>
+          <text x="80" y="122" class="t t-fim">1</text>
+          <text x="164" y="122" class="t">2</text>
+          <text x="80" y="204" class="t t-fim">3</text>
+          <text x="164" y="204" class="t">4</text>
+
+          <!-- jumpers -->
+          <path d="M148 50 V26 H240" class="w w-botao"/>
+          <path d="M96 266 V282 H240" class="w w-gnd"/>
+          <circle cx="148" cy="50" r="3.5" class="ponta"/>
+          <circle cx="96" cy="266" r="3.5" class="ponta"/>
+          <text x="246" y="30" class="t">→ D1</text>
+          <text x="246" y="286" class="t">→ trilho −</text>
+        </svg>
+        <figcaption>
+          <strong>Push button</strong>
+          <ul>
+            <li>O botão <strong>atravessa a divisória central</strong>: pernas 1 e 2 na metade de cima, 3 e 4 na de baixo.</li>
+            <li><strong>Perna 2</strong> (em cima, à direita): um jumper da mesma coluna até o <code>D1</code>.</li>
+            <li><strong>Perna 3</strong> (embaixo, à esquerda): um jumper da mesma coluna até o trilho −.</li>
+            <li>Pernas 1 e 4 ficam sem nada.</li>
+            <li>Usar pernas em <strong>diagonal</strong> funciona com o botão em qualquer posição — não precisa descobrir quais pernas são ligadas por dentro.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <figure class="detalhe">
+        <svg class="esquema detalhe-svg" viewBox="0 0 360 300" role="img" aria-labelledby="det-ldr-t det-ldr-d">
+          <title id="det-ldr-t">Terminais do LDR e do resistor</title>
+          <desc id="det-ldr-d">Três colunas usadas na protoboard. Na primeira, a perna 1 do LDR e um jumper até o 3V3. Na segunda, a perna 2 do LDR, uma perna do resistor de 10 quilo-ohms e um jumper até o A0. Na terceira, a outra perna do resistor e um jumper até o trilho de GND.</desc>
+          <rect x="10" y="10" width="340" height="280" rx="8" class="bb"/>
+          <!-- faixas usadas -->
+          <rect x="77" y="110" width="18" height="108" rx="9" class="faixa-usada"/>
+          <rect x="155" y="110" width="18" height="108" rx="9" class="faixa-usada"/>
+          <rect x="259" y="110" width="18" height="108" rx="9" class="faixa-usada"/>
+          <!-- furos -->
+          <g>
+            <circle cx="60" cy="120" r="2.4" class="furo"/><circle cx="86" cy="120" r="2.4" class="furo"/><circle cx="112" cy="120" r="2.4" class="furo"/><circle cx="138" cy="120" r="2.4" class="furo"/><circle cx="164" cy="120" r="2.4" class="furo"/><circle cx="190" cy="120" r="2.4" class="furo"/><circle cx="216" cy="120" r="2.4" class="furo"/><circle cx="242" cy="120" r="2.4" class="furo"/><circle cx="268" cy="120" r="2.4" class="furo"/><circle cx="294" cy="120" r="2.4" class="furo"/>
+            <circle cx="60" cy="142" r="2.4" class="furo"/><circle cx="86" cy="142" r="2.4" class="furo"/><circle cx="112" cy="142" r="2.4" class="furo"/><circle cx="138" cy="142" r="2.4" class="furo"/><circle cx="164" cy="142" r="2.4" class="furo"/><circle cx="190" cy="142" r="2.4" class="furo"/><circle cx="216" cy="142" r="2.4" class="furo"/><circle cx="242" cy="142" r="2.4" class="furo"/><circle cx="268" cy="142" r="2.4" class="furo"/><circle cx="294" cy="142" r="2.4" class="furo"/>
+            <circle cx="60" cy="164" r="2.4" class="furo"/><circle cx="86" cy="164" r="2.4" class="furo"/><circle cx="112" cy="164" r="2.4" class="furo"/><circle cx="138" cy="164" r="2.4" class="furo"/><circle cx="164" cy="164" r="2.4" class="furo"/><circle cx="190" cy="164" r="2.4" class="furo"/><circle cx="216" cy="164" r="2.4" class="furo"/><circle cx="242" cy="164" r="2.4" class="furo"/><circle cx="268" cy="164" r="2.4" class="furo"/><circle cx="294" cy="164" r="2.4" class="furo"/>
+            <circle cx="60" cy="186" r="2.4" class="furo"/><circle cx="86" cy="186" r="2.4" class="furo"/><circle cx="112" cy="186" r="2.4" class="furo"/><circle cx="138" cy="186" r="2.4" class="furo"/><circle cx="164" cy="186" r="2.4" class="furo"/><circle cx="190" cy="186" r="2.4" class="furo"/><circle cx="216" cy="186" r="2.4" class="furo"/><circle cx="242" cy="186" r="2.4" class="furo"/><circle cx="268" cy="186" r="2.4" class="furo"/><circle cx="294" cy="186" r="2.4" class="furo"/>
+            <circle cx="60" cy="208" r="2.4" class="furo"/><circle cx="86" cy="208" r="2.4" class="furo"/><circle cx="112" cy="208" r="2.4" class="furo"/><circle cx="138" cy="208" r="2.4" class="furo"/><circle cx="164" cy="208" r="2.4" class="furo"/><circle cx="190" cy="208" r="2.4" class="furo"/><circle cx="216" cy="208" r="2.4" class="furo"/><circle cx="242" cy="208" r="2.4" class="furo"/><circle cx="268" cy="208" r="2.4" class="furo"/><circle cx="294" cy="208" r="2.4" class="furo"/>
+          </g>
+
+          <!-- jumpers -->
+          <path d="M86 120 V62" class="w w-3v3"/>
+          <path d="M164 120 V62" class="w w-ldr"/>
+          <path d="M268 120 V62" class="w w-gnd"/>
+          <circle cx="86" cy="120" r="3.5" class="ponta"/>
+          <circle cx="164" cy="120" r="3.5" class="ponta"/>
+          <circle cx="268" cy="120" r="3.5" class="ponta"/>
+          <text x="86" y="50" class="t t-centro">→ 3V3</text>
+          <text x="164" y="50" class="t t-centro">→ A0</text>
+          <text x="268" y="50" class="t t-centro">→ trilho −</text>
+
+          <!-- LDR: pernas na coluna 86 e na 164 -->
+          <path d="M106 160 L86 186 M144 160 L164 186" class="perna-fio"/>
+          <circle cx="125" cy="150" r="20" class="ldr"/>
+          <path d="M112 150 l4 -5 l4 10 l4 -10 l4 10 l4 -10 l4 5" class="ldr-trilha"/>
+          <circle cx="86" cy="186" r="4.5" class="perna-usada"/>
+          <circle cx="164" cy="186" r="4.5" class="perna-usada"/>
+          <text x="125" y="122" class="t t-centro">LDR</text>
+
+          <!-- resistor: pernas na coluna 164 e na 268 -->
+          <path d="M164 208 H192 M240 208 H268" class="perna-fio"/>
+          <rect x="192" y="200" width="48" height="16" rx="5" class="resistor"/>
+          <rect x="202" y="200" width="4" height="16" class="faixa-marrom"/>
+          <rect x="210" y="200" width="4" height="16" class="faixa-preta"/>
+          <rect x="218" y="200" width="4" height="16" class="faixa-laranja"/>
+          <circle cx="164" cy="208" r="4.5" class="perna-usada"/>
+          <circle cx="268" cy="208" r="4.5" class="perna-usada"/>
+
+          <text x="86" y="244" class="t t-peq t-centro">perna 1</text>
+          <text x="164" y="244" class="t t-peq t-centro">perna 2</text>
+          <text x="164" y="260" class="t t-peq t-centro">+ resistor</text>
+          <text x="216" y="236" class="t t-peq t-centro">10 kΩ</text>
+          <text x="268" y="244" class="t t-peq t-centro">resistor</text>
+        </svg>
+        <figcaption>
+          <strong>LDR e resistor de 10 kΩ</strong>
+          <ul>
+            <li>O LDR não tem lado certo: qualquer perna pode ser a 1.</li>
+            <li><strong>Perna 1</strong> numa coluna, com um jumper até o <code>3V3</code> da fileira do A0.</li>
+            <li><strong>Perna 2</strong> noutra coluna. Nessa <strong>mesma coluna</strong> entram uma perna do resistor e o jumper até o <code>A0</code>.</li>
+            <li>A outra perna do resistor numa terceira coluna, com um jumper até o trilho −.</li>
+          </ul>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ─────────────── NodeMCU na protoboard ─────────────── -->
+
+  <section>
+    <h2>Antes das ligações: o NodeMCU na protoboard</h2>
+    <p>
+      Encaixe a placa <strong>sobre a divisória central</strong>, com uma fileira de
+      pinos de cada lado do canal, e o USB virado para a borda direita.
+    </p>
     <div class="alert note">
-      <div class="alert-title">Achando os pinos</div>
+      <div class="alert-title">Como ler "→ D5" na lista</div>
       <p>
-        Os nomes <code>D1</code>, <code>D2</code>, <code>D4</code> … estão
-        impressos na própria placa, na lateral de cada pino. É essa numeração que
-        o guia usa. Ignore os números <code>GPIO</code> na hora de montar — eles
-        só aparecem dentro do código.
+        Cada coluna de 5 furos da protoboard é ligada por dentro. "Ligar no
+        <code>D5</code>" é espetar o jumper em qualquer furo livre <strong>da mesma
+        coluna</strong> do pino <code>D5</code>. "Trilho" é a linha comprida da
+        borda: qualquer furo dela serve. Os nomes dos pinos estão impressos na
+        placa.
       </p>
     </div>
   </section>
 
-  <!-- ─────────────── Passo 4 ─────────────── -->
+  <!-- ─────────────── Lista de ligações ─────────────── -->
 
   <section>
-    <h2><span class="stepno">04</span> Os sensores</h2>
-
-    <h3>DHT11 — temperatura e umidade</h3>
+    <h2>Passo a passo das ligações</h2>
     <p>
-      Alimentado em <strong>3,3 V</strong>, direto do NodeMCU. Isso é proposital:
-      o pino de dado do sensor responde na mesma tensão da alimentação dele, e o
-      NodeMCU não tolera 5 V nas entradas.
+      Faça na ordem e marque cada uma. O número é o mesmo do fio no esquema.
     </p>
 
+    <h3>Energia dos trilhos</h3>
     <div class="wiring">
-      <label class="conn" style="--wire: var(--wire-orange);">
-        <input type="checkbox" class="conn-check" data-id="dht-vcc">
-        <span class="conn-body">
-          <span class="pin">DHT11 VCC</span><span class="arrow">→</span><span class="pin pin-accent">3V3</span>
-        </span>
-        <span class="conn-note">Pino do NodeMCU escrito <code>3V3</code>. Não é o <code>VIN</code>.</span>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="l1">
+        <span class="conn-body"><span class="n">1</span><span class="pin pin-accent">GND</span><span class="arrow">→</span><span class="pin">trilho − de cima</span></span>
+        <span class="conn-note">O GND da fileira dos pinos D, entre o 3V3 e o D5.</span>
       </label>
       <label class="conn" style="--wire: var(--wire-black);">
-        <input type="checkbox" class="conn-check" data-id="dht-gnd">
-        <span class="conn-body">
-          <span class="pin">DHT11 GND</span><span class="arrow">→</span><span class="pin">linha azul</span>
-        </span>
+        <input type="checkbox" class="conn-check" data-id="l2">
+        <span class="conn-body"><span class="n">2</span><span class="pin pin-accent">GND</span><span class="arrow">→</span><span class="pin">trilho − de baixo</span></span>
+        <span class="conn-note">O GND da fileira do A0, vizinho do VIN.</span>
       </label>
-      <label class="conn" style="--wire: var(--wire-yellow);">
-        <input type="checkbox" class="conn-check" data-id="dht-data">
-        <span class="conn-body">
-          <span class="pin">DHT11 DATA</span><span class="arrow">→</span><span class="pin pin-accent">D1</span>
-        </span>
-        <span class="conn-note">Alguns módulos escrevem <code>S</code>, <code>OUT</code> ou <code>SIG</code> no lugar de DATA.</span>
+      <label class="conn" style="--wire: var(--wire-red);">
+        <input type="checkbox" class="conn-check" data-id="l3">
+        <span class="conn-body"><span class="n">3</span><span class="pin pin-accent">VIN</span><span class="arrow">→</span><span class="pin">trilho + de baixo</span></span>
+        <span class="conn-note">O último pino da fileira do A0, do lado do USB.</span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-red);">
+        <input type="checkbox" class="conn-check" data-id="l4">
+        <span class="conn-body"><span class="n">4</span><span class="pin">trilho + de baixo</span><span class="arrow">→</span><span class="pin">trilho + de cima</span></span>
+        <span class="conn-note">Um jumper comprido na ponta direita da protoboard. Agora os dois trilhos + têm 5 V.</span>
       </label>
     </div>
 
-    <h3 style="margin-top: 0.9rem;">PIR HC-SR501 — presença</h3>
-    <p>
-      Este vai no trilho de <strong>5 V</strong>, não no 3,3 V. O HC-SR501 tem um
-      regulador interno e precisa de pelo menos 4,5 V para funcionar direito — em
-      3,3 V ele até acende, mas dispara sozinho ou não dispara nunca. A saída dele
-      já sai em 3,3 V, então é seguro ligar direto no NodeMCU.
-    </p>
+    <h3>Push button</h3>
+    <div class="wiring">
+      <label class="conn" style="--wire: var(--wire-yellow);">
+        <input type="checkbox" class="conn-check" data-id="l5">
+        <span class="conn-body"><span class="n">5</span><span class="pin">perna 2 do botão</span><span class="arrow">→</span><span class="pin pin-accent">D1</span></span>
+        <span class="conn-note">O botão atravessa a divisória central. A perna 2 é a de cima, à direita (veja o detalhe).</span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="l6">
+        <span class="conn-body"><span class="n">6</span><span class="pin">perna 3 do botão</span><span class="arrow">→</span><span class="pin">trilho − de baixo</span></span>
+        <span class="conn-note">A de baixo, à esquerda: na diagonal da perna 2. Pernas 1 e 4 ficam livres. Sem resistor, como no Uno.</span>
+      </label>
+    </div>
 
+    <h3>Sensor de presença PIR (HC-SR501)</h3>
     <div class="wiring">
       <label class="conn" style="--wire: var(--wire-red);">
-        <input type="checkbox" class="conn-check" data-id="pir-vcc">
-        <span class="conn-body">
-          <span class="pin">PIR VCC</span><span class="arrow">→</span><span class="pin">linha vermelha (5 V)</span>
-        </span>
-      </label>
-      <label class="conn" style="--wire: var(--wire-black);">
-        <input type="checkbox" class="conn-check" data-id="pir-gnd">
-        <span class="conn-body">
-          <span class="pin">PIR GND</span><span class="arrow">→</span><span class="pin">linha azul</span>
-        </span>
+        <input type="checkbox" class="conn-check" data-id="l7">
+        <span class="conn-body"><span class="n">7</span><span class="pin">PIR VCC</span><span class="arrow">→</span><span class="pin">trilho + de cima (5 V)</span></span>
+        <span class="conn-note">O PIR precisa de pelo menos 4,5 V. Em 3,3 V ele dispara sozinho ou não dispara nunca.</span>
       </label>
       <label class="conn" style="--wire: var(--wire-green);">
-        <input type="checkbox" class="conn-check" data-id="pir-out">
-        <span class="conn-body">
-          <span class="pin">PIR OUT</span><span class="arrow">→</span><span class="pin pin-accent">D2</span>
-        </span>
-        <span class="conn-note">É o pino do meio nos três da lateral do módulo.</span>
+        <input type="checkbox" class="conn-check" data-id="l8">
+        <span class="conn-body"><span class="n">8</span><span class="pin">PIR OUT</span><span class="arrow">→</span><span class="pin pin-accent">D2</span></span>
+        <span class="conn-note">O pino do meio. A saída do PIR é de 3,3 V, segura para o NodeMCU.</span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="l9">
+        <span class="conn-body"><span class="n">9</span><span class="pin">PIR GND</span><span class="arrow">→</span><span class="pin">trilho − de cima</span></span>
       </label>
     </div>
 
-    <div class="alert care">
-      <div class="alert-title">Os dois potenciômetros laranja do PIR</div>
-      <p>
-        Um regula a distância de detecção, o outro o tempo que a saída fica ligada
-        depois de detectar. Deixe os dois no mínimo por enquanto — no dia da
-        apresentação, com o tempo alto, o sensor fica "preso" em presença
-        detectada e parece travado.
-      </p>
+    <h3>Sensor de luminosidade (LDR)</h3>
+    <div class="wiring">
+      <label class="conn" style="--wire: var(--wire-orange);">
+        <input type="checkbox" class="conn-check" data-id="l10">
+        <span class="conn-body"><span class="n">10</span><span class="pin">perna 1 do LDR</span><span class="arrow">→</span><span class="pin pin-accent">3V3</span></span>
+        <span class="conn-note">O 3V3 da fileira do A0 — <strong>não</strong> o trilho de 5 V. O LDR não tem lado certo.</span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-purple);">
+        <input type="checkbox" class="conn-check" data-id="l11">
+        <span class="conn-body"><span class="n">11</span><span class="pin">perna 2 do LDR</span><span class="arrow">→</span><span class="pin pin-accent">A0</span></span>
+        <span class="conn-note">O jumper vai na mesma coluna da perna 2.</span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="l12">
+        <span class="conn-body"><span class="n">12</span><span class="pin">resistor 10 kΩ</span><span class="arrow">→</span><span class="pin">uma perna na coluna da perna 2 do LDR, a outra no trilho − de baixo</span></span>
+        <span class="conn-note">Faixas marrom, preto, laranja. O resistor não tem lado certo.</span>
+      </label>
     </div>
-  </section>
 
-  <!-- ─────────────── Passo 5 ─────────────── -->
+    <h3>Relé e os 4 LEDs internos</h3>
+    <div class="wiring">
+      <label class="conn" style="--wire: var(--wire-red);">
+        <input type="checkbox" class="conn-check" data-id="l13">
+        <span class="conn-body"><span class="n">13</span><span class="pin">relé VCC</span><span class="arrow">→</span><span class="pin">trilho + de baixo (5 V)</span></span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="l14">
+        <span class="conn-body"><span class="n">14</span><span class="pin">relé GND</span><span class="arrow">→</span><span class="pin">trilho − de baixo</span></span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-blue);">
+        <input type="checkbox" class="conn-check" data-id="l15">
+        <span class="conn-body"><span class="n">15</span><span class="pin">relé IN1</span><span class="arrow">→</span><span class="pin pin-accent">D7</span></span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-red);">
+        <input type="checkbox" class="conn-check" data-id="l16">
+        <span class="conn-body"><span class="n">16</span><span class="pin">borne COM do canal 1</span><span class="arrow">→</span><span class="pin">trilho + de baixo (5 V)</span></span>
+        <span class="conn-note">Os bornes são os parafusos do outro lado do módulo. Afrouxe, encaixe o fio, aperte.</span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-red);">
+        <input type="checkbox" class="conn-check" data-id="l17">
+        <span class="conn-body"><span class="n">17</span><span class="pin">borne NO do canal 1</span><span class="arrow">→</span><span class="pin">fio dos 4 LEDs internos (pino 13 no Uno)</span></span>
+        <span class="conn-note">NO = normalmente aberto. O borne NC fica vazio.</span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="l18">
+        <span class="conn-body"><span class="n">18</span><span class="pin">GND dos LEDs internos</span><span class="arrow">→</span><span class="pin">trilho − de baixo</span></span>
+      </label>
+    </div>
 
-  <section>
-    <h2><span class="stepno">05</span> Os comandos dos relés</h2>
-    <p>
-      Quatro fios, um por canal. Aqui a ordem importa: <code>IN1</code> é a luz,
-      <code>IN4</code> é o alarme, e trocar dois deles significa ligar o ventilador
-      quando o dashboard pedir o portão.
-    </p>
-
+    <h3>2 LEDs externos</h3>
     <div class="wiring">
       <label class="conn" style="--wire: var(--wire-blue);">
-        <input type="checkbox" class="conn-check" data-id="in1">
-        <span class="conn-body">
-          <span class="pin">IN1</span><span class="arrow">→</span><span class="pin pin-accent">D5</span><span class="arrow">·</span><span>Luz</span>
-        </span>
+        <input type="checkbox" class="conn-check" data-id="l19">
+        <span class="conn-body"><span class="n">19</span><span class="pin">fio dos LEDs externos (pino 8 no Uno)</span><span class="arrow">→</span><span class="pin pin-accent">D6</span></span>
+        <span class="conn-note">Direto no pino: dois LEDs cabem no que ele fornece. Acendem um pouco mais fracos que no Uno (3,3 V em vez de 5 V).</span>
       </label>
-      <label class="conn" style="--wire: var(--wire-blue);">
-        <input type="checkbox" class="conn-check" data-id="in2">
-        <span class="conn-body">
-          <span class="pin">IN2</span><span class="arrow">→</span><span class="pin pin-accent">D6</span><span class="arrow">·</span><span>Ventilador</span>
-        </span>
-      </label>
-      <label class="conn" style="--wire: var(--wire-blue);">
-        <input type="checkbox" class="conn-check" data-id="in3">
-        <span class="conn-body">
-          <span class="pin">IN3</span><span class="arrow">→</span><span class="pin pin-accent">D7</span><span class="arrow">·</span><span>Portão</span>
-        </span>
-      </label>
-      <label class="conn" style="--wire: var(--wire-blue);">
-        <input type="checkbox" class="conn-check" data-id="in4">
-        <span class="conn-body">
-          <span class="pin">IN4</span><span class="arrow">→</span><span class="pin pin-accent">D4</span><span class="arrow">·</span><span>Alarme</span>
-        </span>
-        <span class="conn-note">D4, não D8. O motivo está logo abaixo.</span>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="l20">
+        <span class="conn-body"><span class="n">20</span><span class="pin">GND dos LEDs externos</span><span class="arrow">→</span><span class="pin">trilho − de cima</span></span>
       </label>
     </div>
 
-    <div class="alert stop">
-      <div class="alert-title">O alarme vai no D4 — o D8 impede a placa de ligar</div>
-      <p>
-        O pino <code>D8</code> precisa estar em 0 V no instante em que o ESP8266 é
-        energizado, senão ele não inicia. Os pinos <code>IN</code> dos módulos de
-        relé são puxados para cima por um resistor interno — com o módulo ligado no
-        D8, a placa fica morta e parece queimada.
-      </p>
-      <p>
-        O <code>D4</code> tem a regra contrária: precisa estar em nível alto no
-        boot, que é exatamente o que o módulo faz. Os dois se encaixam, e o relé
-        ainda nasce desligado. O firmware já está corrigido para isso.
-      </p>
+    <h3>Alarme: LED e buzzer</h3>
+    <div class="wiring">
+      <label class="conn" style="--wire: var(--wire-blue);">
+        <input type="checkbox" class="conn-check" data-id="l21">
+        <span class="conn-body"><span class="n">21</span><span class="pin">fio do LED do alarme (pino 11 no Uno)</span><span class="arrow">→</span><span class="pin pin-accent">D0</span></span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="l22">
+        <span class="conn-body"><span class="n">22</span><span class="pin">GND do LED do alarme</span><span class="arrow">→</span><span class="pin">trilho − de cima</span></span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-blue);">
+        <input type="checkbox" class="conn-check" data-id="l23">
+        <span class="conn-body"><span class="n">23</span><span class="pin">buzzer +</span><span class="arrow">→</span><span class="pin pin-accent">D5</span></span>
+        <span class="conn-note">A perna longa, ou a marcada com "+".</span>
+      </label>
+      <label class="conn" style="--wire: var(--wire-black);">
+        <input type="checkbox" class="conn-check" data-id="l24">
+        <span class="conn-body"><span class="n">24</span><span class="pin">buzzer −</span><span class="arrow">→</span><span class="pin">trilho − de cima</span></span>
+      </label>
     </div>
-
-    <div class="alert note">
-      <div class="alert-title">O LED azul vai piscar junto com o alarme</div>
+    <div class="alert care">
+      <div class="alert-title">Se o LED do alarme e o buzzer saem num fio só da maquete</div>
       <p>
-        O <code>D4</code> também comanda o LED azul soldado no módulo ESP-12E.
-        Quando o relé do alarme ligar, o LED acende junto. É inofensivo, e na
-        prática vira um indicador visual de graça.
+        No Uno os dois estavam no pino 11. Aqui cada um tem o seu pino, porque as
+        correntes somadas passariam do limite de um pino. Se não der para separar
+        na maquete, ligue esse fio único no <code>D5</code> e pule a ligação 21.
       </p>
     </div>
   </section>
 
   <hr class="rule">
 
-  <!-- ─────────────── Mapa completo ─────────────── -->
+  <!-- ─────────────── Mapa ─────────────── -->
 
   <section>
-    <h2>Mapa completo dos pinos</h2>
-    <p>A mesma informação em uma tela só, para conferir depois de montar.</p>
+    <h2>Mapa dos pinos</h2>
+    <p>Para conferir depois de montar.</p>
     <div class="scroller">
       <table>
         <thead>
-          <tr><th>Pino NodeMCU</th><th>GPIO</th><th>Vai para</th><th>Função</th></tr>
+          <tr><th>Pino NodeMCU</th><th>GPIO</th><th>Vai para</th></tr>
         </thead>
         <tbody>
-          <tr><td class="mono">D1</td><td class="mono">5</td><td class="mono">DHT11 DATA</td><td>Temperatura</td></tr>
-          <tr><td class="mono">D2</td><td class="mono">4</td><td class="mono">PIR OUT</td><td>Presença</td></tr>
-          <tr><td class="mono">D4</td><td class="mono">2</td><td class="mono">Relé IN4</td><td>Alarme</td></tr>
-          <tr><td class="mono">D5</td><td class="mono">14</td><td class="mono">Relé IN1</td><td>Luz</td></tr>
-          <tr><td class="mono">D6</td><td class="mono">12</td><td class="mono">Relé IN2</td><td>Ventilador</td></tr>
-          <tr><td class="mono">D7</td><td class="mono">13</td><td class="mono">Relé IN3</td><td>Portão</td></tr>
-          <tr><td class="mono">3V3</td><td class="mono">—</td><td class="mono">DHT11 VCC</td><td>Alimentação do sensor</td></tr>
-          <tr><td class="mono">GND</td><td class="mono">—</td><td class="mono">Terra comum</td><td>Referência dos dois circuitos</td></tr>
-          <tr><td class="mono">D8</td><td class="mono">15</td><td class="mono">— não usar —</td><td>Impede o boot</td></tr>
+          <tr><td class="mono">D0</td><td class="mono">16</td><td>LED do alarme</td></tr>
+          <tr><td class="mono">D1</td><td class="mono">5</td><td>Push button</td></tr>
+          <tr><td class="mono">D2</td><td class="mono">4</td><td>PIR (OUT)</td></tr>
+          <tr><td class="mono">D5</td><td class="mono">14</td><td>Buzzer</td></tr>
+          <tr><td class="mono">D6</td><td class="mono">12</td><td>2 LEDs externos</td></tr>
+          <tr><td class="mono">D7</td><td class="mono">13</td><td>Relé IN1 → 4 LEDs internos</td></tr>
+          <tr><td class="mono">A0</td><td class="mono">—</td><td>LDR + 10 kΩ</td></tr>
+          <tr><td class="mono">3V3</td><td class="mono">—</td><td>LDR (o da fileira do A0)</td></tr>
+          <tr><td class="mono">VIN</td><td class="mono">—</td><td>Trilhos + (5 V)</td></tr>
+          <tr><td class="mono">GND</td><td class="mono">—</td><td>Trilhos −</td></tr>
+          <tr><td class="mono">D3 D4 D8</td><td class="mono">0 2 15</td><td>— não usar: decidem o boot da placa —</td></tr>
         </tbody>
       </table>
     </div>
@@ -885,80 +1350,45 @@
 
   <hr class="rule">
 
-  <!-- ─────────────── Passo 6 ─────────────── -->
+  <!-- ─────────────── Conferência ─────────────── -->
 
   <section>
-    <h2><span class="stepno">06</span> Conferência antes de energizar</h2>
-    <p>
-      Cinco checagens. Levam dois minutos e evitam a única categoria de erro que
-      custa dinheiro.
-    </p>
-
+    <h2>Conferência e energia</h2>
     <div class="checklist">
       <label class="check-item">
-        <input type="checkbox" class="conn-check" data-id="chk-vin">
-        <span class="check-text">Nenhum fio sai do <code>VIN</code> ou <code>VU</code> do NodeMCU.</span>
+        <input type="checkbox" class="conn-check" data-id="chk-5v">
+        <span class="check-text">Nenhum fio dos trilhos + (5 V) chega num pino D, no A0 ou no 3V3.</span>
       </label>
       <label class="check-item">
-        <input type="checkbox" class="conn-check" data-id="chk-gnd">
-        <span class="check-text">O fio preto do carregador <strong>e</strong> o GND do NodeMCU estão na mesma linha azul.</span>
+        <input type="checkbox" class="conn-check" data-id="chk-ldr">
+        <span class="check-text">O LDR está no pino <code>3V3</code>, não no trilho de 5 V.</span>
       </label>
       <label class="check-item">
-        <input type="checkbox" class="conn-check" data-id="chk-d8">
-        <span class="check-text">Nada está ligado no <code>D8</code>.</span>
-      </label>
-      <label class="check-item">
-        <input type="checkbox" class="conn-check" data-id="chk-dht">
-        <span class="check-text">O DHT11 está no <code>3V3</code>, e o PIR está na linha vermelha de 5 V. Não invertidos.</span>
+        <input type="checkbox" class="conn-check" data-id="chk-boot">
+        <span class="check-text">Nada ligado em <code>D3</code>, <code>D4</code> ou <code>D8</code>.</span>
       </label>
       <label class="check-item">
         <input type="checkbox" class="conn-check" data-id="chk-curto">
-        <span class="check-text">Nenhum fio descascado encostando em outro, e o NodeMCU está montado sobre a divisória central.</span>
+        <span class="check-text">Nenhuma perna descascada encostando em outra, e o NodeMCU está sobre a divisória central.</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="conn-check" data-id="chk-usb">
+        <span class="check-text">Cabo USB no notebook: o LED do NodeMCU pisca, o LED de energia do relé acende e nada esquenta. Se algo aquecer, tire o cabo e volte à conferência.</span>
       </label>
     </div>
-  </section>
-
-  <!-- ─────────────── Passo 7 ─────────────── -->
-
-  <section>
-    <h2><span class="stepno">07</span> A ordem de ligar</h2>
-    <p>
-      A sequência importa. Os pinos <code>IN</code> do módulo de relé só ficam no
-      nível certo depois que o módulo tem energia — e o ESP8266 lê esses níveis no
-      instante em que liga. Carregador primeiro, USB depois.
-    </p>
-
-    <div class="checklist">
-      <label class="check-item">
-        <input type="checkbox" class="conn-check" data-id="pwr-1">
-        <span class="check-text"><strong>Primeiro:</strong> o carregador na tomada. Os LEDs do módulo de relé acendem, nenhum relé clica.</span>
-      </label>
-      <label class="check-item">
-        <input type="checkbox" class="conn-check" data-id="pwr-2">
-        <span class="check-text"><strong>Depois:</strong> o cabo USB no notebook. O LED do NodeMCU acende.</span>
-      </label>
-      <label class="check-item">
-        <input type="checkbox" class="conn-check" data-id="pwr-3">
-        <span class="check-text">Nada esquentou. Se algum componente aquecer nos primeiros segundos, desligue tudo e volte à conferência.</span>
-      </label>
-    </div>
-
-    <div class="alert care">
-      <div class="alert-title">Se algum relé clicar sozinho ao energizar</div>
+    <div class="alert note">
+      <div class="alert-title">O PIR leva 1 minuto para acordar</div>
       <p>
-        Um clique único no momento de ligar é normal — é o firmware forçando todos
-        para desligado. Cliques repetidos, ou um relé que fica ligado, significam
-        que a polaridade do seu módulo é invertida. Solução: trocar
-        <code>RELAY_ON</code> e <code>RELAY_OFF</code> no topo do arquivo
-        <code>.ino</code> e regravar.
+        Logo depois de receber energia, o PIR pode disparar sozinho por até um
+        minuto enquanto se calibra. Espere antes de testar o alarme.
       </p>
     </div>
   </section>
 
-  <!-- ─────────────── Passo 8 ─────────────── -->
+  <!-- ─────────────── Gravar ─────────────── -->
 
   <section>
-    <h2><span class="stepno">08</span> Gravar o firmware</h2>
+    <h2>Gravar o firmware</h2>
     <p>
       Abra <code>firmware/esp8266/casa_inteligente/casa_inteligente.ino</code> na
       IDE do Arduino.
@@ -968,121 +1398,73 @@
         Placa: <strong>NodeMCU 1.0 (ESP-12E Module)</strong>. Se ela não aparecer
         na lista, falta instalar o pacote ESP8266 — a URL está no README.
       </li>
-      <li>
-        Bibliotecas, pelo Gerenciador: <code>ArduinoJson</code> (v7),
-        <code>DHT sensor library</code> e <code>Adafruit Unified Sensor</code>.
-      </li>
+      <li>Biblioteca, pelo Gerenciador: <code>ArduinoJson</code> (v7).</li>
       <li>
         Preencha o bloco <strong>EDITE AQUI</strong> no topo do arquivo: nome e
         senha do WiFi, o <code>UID</code> do Firebase e o <code>TOKEN</code>.
       </li>
       <li>Selecione a porta COM e clique em carregar.</li>
     </ol>
-
-    <div class="alert care">
-      <div class="alert-title">Se nenhuma porta COM aparecer</div>
-      <p>
-        Quase sempre é driver. Placas com conversor <strong>CH340</strong> precisam
-        do driver instalado à mão no Windows; as com <strong>CP2102</strong>
-        costumam funcionar direto. O nome do chip está impresso no quadradinho
-        preto perto do conector USB.
-      </p>
-    </div>
-
     <div class="alert note">
       <div class="alert-title">WiFi da escola normalmente não funciona</div>
       <p>
-        O ESP8266 não conecta em redes com login por página (aquelas que abrem um
-        formulário no navegador) nem em redes corporativas com usuário e senha
-        individuais. Use o roteador de casa para testar, e o roteador pessoal ou o
-        celular como ponto de acesso no dia da apresentação.
+        O ESP8266 só conecta em rede de 2,4 GHz, sem página de login. Use o
+        roteador de casa para testar e o celular como ponto de acesso no dia da
+        apresentação.
       </p>
     </div>
   </section>
 
-  <!-- ─────────────── Passo 9 ─────────────── -->
+  <!-- ─────────────── Testar ─────────────── -->
 
   <section>
-    <h2><span class="stepno">09</span> Testar</h2>
+    <h2>Testar</h2>
     <p>
-      Abra o Monitor Serial em <strong>115200</strong>. Você deve ver a conexão do
-      WiFi e, a cada 2 segundos, uma linha de sincronização.
+      Abra o Monitor Serial em <strong>115200</strong>. Para a maquete fazer o que
+      fazia no Uno, crie no site três automações:
+      <strong>Botão físico → Luz interna</strong>,
+      <strong>Escureceu → Luz externa</strong> e
+      <strong>Presença → Alarme</strong>.
     </p>
-    <p>
-      Depois, no dashboard, clique em cada dispositivo, um por vez. O serial
-      responde <code>Comando aplicado: luz = LIGADO</code> e o relé clica. Entre o
-      clique no site e o clique do relé passam alguns segundos — é o tempo do
-      handshake criptografado, e é esperado.
-    </p>
-
     <div class="checklist">
       <label class="check-item">
         <input type="checkbox" class="conn-check" data-id="test-wifi">
-        <span class="check-text">O serial mostrou o WiFi conectado e um endereço IP.</span>
+        <span class="check-text">O serial mostrou o WiFi conectado e um endereço IP, e o dashboard parou de dizer que o hardware não está conectado.</span>
       </label>
       <label class="check-item">
         <input type="checkbox" class="conn-check" data-id="test-dash">
-        <span class="check-text">O dashboard parou de dizer que o hardware não está conectado.</span>
+        <span class="check-text">Pelo dashboard: a luz interna faz o relé clicar e acende os 4 LEDs; a luz externa acende os 2 LEDs; o alarme liga LED e buzzer. Entre o clique e a ação passam alguns segundos — é esperado.</span>
       </label>
       <label class="check-item">
-        <input type="checkbox" class="conn-check" data-id="test-4">
-        <span class="check-text">Os quatro relés clicam, cada um no seu comando, sem trocar.</span>
+        <input type="checkbox" class="conn-check" data-id="test-btn">
+        <span class="check-text">Apertar o botão alterna os LEDs internos.</span>
       </label>
       <label class="check-item">
-        <input type="checkbox" class="conn-check" data-id="test-dht">
-        <span class="check-text">A temperatura aparece no serial com valor plausível — não <code>nan</code>, não <code>0.0</code>.</span>
+        <input type="checkbox" class="conn-check" data-id="test-ldr">
+        <span class="check-text">A linha <code>Luminosidade:</code> do serial cai ao tampar o LDR com a mão. Ajuste <code>LDR_LIMITE_ESCURO</code> (hoje 650, o valor do Uno) entre o valor no claro e o valor tampado.</span>
       </label>
       <label class="check-item">
         <input type="checkbox" class="conn-check" data-id="test-pir">
-        <span class="check-text">Passar a mão na frente do PIR gera um evento de presença.</span>
+        <span class="check-text">Passar na frente do PIR alterna o alarme.</span>
       </label>
     </div>
-  </section>
-
-  <hr class="rule">
-
-  <!-- ─────────────── Carga ─────────────── -->
-
-  <section>
-    <h2>O outro lado do relé</h2>
-    <p>
-      Até aqui, os relés só clicam. Para eles acionarem alguma coisa, usa-se os
-      bornes de parafuso do lado oposto do módulo. Cada canal tem três:
-    </p>
-
-    <div class="scroller">
-      <table>
-        <thead>
-          <tr><th>Borne</th><th>Significa</th><th>Comportamento</th></tr>
-        </thead>
-        <tbody>
-          <tr><td class="mono">COM</td><td>Comum</td><td>A entrada. Sempre usada.</td></tr>
-          <tr><td class="mono">NO</td><td>Normalmente aberto</td><td>Fecha quando o relé liga. <strong>É este que vocês querem.</strong></td></tr>
-          <tr><td class="mono">NC</td><td>Normalmente fechado</td><td>Abre quando o relé liga. Deixe vazio.</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="alert stop">
-      <div class="alert-title">Não leve tomada de 127 V para a banca</div>
-      <p>
-        O relé aguenta, mas uma apresentação não é lugar para rede elétrica: mesa
-        cheia, fios soltos, gente encostando. Use uma fita LED de 12 V ou lâmpadas
-        de baixa tensão — o clique do relé e a luz acendendo demonstram exatamente
-        o mesmo conceito.
-      </p>
-      <p>
-        Se a equipe quiser mostrar uma lâmpada de verdade, faça em bancada, com o
-        professor presente, e não durante a apresentação.
-      </p>
-    </div>
-
     <div class="alert care">
-      <div class="alert-title">Um por vez na demonstração</div>
+      <div class="alert-title">Os dois parafusos laranja do PIR</div>
       <p>
-        Quatro relés ligados ao mesmo tempo somam ~280 mA. Se vocês acabarem sem o
-        carregador e com tudo na USB, acione um dispositivo, mostre, desligue, e
-        vá para o próximo. Fica melhor de assistir e não arrisca reiniciar a placa.
+        Um regula a distância (até ~7 m), o outro quanto tempo a saída fica ligada
+        depois de detectar. Deixe o do <strong>tempo no mínimo</strong> (girar
+        todo para a esquerda): com o tempo alto, o sensor demora a "rearmar" e o
+        alarme parece travado.
+      </p>
+    </div>
+    <div class="alert note">
+      <div class="alert-title">Diferença para o Uno</div>
+      <p>
+        No Uno, cada sensor mandava direto no LED: o alarme tocava só enquanto o
+        sensor detectava, e os LEDs externos ficavam acesos enquanto estivesse
+        escuro. No sistema, cada evento <strong>alterna</strong> o dispositivo —
+        liga na primeira vez e desliga na próxima — e tudo também pode ser ligado e
+        desligado pelo site, pela voz e pelo celular.
       </p>
     </div>
   </section>
@@ -1099,13 +1481,16 @@
           <tr><th>Sintoma</th><th>Causa quase sempre</th></tr>
         </thead>
         <tbody>
-          <tr><td>A placa não liga, nenhum LED</td><td>Algo ligado no <code>D8</code>, ou o USB na porta errada</td></tr>
-          <tr><td>Reinicia sozinho a cada poucos segundos</td><td>Relé sendo alimentado pelo NodeMCU em vez do carregador</td></tr>
-          <tr><td>Relé não clica, mas o serial diz que aplicou</td><td>GND não é comum entre os dois circuitos</td></tr>
-          <tr><td>Relé fica ligado o tempo todo</td><td>Polaridade invertida — trocar <code>RELAY_ON</code> / <code>RELAY_OFF</code></td></tr>
-          <tr><td>Temperatura vem <code>nan</code></td><td>DHT11 no pino errado, ou alimentado em 5 V</td></tr>
-          <tr><td>Presença dispara sem parar</td><td>PIR em 3,3 V em vez de 5 V, ou potenciômetro de tempo no máximo</td></tr>
-          <tr><td>Nenhuma porta COM na IDE</td><td>Driver CH340 faltando, ou cabo USB só de carga, sem dados</td></tr>
+          <tr><td>A placa não liga ou fica reiniciando</td><td>Algo ligado em <code>D3</code>, <code>D4</code> ou <code>D8</code>, ou curto entre um trilho + e o GND</td></tr>
+          <tr><td>Relé fica ligado o tempo todo</td><td>Módulo ao contrário — inverter <code>RELE_LIGADO</code> e <code>RELE_DESLIGADO</code> no firmware</td></tr>
+          <tr><td>Relé não desliga direito, ou fica "meio ligado"</td><td>Tirar o jumper <code>JD-VCC</code> do módulo, ligar <code>VCC</code> no 3V3 e <code>JD-VCC</code> nos 5 V</td></tr>
+          <tr><td>Relé clica, mas os LEDs internos não acendem</td><td>Fio dos LEDs no <code>NC</code> em vez do <code>NO</code>, ou GND dos LEDs fora do trilho −</td></tr>
+          <tr><td>LED não acende, mas o serial diz que aplicou</td><td>GND do LED fora do trilho, ou fio na coluna errada da protoboard</td></tr>
+          <tr><td>Botão não responde, ou liga a luz sozinho</td><td>Botão sem atravessar a divisória, ou fios em pernas que não estão em diagonal (use a 2 e a 3)</td></tr>
+          <tr><td>Luminosidade fica sempre em 0 ou 1023</td><td>Falta o resistor de 10 kΩ, ou o ponto do meio não está no <code>A0</code></td></tr>
+          <tr><td>Luz externa acende quando clareia</td><td>Sentido da leitura invertido — trocar <code>LDR_ESCURO_E_MAIOR</code></td></tr>
+          <tr><td>Alarme dispara sozinho</td><td>PIR no primeiro minuto depois de ligado, PIR em 3,3 V em vez de 5 V, ou parafuso de tempo no máximo</td></tr>
+          <tr><td>Nenhuma porta COM na IDE</td><td>Cabo USB só de carga, sem dados, ou driver do conversor faltando</td></tr>
           <tr><td>Dashboard diz Offline com tudo montado</td><td>Railway hibernando — acordar em <code>/arduino/health</code> antes</td></tr>
         </tbody>
       </table>
@@ -1122,7 +1507,7 @@
 
 <script>
   (function () {
-    var KEY = 'montagem-casa-inteligente-v1';
+    var KEY = 'montagem-casa-inteligente-v4';
     var boxes = Array.prototype.slice.call(document.querySelectorAll('.conn-check'));
     var fill = document.getElementById('progress-fill');
     var label = document.getElementById('progress-label');

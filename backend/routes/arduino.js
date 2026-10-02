@@ -4,9 +4,8 @@ const { executeAutomations } = require('../services/automation');
 
 const router = express.Router();
 
-const VALID_DEVICES          = ['luz', 'ventilador', 'portao', 'alarme'];
-const VALID_TRIGGERS         = ['presenca', 'temperatura', 'horario'];
-const DEFAULT_TEMP_THRESHOLD = 30;
+const VALID_DEVICES  = ['luz', 'luz_externa', 'alarme'];
+const VALID_TRIGGERS = ['presenca', 'botao_fisico', 'luminosidade'];
 
 router.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
@@ -23,15 +22,7 @@ router.post('/sync', async (req, res) => {
 
   try {
     // 1. Atualiza status do Arduino no RTDB
-    const statusUpdate = { online, lastSeen: Date.now() };
-    // Só grava temperature se vier um número finito válido do firmware.
-    // Ausente ou inválido (NaN, string, etc.) não escreve o campo — nunca
-    // grava null nem 0, que seriam lidos como uma leitura real de sensor.
-    const { temperature } = req.body;
-    if (typeof temperature === 'number' && Number.isFinite(temperature)) {
-      statusUpdate.temperature = temperature;
-    }
-    await rtdb.ref(`arduino_status/${uid}`).update(statusUpdate);
+    await rtdb.ref(`arduino_status/${uid}`).update({ online, lastSeen: Date.now() });
 
     // 2. Grava estado real de cada dispositivo informado pelo Arduino
     for (const [deviceId, state] of Object.entries(devices)) {
@@ -41,15 +32,14 @@ router.post('/sync', async (req, res) => {
 
     // Se offline, não processa commands (evita perda quando Arduino desliga)
     if (!online) {
-      res.json({ commands: [], tempThreshold: DEFAULT_TEMP_THRESHOLD });
+      res.json({ commands: [] });
       return;
     }
 
-    // 3. Lê configurações do usuário (activeToggles + tempThreshold)
+    // 3. Lê configurações do usuário (activeToggles)
     const userSnap      = await db.collection('users').doc(uid).get();
     const userData      = userSnap.exists ? userSnap.data() : {};
     const activeToggles = userData.activeToggles || {};
-    const tempThreshold = userData.tempThreshold ?? DEFAULT_TEMP_THRESHOLD;
 
     // 4. Executa automações disparadas pelos eventos do sensor
     //    Respeita activeToggles: pula se o usuário desativou aquele tipo de gatilho
@@ -87,7 +77,7 @@ router.post('/sync', async (req, res) => {
       return true;
     });
 
-    res.json({ commands, tempThreshold });
+    res.json({ commands });
 
   } catch (err) {
     console.error('[/arduino/sync] erro:', err);

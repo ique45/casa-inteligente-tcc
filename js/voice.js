@@ -2,15 +2,17 @@
 // frases fixas mapeadas para dispositivos.
 // \b garante que 'desligar' não case no padrão de 'ligar' (substring)
 const voiceControl = (() => {
+  // A luz externa vem antes: o primeiro padrão que casa vence, e o padrão
+  // da luz interna ("acender luz") também casaria em "acender luz externa".
   const COMMANDS = [
+    { pattern: /\bligar?\s+(?:a\s+)?luz\s+(?:de\s+)?(?:externa|fora)/i,         deviceId: 'luz_externa', action: true  },
+    { pattern: /\bdesligar?\s+(?:a\s+)?luz\s+(?:de\s+)?(?:externa|fora)/i,      deviceId: 'luz_externa', action: false },
+    { pattern: /\bacend[ae]r?\s+(?:a\s+)?luz\s+(?:de\s+)?(?:externa|fora)/i,    deviceId: 'luz_externa', action: true  },
+    { pattern: /\bapag(?:ar?|ue)\s+(?:a\s+)?luz\s+(?:de\s+)?(?:externa|fora)/i, deviceId: 'luz_externa', action: false },
     { pattern: /\bligar?\s+(?:a\s+)?luz/i,            deviceId: 'luz',        action: true  },
     { pattern: /\bdesligar?\s+(?:a\s+)?luz/i,         deviceId: 'luz',        action: false },
     { pattern: /\bacend[ae]r?\s+(?:a\s+)?luz/i,       deviceId: 'luz',        action: true  },
     { pattern: /\bapag(?:ar?|ue)\s+(?:a\s+)?luz/i,    deviceId: 'luz',        action: false },
-    { pattern: /\bligar?\s+(?:o\s+)?ventilador/i,     deviceId: 'ventilador', action: true  },
-    { pattern: /\bdesligar?\s+(?:o\s+)?ventilador/i,  deviceId: 'ventilador', action: false },
-    { pattern: /\babrir?\s+(?:o\s+)?port[ãa]o/i,      deviceId: 'portao',     action: true  },
-    { pattern: /\bfechar?\s+(?:o\s+)?port[ãa]o/i,     deviceId: 'portao',     action: false },
     { pattern: /\bligar?\s+(?:o\s+)?alarme/i,         deviceId: 'alarme',     action: true  },
     { pattern: /\bdesligar?\s+(?:o\s+)?alarme/i,      deviceId: 'alarme',     action: false },
     { pattern: /\barmar?\s+(?:o\s+)?alarme/i,         deviceId: 'alarme',     action: true  },

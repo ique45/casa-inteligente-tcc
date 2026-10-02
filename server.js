@@ -31,31 +31,30 @@ const PREVIEW_SCRIPT = `
     users: [{ id: 'preview-uid', data: {
       name: 'Dona Maria',
       activeProfiles: ['idoso'],
-      activeToggles: { voz: true, botao: true, presenca: true, horario: false, temperatura: false }
+      activeToggles: { voz: true }
     } }],
     // db.collection('users').doc(uid).collection('history')
     history: [
-      { id: 'h1', data: { device: 'Luz da sala', deviceId: 'luz',        trigger: 'botao',       state: true,  timestamp: ts(now - 12 * 60 * 1000) } },
-      { id: 'h2', data: { device: 'Ventilador',   deviceId: 'ventilador', trigger: 'temperatura', state: true,  timestamp: ts(now - 55 * 60 * 1000) } },
-      { id: 'h3', data: { device: 'Portão',       deviceId: 'portao',     trigger: 'voz',         state: false, timestamp: ts(now - 3 * 60 * 60 * 1000) } },
-      { id: 'h4', data: { device: 'Alarme',       deviceId: 'alarme',     trigger: 'presenca',    state: true,  timestamp: ts(now - 26 * 60 * 60 * 1000) } },
-      { id: 'h5', data: { device: 'Luz da sala',  deviceId: 'luz',        trigger: 'botao',       state: false, timestamp: ts(now - 28 * 60 * 60 * 1000) } }
+      { id: 'h1', data: { device: 'Luz da sala',    deviceId: 'luz',         trigger: 'botao_fisico', state: true,  timestamp: ts(now - 12 * 60 * 1000) } },
+      { id: 'h2', data: { device: 'Luz do jardim',  deviceId: 'luz_externa', trigger: 'luminosidade', state: true,  timestamp: ts(now - 55 * 60 * 1000) } },
+      { id: 'h3', data: { device: 'Alarme',         deviceId: 'alarme',      trigger: 'botao',        state: false, timestamp: ts(now - 3 * 60 * 60 * 1000) } },
+      { id: 'h4', data: { device: 'Alarme',         deviceId: 'alarme',      trigger: 'presenca',     state: true,  timestamp: ts(now - 26 * 60 * 60 * 1000) } },
+      { id: 'h5', data: { device: 'Luz da sala',    deviceId: 'luz',         trigger: 'voz',          state: false, timestamp: ts(now - 28 * 60 * 60 * 1000) } }
     ],
     // db.collection('automations').doc(uid).collection('items')
     items: [
-      { id: 'a1', data: { deviceType: 'luz',        deviceName: 'Luz da sala',          trigger: 'botao',       action: 'toggle', enabled: true,  createdAt: ts(now - 7 * 86400000) } },
-      { id: 'a2', data: { deviceType: 'ventilador', deviceName: 'Ventilador do quarto', trigger: 'botao',       action: 'toggle', enabled: true,  createdAt: ts(now - 7 * 86400000) } },
-      { id: 'a3', data: { deviceType: 'portao',     deviceName: 'Portão da garagem',    trigger: 'botao',       action: 'toggle', enabled: true,  createdAt: ts(now - 6 * 86400000) } },
-      { id: 'a4', data: { deviceType: 'alarme',     deviceName: 'Alarme da entrada',    trigger: 'botao',       action: 'toggle', enabled: true,  createdAt: ts(now - 6 * 86400000) } },
-      { id: 'a5', data: { deviceType: 'luz',        deviceName: 'Luz da sala',          trigger: 'presenca',    action: 'toggle', enabled: true,  createdAt: ts(now - 4 * 86400000) } },
-      { id: 'a6', data: { deviceType: 'ventilador', deviceName: 'Ventilador do quarto', trigger: 'temperatura', action: 'toggle', enabled: true,  createdAt: ts(now - 3 * 86400000) } },
-      { id: 'a7', data: { deviceType: 'portao',     deviceName: 'Portão Garagem',       trigger: 'voz',         action: 'toggle', enabled: true,  voiceOn: 'Abrir Portão Garagem', voiceOff: 'Fechar Portão Garagem', createdAt: ts(now - 2 * 86400000) } },
-      { id: 'a8', data: { deviceType: 'alarme',     deviceName: 'Alarme da entrada',    trigger: 'horario',     action: 'toggle', enabled: false, createdAt: ts(now - 1 * 86400000) } }
+      { id: 'a1', data: { deviceType: 'luz',         deviceName: 'Luz da sala',       trigger: 'botao',        action: 'toggle', enabled: true,  createdAt: ts(now - 7 * 86400000) } },
+      { id: 'a2', data: { deviceType: 'luz_externa', deviceName: 'Luz do jardim',     trigger: 'botao',        action: 'toggle', enabled: true,  createdAt: ts(now - 7 * 86400000) } },
+      { id: 'a4', data: { deviceType: 'alarme',      deviceName: 'Alarme da entrada', trigger: 'botao',        action: 'toggle', enabled: true,  createdAt: ts(now - 6 * 86400000) } },
+      { id: 'a5', data: { deviceType: 'luz',         deviceName: 'Luz da sala',       trigger: 'botao_fisico', action: 'toggle', enabled: true,  createdAt: ts(now - 4 * 86400000) } },
+      { id: 'a6', data: { deviceType: 'luz_externa', deviceName: 'Luz do jardim',     trigger: 'luminosidade', action: 'toggle', enabled: true,  createdAt: ts(now - 3 * 86400000) } },
+      { id: 'a7', data: { deviceType: 'luz',         deviceName: 'Luz Quarto',        trigger: 'voz',          action: 'toggle', enabled: true,  voiceOn: 'Acender Luz Quarto', voiceOff: 'Apagar Luz Quarto', createdAt: ts(now - 2 * 86400000) } },
+      { id: 'a8', data: { deviceType: 'alarme',      deviceName: 'Alarme da entrada', trigger: 'presenca',     action: 'toggle', enabled: true,  createdAt: ts(now - 1 * 86400000) } }
     ]
   };
   var RTDB_SEED = {
-    devices: { luz: { state: true }, ventilador: { state: true }, portao: { state: false }, alarme: { state: false } },
-    arduino_status: { online: true, lastSeen: now, temperature: 24 }
+    devices: { luz: { state: true }, luz_externa: { state: false }, alarme: { state: false } },
+    arduino_status: { online: true, lastSeen: now }
   };
 
   // --- Firestore falso, encadeável -------------------------------------

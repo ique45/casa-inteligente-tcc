@@ -8,8 +8,8 @@ let _rtdbStatusRef  = null;
 let _automationsUnsubscribe = null;
 let _historyUnsubscribe = null;
 
-// O primeiro snapshot do RTDB entrega o estado dos 4 dispositivos de uma vez
-// ao abrir a pagina. Sem esta trava, o app anunciaria os quatro em sequencia
+// O primeiro snapshot do RTDB entrega o estado de todos os dispositivos de uma
+// vez ao abrir a pagina. Sem esta trava, o app anunciaria todos em sequencia
 // a cada carregamento. So libera a fala depois de processar esse snapshot.
 let _falaLiberada = false;
 
@@ -104,7 +104,7 @@ function renderAutomations() {
 
     // Só a automação de gatilho "botão" tem um dispositivo físico pra
     // acionar de verdade — vira o botão grande do card. As outras (voz,
-    // presença, horário...) não têm essa ação, só o interruptor pequeno.
+    // presença, luminosidade...) não têm essa ação, só o interruptor pequeno.
     let primaryBtnHtml = '';
     if (d.trigger === 'botao' && device) {
       const isOn = deviceStates[d.deviceType] === true;
@@ -235,7 +235,7 @@ function listenDeviceStates() {
     const data = snap.val() || {};
     // Só o dispositivo que mudou: updateDeviceUI encerra a espera pela
     // confirmação e anuncia o estado por voz. Chamada para todos, a escrita
-    // do ventilador cancelava a espera do portão, e como cada fala corta a
+    // da luz cancelava a espera do alarme, e como cada fala corta a
     // anterior, só o último da lista era ouvido.
     DEVICES.forEach(d => {
       const isOn = data[d.id]?.state === true;
