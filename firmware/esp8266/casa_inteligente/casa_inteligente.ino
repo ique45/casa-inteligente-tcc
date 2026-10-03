@@ -42,11 +42,9 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 // ─────────────────────────────────────────────────────────────
 
 // Pinos (numeracao GPIO, nao a numeracao "D" impressa na placa)
-// O D8 fica vazio de proposito: o ESP8266 le esse pino (e o D3 e o D4) no
-// boot para decidir como iniciar, e precisa dele em LOW; um rele ou sensor
-// ligado nele pode impedir a placa de ligar. O D4 precisa estar em HIGH no
-// boot, e o modulo de rele (canal 2) puxa o pino para cima, o que ajuda. O D3
-// precisa estar em HIGH no boot,
+// D4 e D8 ficam vazios de proposito: o ESP8266 le esses pinos (e o D3) no
+// boot para decidir como iniciar, e um LED, rele ou sensor ligado neles pode
+// impedir a placa de ligar. O D3 precisa estar em HIGH no boot,
 // o resistor da propria placa garante isso, e o Trig do HC-SR04 e so uma
 // entrada, que nao puxa o pino para baixo.
 //
@@ -68,11 +66,10 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 #define PIN_LED_EXTERNA     12   // D6
 // LED do alarme e buzzer (os dois no pino 11 no Uno). Aqui ficam em pinos
 // separados: somadas, as duas correntes passariam do limite de um pino.
-// LED que indica "alarme armado": + no 5 V (com resistor), - no D4. O D4 em
-// LOW acende (o pino faz papel de GND) e solto apaga. Assim o LED recebe os
-// 5 V como no Uno e o D4 fica em HIGH no boot, como ele precisa. Efeito
-// colateral inofensivo: o LED azul do ESP-12E, ligado ao D4, acende junto.
-#define PIN_RELE_ALARME      2   // D4 -> rele IN2
+// LED que indica "alarme armado": + no D0 (com resistor), - no GND.
+// HIGH acende (armado), LOW apaga. Ficava no D4 como "terra" (LOW acendia),
+// mas o grupo preferiu o pino mandar 3,3 V quando armado (03/10).
+#define PIN_LED_ARMADO      16   // D0
 #define PIN_BUZZER          14   // D5
 
 // Modulo de rele "ativo em LOW", o mais comum: o rele LIGA quando o pino vai
@@ -252,14 +249,9 @@ void connectWiFi() {
 
 // ─── Alarme (ultrassom + LED + buzzer) ───────────────────────
 
-// LED do alarme pelo rele: LOW liga, pino solto desliga (como o D7).
+// LED de "alarme armado": HIGH acende, LOW apaga.
 void escreverLedAlarme(bool ligado) {
-  if (ligado) {
-    digitalWrite(PIN_RELE_ALARME, RELE_LIGADO);
-    pinMode(PIN_RELE_ALARME, OUTPUT);
-  } else {
-    pinMode(PIN_RELE_ALARME, INPUT);
-  }
+  digitalWrite(PIN_LED_ARMADO, ligado ? HIGH : LOW);
 }
 
 // No disparo so o buzzer toca: o LED do D4 indica que o alarme esta armado.
@@ -301,7 +293,7 @@ void verificarAlarme() {
     if ((long)(agora - fimDaEtapa) >= 0) {
       alarmeDisparado = false;
       escreverAlarme(false);
-      d0NaParada = digitalRead(PIN_RELE_ALARME) == HIGH;
+      d0NaParada = digitalRead(PIN_LED_ARMADO) == HIGH;
       d5NaParada = digitalRead(PIN_BUZZER) == HIGH;
       alarmeParou = true;
       alarmeEmPausa = true;
@@ -313,7 +305,7 @@ void verificarAlarme() {
     distDoDisparo = d;
     alarmeDisparado = true;
     escreverAlarme(true);
-    d0NoDisparo = digitalRead(PIN_RELE_ALARME) == HIGH;
+    d0NoDisparo = digitalRead(PIN_LED_ARMADO) == HIGH;
     d5NoDisparo = digitalRead(PIN_BUZZER) == HIGH;
     fimDaEtapa = agora + ALARME_DURACAO_MS;
     disparoNovo = true;
@@ -485,7 +477,7 @@ String nivelDoPino(int pin, bool rele) {
 String linhaDePinos() {
   return "Pinos: D7 rele=" + nivelDoPino(PIN_RELE_INTERNA, true) +
          " | D6 ext=" + nivelDoPino(PIN_LED_EXTERNA, false) +
-         " | D4 led armado=" + nivelDoPino(PIN_RELE_ALARME, false) +
+         " | D0 led armado=" + nivelDoPino(PIN_LED_ARMADO, false) +
          " | D5 buzzer=" + nivelDoPino(PIN_BUZZER, false) +
          " | D1 botao=" + nivelDoPino(PIN_BOTAO, false);
 }
@@ -513,8 +505,8 @@ void applyCommand(const char* device, bool state) {
       alarmeEmPausa = false;
       escreverAlarme(false);
     }
-    logar(String(state ? "Alarme ARMADO" : "Alarme DESARMADO") + " (LED D4 " +
-          (digitalRead(PIN_RELE_ALARME) == HIGH ? "HIGH" : "LOW") + ")");
+    logar(String(state ? "Alarme ARMADO" : "Alarme DESARMADO") + " (LED D0 " +
+          (digitalRead(PIN_LED_ARMADO) == HIGH ? "HIGH" : "LOW") + ")");
     return;
   }
   if (strcmp(device, "alarme") == 0) {
@@ -629,6 +621,7 @@ void setup() {
   pinMode(PIN_LED_EXTERNA, OUTPUT);   // controlado pelo LDR (lerLuz)
   pinMode(PIN_BUZZER, OUTPUT);
   escreverAlarme(false);
+  pinMode(PIN_LED_ARMADO, OUTPUT);
   escreverLedAlarme(false);   // comeca desarmado
 
   pinMode(PIN_ECHO, INPUT);
