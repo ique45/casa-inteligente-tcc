@@ -79,7 +79,7 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 const bool RELE_DESLIGA_SOLTANDO_O_PINO = true;
 
 // Constantes de comportamento
-const unsigned long SYNC_INTERVAL          = 2000;   // ms entre cada sync
+const unsigned long SYNC_INTERVAL          = 1000;   // ms entre cada sync (o envio em si leva ~2 s)
 const int           WIFI_TIMEOUT_ATTEMPTS  = 20;     // 20 x 500ms = ~10s
 const unsigned long BOTAO_DEBOUNCE_MS      = 200;    // ignora o "quique" do contato
 
@@ -103,7 +103,10 @@ const int           LOG_MAX                = 12;
 // Para calibrar, abra o Monitor Serial: a leitura aparece a cada ciclo
 // ("Luminosidade: ..."). 650 e o valor que o grupo usava no Uno.
 const bool          LDR_ESCURO_E_MAIOR     = false;
-const int           LDR_LIMITE_ESCURO      = 670;    // 670 ou menos = escuro (definido pelo grupo em 03/10)
+const int           LDR_LIMITE_ESCURO      = 800;    // 800 ou menos = escuro (definido pelo grupo em 03/10)
+// O LDR e lido por um timer proprio, fora do ciclo de envio: 5 vezes por
+// segundo. Assim os LEDs externos reagem quase na hora.
+const unsigned long LDR_TICK_MS            = 200;
 // Histerese: o gatilho so re-arma depois que a leitura volta LDR_HISTERESE
 // pontos para o lado claro. Sem isso, uma leitura oscilando em torno do
 // limite dispararia o evento (e a automacao de "Alternar") a cada 2s.
@@ -113,7 +116,17 @@ const int           LDR_HISTERESE          = 50;
 bool estadoLuzInterna = false;
 bool estadoLuzExterna = false;
 
-bool estaEscuro = false;  // estado do gatilho de luminosidade (edge-trigger, ve readSensors)
+// Estado do LDR, mexido pelo timer (lerLuz) e lido pelo loop.
+Ticker                 timerLuz;
+volatile bool          estaEscuro      = false;  // gatilho por borda, com histerese
+volatile int           luzUltima       = 0;
+volatile int           luzMin          = 1024;
+volatile int           luzMax          = 0;
+volatile int           luzAmostras     = 0;
+volatile bool          escureceuNovo   = false;
+volatile bool          clareouNovo     = false;
+volatile int           leituraEscureceu = 0;
+volatile int           leituraClareou  = 0;
 const unsigned long PINOS_LOG_INTERVALO_MS = 30000;
 String        ultimaLinhaDePinos;
 unsigned long ultimoLogPinos  = 0;
@@ -284,14 +297,31 @@ void readSensors() {
     logar("Sem presenca: alarme desligado");
   }
 
-  // Luminosidade. O evento "luminosidade" e edge-triggered: dispara so na
-  // passagem de claro para escuro, com histerese para re-armar. Isso evita
-  // gerar o evento a cada ciclo de 2s enquanto continua escuro, o que faria
-  // uma automacao de "Alternar" ligar/desligar a luz sem parar.
-  // Toda leitura vai para o log: uma por ciclo (~3 s). O ciclo e o limite,
-  // porque o envio ao servidor (TLS) ocupa quase todo ele.
-  int leitura = analogRead(PIN_LDR);
-  logar("Luminosidade: " + String(leitura));
+  // Luminosidade. O timer (lerLuz) ja ligou ou desligou os LEDs externos
+  // na passagem de claro para escuro e de volta; aqui so registra.
+  if (escureceuNovo) {
+    escureceuNovo = false;
+    logar("Escureceu (leitura " + String(leituraEscureceu) + "): LEDs externos ligados");
+    // O backend ainda recebe o evento, para outras automacoes de "Escureceu".
+    if (!eventoJaPendente("luminosidade") && eventCount < 4) {
+      events[eventCount++] = "luminosidade";
+    }
+  }
+  if (clareouNovo) {
+    clareouNovo = false;
+    logar("Clareou (leitura " + String(leituraClareou) + "): LEDs externos desligados");
+  }
+  estadoLuzExterna = digitalRead(PIN_LED_EXTERNA) == HIGH;
+
+  // Uma linha por ciclo com a ultima leitura e a faixa desde a linha anterior
+  // (o timer le 5 vezes por segundo; o serial so e escrito entre os envios).
+  if (luzAmostras > 0) {
+    logar("Luminosidade: " + String(luzUltima) + " (min " + String(luzMin) + ", max " +
+          String(luzMax) + ", " + String(luzAmostras) + " leituras)");
+    luzMin = 1024;
+    luzMax = 0;
+    luzAmostras = 0;
+  }
 
   // Nivel dos pinos: sempre que algum muda, e de tempos em tempos.
   String pinos = linhaDePinos();
@@ -300,42 +330,33 @@ void readSensors() {
     ultimaLinhaDePinos = pinos;
     ultimoLogPinos     = millis();
   }
+}
+
+// Chamada pelo timer a cada LDR_TICK_MS. Como no Uno, os LEDs externos seguem
+// o LDR direto na placa: escureceu liga, clareou desliga, sem esperar o
+// servidor. So na passagem: entre uma e outra, o site pode ligar e desligar a
+// luz externa a vontade.
+void lerLuz() {
+  int leitura = analogRead(PIN_LDR);
+  luzUltima = leitura;
+  if (leitura < luzMin) luzMin = leitura;
+  if (leitura > luzMax) luzMax = leitura;
+  luzAmostras = luzAmostras + 1;
 
   bool escuroAgora = LDR_ESCURO_E_MAIOR ? (leitura >= LDR_LIMITE_ESCURO)
                                         : (leitura <= LDR_LIMITE_ESCURO);
   bool claroDeNovo = LDR_ESCURO_E_MAIOR ? (leitura < LDR_LIMITE_ESCURO - LDR_HISTERESE)
                                         : (leitura > LDR_LIMITE_ESCURO + LDR_HISTERESE);
-  // Como no Uno, os LEDs externos seguem o LDR direto na placa: escureceu
-  // liga, clareou desliga, sem esperar o servidor. So na passagem: entre uma
-  // e outra, o site pode ligar e desligar a luz externa a vontade.
-  if (escuroAgora) {
-    if (!estaEscuro) {
-      estaEscuro = true;
-      definirLuzExterna(true);
-      logar("Escureceu (leitura " + String(leitura) + "): LEDs externos ligados (D6 " +
-            nivelDoPino(PIN_LED_EXTERNA, false) + ")");
-      // O backend ainda recebe o evento, para outras automacoes de "Escureceu".
-      if (!eventoJaPendente("luminosidade") && eventCount < 4) {
-        events[eventCount++] = "luminosidade";
-      }
-    }
-  } else if (claroDeNovo) {
-    if (estaEscuro) {
-      definirLuzExterna(false);
-      logar("Clareou (leitura " + String(leitura) + "): LEDs externos desligados (D6 " +
-            nivelDoPino(PIN_LED_EXTERNA, false) + ")");
-    }
+  if (escuroAgora && !estaEscuro) {
+    estaEscuro = true;
+    digitalWrite(PIN_LED_EXTERNA, HIGH);
+    leituraEscureceu = leitura;
+    escureceuNovo = true;
+  } else if (claroDeNovo && estaEscuro) {
     estaEscuro = false;
-  }
-}
-
-void definirLuzExterna(bool ligada) {
-  for (int i = 0; i < DEVICE_COUNT; i++) {
-    if (strcmp(devicePins[i].name, "luz_externa") == 0) {
-      escreverDispositivo(devicePins[i], ligada);
-      *(devicePins[i].stateVar) = ligada;
-      return;
-    }
+    digitalWrite(PIN_LED_EXTERNA, LOW);
+    leituraClareou = leitura;
+    clareouNovo = true;
   }
 }
 
@@ -495,6 +516,7 @@ void setup() {
   pinMode(PIN_BOTAO, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PIN_BOTAO), aoApertarBotao, FALLING);
   timerAlarme.attach_ms(ALARME_TICK_MS, verificarAlarme);
+  timerLuz.attach_ms(LDR_TICK_MS, lerLuz);
 
   connectWiFi();
 
