@@ -141,6 +141,13 @@ volatile bool          alarmeDisparado = false;
 volatile unsigned long proximaLeitura  = 0;
 volatile bool          disparoNovo     = false;  // o loop registra e avisa o backend
 volatile bool          alarmeParou     = false;
+// Saida crua do PIR, para ajustar os parafusos olhando o serial: cada subida
+// (detectou) e cada descida (com quanto tempo ficou em HIGH).
+volatile bool          pirSubiu        = false;
+volatile bool          pirDesceu       = false;
+volatile unsigned long pirSubiuEm      = 0;
+volatile unsigned long pirTempoEmHigh  = 0;
+volatile int           pirDeteccoes    = 0;   // subidas desde a ultima linha
 
 String logs[LOG_MAX];
 int    logCount = 0;
@@ -229,6 +236,18 @@ void escreverAlarme(bool ligado) {
 // detecta. Disparado: so olha o PIR de novo quando passam os 5s.
 void verificarAlarme() {
   unsigned long agora = millis();
+
+  static bool pirAnterior = false;
+  bool pirAgora = digitalRead(PIN_PIR) == HIGH;
+  if (pirAgora && !pirAnterior) {
+    pirSubiuEm = agora;
+    pirDeteccoes = pirDeteccoes + 1;
+    pirSubiu = true;
+  } else if (!pirAgora && pirAnterior) {
+    pirTempoEmHigh = agora - pirSubiuEm;
+    pirDesceu = true;
+  }
+  pirAnterior = pirAgora;
   if (!alarmeDisparado) {
     if (digitalRead(PIN_PIR) == HIGH) {
       alarmeDisparado = true;
@@ -307,6 +326,19 @@ void readSensors() {
   if (alarmeParou) {
     alarmeParou = false;
     logar("Sem presenca: alarme desligado");
+  }
+
+  // PIR cru, para calibrar a sensibilidade (alcance) e o tempo no sensor.
+  if (pirSubiu) {
+    pirSubiu = false;
+    int n = pirDeteccoes;
+    pirDeteccoes = 0;
+    logar(n > 1 ? "PIR: detectou (" + String(n) + " vezes desde a ultima linha)"
+                : String("PIR: detectou"));
+  }
+  if (pirDesceu) {
+    pirDesceu = false;
+    logar("PIR: parou depois de " + String(pirTempoEmHigh / 1000.0, 1) + " s em HIGH");
   }
 
   // Luminosidade. O timer (lerLuz) ja ligou ou desligou os LEDs externos
