@@ -42,9 +42,10 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 // ─────────────────────────────────────────────────────────────
 
 // Pinos (numeracao GPIO, nao a numeracao "D" impressa na placa)
-// D4 e D8 ficam vazios de proposito: o ESP8266 le esses pinos (e o D3) no
-// boot para decidir como iniciar, e um LED, rele ou sensor ligado neles pode
-// impedir a placa de ligar. O D3 e a excecao: precisa estar em HIGH no boot,
+// O D4 fica vazio de proposito: o ESP8266 le esse pino (e o D3 e o D8) no
+// boot para decidir como iniciar, e um LED, rele ou sensor ligado nele pode
+// impedir a placa de ligar. O D8 precisa estar em LOW no boot, e o LED do
+// alarme ligado ao GND mantem esse nivel. O D3 precisa estar em HIGH no boot,
 // o resistor da propria placa garante isso, e o Trig do HC-SR04 e so uma
 // entrada, que nao puxa o pino para baixo.
 //
@@ -66,9 +67,9 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 #define PIN_LED_EXTERNA     12   // D6
 // LED do alarme e buzzer (os dois no pino 11 no Uno). Aqui ficam em pinos
 // separados: somadas, as duas correntes passariam do limite de um pino.
-// O LED fica no D0 porque esse pino vai a HIGH por um instante no boot: no
-// LED isso e uma piscada invisivel, no buzzer seria um bip a cada reset.
-#define PIN_LED_ALARME      16   // D0
+// O LED do alarme ficava no D0, mas na maquete o D0 ia a HIGH e o LED nao
+// acendia (o mesmo LED acendia no 3V3). Movido para o D8 em 03/10.
+#define PIN_LED_ALARME      15   // D8
 #define PIN_BUZZER          14   // D5
 
 // Modulo de rele "ativo em LOW", o mais comum: o rele LIGA quando o pino vai
@@ -120,14 +121,14 @@ const int           LOG_MAX                = 12;
 // Para calibrar, abra o Monitor Serial: a leitura aparece a cada ciclo
 // ("Luminosidade: ..."). 650 e o valor que o grupo usava no Uno.
 const bool          LDR_ESCURO_E_MAIOR     = false;
-const int           LDR_LIMITE_ESCURO      = 800;    // 800 ou menos = escuro (definido pelo grupo em 03/10)
+const int           LDR_LIMITE_ESCURO      = 750;    // 750 ou menos = escuro (definido pelo grupo em 03/10)
 // O LDR e lido por um timer proprio, fora do ciclo de envio: 5 vezes por
 // segundo. Assim os LEDs externos reagem quase na hora.
 const unsigned long LDR_TICK_MS            = 200;
 // Histerese: o gatilho so re-arma depois que a leitura volta LDR_HISTERESE
 // pontos para o lado claro. Sem isso, uma leitura oscilando em torno do
 // limite dispararia o evento (e a automacao de "Alternar") a cada 2s.
-const int           LDR_HISTERESE          = 20;     // apaga com 820 ou mais
+const int           LDR_HISTERESE          = 20;     // apaga com 770 ou mais
 
 // ─── Estado global ───────────────────────────────────────────
 bool estadoLuzInterna = false;
@@ -160,12 +161,12 @@ volatile float         distMin         = 9999;
 volatile int           distLeituras    = 0;
 volatile float         distDoDisparo   = 0;
 // Nivel lido de volta nos pinos do alarme logo depois de escrever, para o
-// serial provar que o D0 (LED) e o D5 (buzzer) foram mesmo a HIGH/LOW.
+// serial provar que o D8 (LED) e o D5 (buzzer) foram mesmo a HIGH/LOW.
 volatile bool          d0NoDisparo     = false;
 volatile bool          d5NoDisparo     = false;
 volatile bool          d0NaParada      = false;
 volatile bool          d5NaParada      = false;
-// Teste do LED do alarme pelo site: mantem o D0 em HIGH por TESTE_LED_MS,
+// Teste do LED do alarme pelo site: mantem o D8 em HIGH por TESTE_LED_MS,
 // sem buzzer e sem depender do sensor, para conferir a fiacao com calma.
 const unsigned long    TESTE_LED_MS    = 10000;
 volatile bool          testeLedAtivo   = false;
@@ -272,7 +273,7 @@ float medirDistanciaCm() {
 void verificarAlarme() {
   unsigned long agora = millis();
 
-  // Durante o teste do LED, o alarme fica parado e o D0 fica em HIGH.
+  // Durante o teste do LED, o alarme fica parado e o D8 fica em HIGH.
   if (testeLedAtivo) {
     if ((long)(agora - fimTesteLed) >= 0) {
       testeLedAtivo = false;
@@ -367,7 +368,7 @@ void readSensors() {
   // avisa o backend (que pode ter outras automacoes de presenca).
   if (disparoNovo) {
     disparoNovo = false;
-    logar("Objeto a " + String(distDoDisparo, 1) + " cm: alarme disparado (D0 " +
+    logar("Objeto a " + String(distDoDisparo, 1) + " cm: alarme disparado (D8 " +
           (d0NoDisparo ? "HIGH" : "LOW") + ", D5 " + (d5NoDisparo ? "HIGH" : "LOW") + ")");
     if (!eventoJaPendente("presenca") && eventCount < 4) {
       events[eventCount++] = "presenca";
@@ -375,11 +376,11 @@ void readSensors() {
   }
   if (testeLedAcabou) {
     testeLedAcabou = false;
-    logar("Fim do teste do LED do alarme: D0 em LOW");
+    logar("Fim do teste do LED do alarme: D8 em LOW");
   }
   if (alarmeParou) {
     alarmeParou = false;
-    logar(String("Alarme desligado (D0 ") + (d0NaParada ? "HIGH" : "LOW") + ", D5 " +
+    logar(String("Alarme desligado (D8 ") + (d0NaParada ? "HIGH" : "LOW") + ", D5 " +
           (d5NaParada ? "HIGH" : "LOW") + "; pausa de 1,5 s)");
   }
 
@@ -433,7 +434,7 @@ void readSensors() {
 }
 
 // Chamada pelo timer a cada LDR_TICK_MS. Como no Uno, os LEDs externos seguem
-// o LDR o tempo todo: escuro (800 ou menos) acende, claro (820 ou mais)
+// o LDR o tempo todo: escuro (750 ou menos) acende, claro (770 ou mais)
 // apaga, entre os dois mantem. O site so mostra o estado (decisao do grupo
 // em 03/10), por isso o pino e reescrito a cada leitura.
 void lerLuz() {
@@ -485,7 +486,7 @@ String nivelDoPino(int pin, bool rele) {
 String linhaDePinos() {
   return "Pinos: D7 rele=" + nivelDoPino(PIN_RELE_INTERNA, true) +
          " | D6 ext=" + nivelDoPino(PIN_LED_EXTERNA, false) +
-         " | D0 led alarme=" + nivelDoPino(PIN_LED_ALARME, false) +
+         " | D8 led alarme=" + nivelDoPino(PIN_LED_ALARME, false) +
          " | D5 buzzer=" + nivelDoPino(PIN_BUZZER, false) +
          " | D1 botao=" + nivelDoPino(PIN_BOTAO, false);
 }
@@ -513,7 +514,7 @@ void applyCommand(const char* device, bool state) {
       digitalWrite(PIN_LED_ALARME, HIGH);
       fimTesteLed = millis() + TESTE_LED_MS;
       testeLedAtivo = true;
-      logar(String("Teste do LED do alarme: D0 em ") +
+      logar(String("Teste do LED do alarme: D8 em ") +
             (digitalRead(PIN_LED_ALARME) == HIGH ? "HIGH" : "LOW") + " por 10 s");
     }
     return;
