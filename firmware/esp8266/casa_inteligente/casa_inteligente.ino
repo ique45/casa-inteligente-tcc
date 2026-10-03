@@ -103,7 +103,7 @@ const int           LOG_MAX                = 12;
 // Para calibrar, abra o Monitor Serial: a leitura aparece a cada ciclo
 // ("Luminosidade: ..."). 650 e o valor que o grupo usava no Uno.
 const bool          LDR_ESCURO_E_MAIOR     = false;
-const int           LDR_LIMITE_ESCURO      = 650;    // a partir daqui conta como escuro
+const int           LDR_LIMITE_ESCURO      = 670;    // 670 ou menos = escuro (definido pelo grupo em 03/10)
 // Histerese: o gatilho so re-arma depois que a leitura volta LDR_HISTERESE
 // pontos para o lado claro. Sem isso, uma leitura oscilando em torno do
 // limite dispararia o evento (e a automacao de "Alternar") a cada 2s.
@@ -305,17 +305,37 @@ void readSensors() {
                                         : (leitura <= LDR_LIMITE_ESCURO);
   bool claroDeNovo = LDR_ESCURO_E_MAIOR ? (leitura < LDR_LIMITE_ESCURO - LDR_HISTERESE)
                                         : (leitura > LDR_LIMITE_ESCURO + LDR_HISTERESE);
+  // Como no Uno, os LEDs externos seguem o LDR direto na placa: escureceu
+  // liga, clareou desliga, sem esperar o servidor. So na passagem: entre uma
+  // e outra, o site pode ligar e desligar a luz externa a vontade.
   if (escuroAgora) {
     if (!estaEscuro) {
       estaEscuro = true;
-      logar("Escureceu (leitura " + String(leitura) + ")");
+      definirLuzExterna(true);
+      logar("Escureceu (leitura " + String(leitura) + "): LEDs externos ligados (D6 " +
+            nivelDoPino(PIN_LED_EXTERNA, false) + ")");
+      // O backend ainda recebe o evento, para outras automacoes de "Escureceu".
       if (!eventoJaPendente("luminosidade") && eventCount < 4) {
         events[eventCount++] = "luminosidade";
       }
     }
   } else if (claroDeNovo) {
-    if (estaEscuro) logar("Clareou (leitura " + String(leitura) + ")");
+    if (estaEscuro) {
+      definirLuzExterna(false);
+      logar("Clareou (leitura " + String(leitura) + "): LEDs externos desligados (D6 " +
+            nivelDoPino(PIN_LED_EXTERNA, false) + ")");
+    }
     estaEscuro = false;
+  }
+}
+
+void definirLuzExterna(bool ligada) {
+  for (int i = 0; i < DEVICE_COUNT; i++) {
+    if (strcmp(devicePins[i].name, "luz_externa") == 0) {
+      escreverDispositivo(devicePins[i], ligada);
+      *(devicePins[i].stateVar) = ligada;
+      return;
+    }
   }
 }
 

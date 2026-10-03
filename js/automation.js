@@ -1,6 +1,7 @@
 const TRIGGERS_BY_DEVICE = {
   luz:         ['voz', 'botao', 'botao_fisico', 'presenca', 'luminosidade'],
-  luz_externa: ['voz', 'botao', 'botao_fisico', 'presenca', 'luminosidade']
+  // Sem "luminosidade": a placa já liga e desliga a luz externa pelo LDR.
+  luz_externa: ['voz', 'botao', 'botao_fisico', 'presenca']
   // Sem alarme: ele toca sozinho quando o PIR detecta (firmware).
 };
 
