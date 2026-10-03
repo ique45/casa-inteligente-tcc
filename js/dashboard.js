@@ -370,7 +370,7 @@ function updateDeviceUI(deviceId, isOn) {
     }
     if (label) label.textContent = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
   });
-  if (_falaLiberada) speech.falar(frasePara(deviceId, isOn));
+  if (_falaLiberada && !d.semFala) speech.falar(frasePara(deviceId, isOn));
 }
 
 function listenArduinoStatus() {

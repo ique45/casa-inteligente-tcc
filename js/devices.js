@@ -7,6 +7,7 @@ const DEVICES = [
     acaoOn: 'Armar alarme', acaoOff: 'Desarmar alarme' },
   // A sirene (buzzer) toca pelo ultrassom, na própria placa: só aparece como status.
   { id: 'alarme',      name: 'Sirene',      icon: '🔔', labelOn: 'Tocando', labelOff: 'Desligada', labelTransition: null, speechOn: 'tocando', speechOff: 'desligada', somenteLeitura: true, alertaQuandoLigado: true,
+    semFala: true,   // a sirene já faz barulho: não precisa anunciar por voz
     nota: 'Toca 2 s quando algo chega a 6 cm do sensor de distância, com o alarme armado.' }
 ];
 

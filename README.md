@@ -4,8 +4,9 @@ Sistema de automação residencial voltado à **acessibilidade**, desenvolvido c
 Trabalho de Conclusão de Curso da turma 3 AMS de Desenvolvimento de Sistemas.
 
 O objetivo é dar mais autonomia a idosos e pessoas com mobilidade reduzida,
-permitindo controlar a luz e o alarme pelo site, por comando de voz, por um botão
-físico ou automaticamente, a partir dos sensores de presença e de luminosidade.
+permitindo controlar a luz e armar o alarme pelo site, por comando de voz ou por um
+botão físico. A luz externa acende sozinha quando escurece (LDR), e o alarme armado
+toca quando algo chega perto do sensor de distância (ultrassom).
 
 ## Arquitetura
 
@@ -18,11 +19,13 @@ físico ou automaticamente, a partir dos sensores de presença e de luminosidade
 ```
 
 1. O usuário aciona um dispositivo no site; o comando é gravado no Realtime Database.
-2. O ESP8266 consulta o backend a cada 2 segundos, enviando os eventos do botão
-   físico, do sensor de presença e do sensor de luminosidade, e o estado atual dos
-   LEDs.
+2. O ESP8266 consulta o backend a cada ~2 segundos, enviando os eventos do botão
+   físico, do ultrassom e do LDR, o estado atual das luzes e do alarme e as linhas
+   do Monitor Serial (que aparecem no painel do site).
 3. O backend responde com os comandos pendentes — do site e das automações — e o
-   ESP8266 acende ou apaga os LEDs (o alarme liga LED e buzzer juntos).
+   ESP8266 aplica: relé dos 4 LEDs internos, armar/desarmar o alarme. O LED externo
+   (pelo LDR) e a sirene (pelo ultrassom, com o alarme armado) são decididos na
+   própria placa, sem esperar o servidor.
 4. Cada ação é registrada no histórico, no Firestore.
 
 ## Tecnologias
@@ -193,10 +196,8 @@ regras.
 
 ## Limitações conhecidas
 
-- **Sem hardware.** O NodeMCU ainda não foi comprado, então o firmware nunca foi
-  executado em uma placa real. Enquanto não houver uma placa conectada, o
-  dashboard indica que o hardware não está conectado e os comandos ficam
-  guardados no Realtime Database, aguardando.
+- **Placa offline.** Sem a placa conectada, o dashboard indica que o hardware não
+  está conectado e os comandos ficam guardados no Realtime Database, aguardando.
 - **Nível de escuro definido no firmware.** O sensor de luminosidade dispara quando
   a leitura passa de `LDR_LIMITE_ESCURO`; o valor e o sentido da leitura
   (`LDR_ESCURO_E_MAIOR`) dependem do sensor e são calibrados pelo Monitor Serial,
@@ -208,18 +209,20 @@ regras.
   pessoa do público-alvo. São boa prática aplicada com cuidado, não comportamento
   medido. A confirmação falada depende de existir voz **pt-BR** instalada no
   navegador; sem ela o recurso aparece desabilitado no perfil.
-- **Sem relé, LEDs direto nos pinos.** A luz e o alarme são LEDs ligados direto
-  nas saídas do NodeMCU, cada um com seu resistor; o buzzer do alarme tem pino
-  próprio. Os pinos D3, D4 e D8 ficam vazios porque o ESP8266 os lê no boot.
-  Ligação completa em `docs/montagem.html`.
+- **Ligação da maquete.** Os 4 LEDs internos passam por um relé (D7); o LED externo
+  (D6), o LED de alarme armado (D0) e o buzzer (D5) vão direto nos pinos; botão no
+  D1, ultrassom HC-SR04 no D2/D3 (Echo por divisor de resistores) e LDR no A0. D4 e
+  D8 ficam vazios porque o ESP8266 os lê no boot. Ligação completa, com esquema
+  numerado, em `docs/montagem.html`.
 
 ## Roteiro de demonstração
 
 1. **`index.html`** — apresentação do projeto, o problema e a proposta.
 2. **"Acessar o Sistema"** — leva à tela de login (e-mail/senha ou Google).
 3. **Seleção de perfil** — escolha do perfil de acessibilidade do usuário.
-4. **Dashboard** — a luz e o alarme, o estado do hardware e os comandos de voz.
-5. **Automações** — criar uma regra: "quando houver presença, ligar a luz".
+4. **Dashboard** — "Agora na casa" (luzes, alarme e sirene em tempo real), o
+   monitor serial da placa e os comandos de voz.
+5. **Automações** — criar uma regra: "quando apertar o botão físico, alternar a luz interna".
 6. **Histórico** — todos os acionamentos registrados, com data e origem.
 
 ## Documentação técnica

@@ -685,8 +685,9 @@
     <h1>Montagem da Casa Inteligente</h1>
     <p class="standfirst">
       Como ligar a maquete do projeto do Uno no NodeMCU ESP8266. Os 4 LEDs internos
-      passam por um relé; o LED externo, o LED do alarme e o buzzer vão direto
-      nos pinos; o alarme usa um sensor de distância ultrassônico (HC-SR04).
+      passam por um relé; o LED externo, o LED de alarme armado e o buzzer vão
+      direto nos pinos. O alarme é armado pelo site e dispara com o sensor de
+      distância ultrassônico (HC-SR04).
     </p>
     <div class="meta-strip">
       <span>Placa: NodeMCU 1.0 (ESP-12E)</span>
@@ -721,8 +722,8 @@
           <tr><td>4 LEDs internos</td><td class="mono">13</td><td class="mono">relé (IN1 no D7)</td><td>—</td></tr>
           <tr><td>LDR</td><td class="mono">A0</td><td class="mono">A0</td><td>LED externo</td></tr>
           <tr><td>LED externo</td><td class="mono">8</td><td class="mono">D6</td><td>—</td></tr>
-          <tr><td>Ultrassom HC-SR04 <em>(no lugar do IR)</em></td><td class="mono">12</td><td class="mono">D2 Echo · D3 Trig</td><td>LED do alarme e buzzer</td></tr>
-          <tr><td>LED do alarme</td><td class="mono">11</td><td class="mono">D0</td><td>—</td></tr>
+          <tr><td>Ultrassom HC-SR04 <em>(no lugar do IR)</em></td><td class="mono">12</td><td class="mono">D2 Echo · D3 Trig</td><td>Buzzer, com o alarme armado</td></tr>
+          <tr><td>LED de alarme armado</td><td class="mono">11</td><td class="mono">D0</td><td>— (acende ao armar pelo site)</td></tr>
           <tr><td>Buzzer</td><td class="mono">11</td><td class="mono">D5</td><td>—</td></tr>
         </tbody>
       </table>
@@ -776,7 +777,7 @@
     <div class="esquema-wrap">
       <svg class="esquema" viewBox="0 0 960 760" role="img" aria-labelledby="esq-titulo esq-desc">
         <title id="esq-titulo">Esquema de ligação da maquete no NodeMCU</title>
-        <desc id="esq-desc">NodeMCU no centro da protoboard. Os quatro trilhos com 5 V do pino VIN e GND. Push button entre D1 e GND. Ultrassom HC-SR04 com VCC nos 5 V, GND no GND, Trig no D3 e Echo no D2 por um resistor de 1 quilo-ohm, com dois resistores de 1 quilo-ohm em série da coluna do D2 até o GND. LED do alarme no D0 e buzzer no D5. LED externo no D6. Módulo de relé com IN1 no D7; COM nos 5 V e NO nos 4 LEDs internos. LDR entre o 3V3 e o A0, com resistor de 10 quilo-ohms do A0 ao GND. D4 e D8 ficam vazios.</desc>
+        <desc id="esq-desc">NodeMCU no centro da protoboard. Os quatro trilhos com 5 V do pino VIN e GND. Push button entre D1 e GND. Ultrassom HC-SR04 com VCC nos 5 V, GND no GND, Trig no D3 e Echo no D2 por um resistor de 1 quilo-ohm, com dois resistores de 1 quilo-ohm em série da coluna do D2 até o GND. LED de alarme armado no D0 (aceso enquanto o alarme está armado) e buzzer no D5. LED externo no D6. Módulo de relé com IN1 no D7; COM nos 5 V e NO nos 4 LEDs internos. LDR entre o 3V3 e o A0, com resistor de 10 quilo-ohms do A0 ao GND. D4 e D8 ficam vazios.</desc>
         <defs>
           <pattern id="furos" width="13" height="13" patternUnits="userSpaceOnUse">
             <circle cx="6.5" cy="6.5" r="1.7" class="furo"/>
@@ -925,14 +926,14 @@
         <text x="196" y="129" class="t-modulo-pino">Echo</text>
         <text x="196" y="143" class="t-modulo-pino">GND</text>
 
-        <!-- 21-22: LED do alarme (D0), deitado -->
+        <!-- 23-24: LED de alarme armado (D0), deitado -->
         <path d="M270 288 V270 H182" class="w w-led"/>
         <path d="M150 270 H36 V62" class="w w-gnd"/>
         <path d="M182 258 H162 a12 12 0 0 0 0 24 H182 Z" class="led led-vermelho"/>
         <text x="196" y="264" class="t t-peq">+</text>
-        <text x="62" y="258" class="t">LED do alarme</text>
+        <text x="62" y="258" class="t">LED armado</text>
 
-        <!-- 23-24: buzzer (D5) -->
+        <!-- 25-26: buzzer (D5) -->
         <path d="M452 288 V240 H560 V198" class="w w-led"/>
         <path d="M560 146 V62" class="w w-gnd"/>
         <circle cx="560" cy="172" r="26" class="buzzer"/>
@@ -1326,15 +1327,21 @@
       </label>
     </div>
 
-    <h3>Alarme: LED e buzzer</h3>
+    <h3>Alarme: LED de armado e buzzer</h3>
+    <p>
+      O LED fica aceso enquanto o alarme está <strong>armado</strong> (botão
+      "Armar alarme" no site). Com o alarme armado, o buzzer toca 2 s quando algo
+      chega a 6 cm do ultrassom.
+    </p>
     <div class="wiring">
       <label class="conn" style="--wire: var(--wire-blue);">
         <input type="checkbox" class="conn-check" data-id="l21">
-        <span class="conn-body"><span class="n">23</span><span class="pin">fio do LED do alarme (pino 11 no Uno)</span><span class="arrow">→</span><span class="pin pin-accent">D0</span></span>
+        <span class="conn-body"><span class="n">23</span><span class="pin">LED de armado, perna + (com resistor)</span><span class="arrow">→</span><span class="pin pin-accent">D0</span></span>
+        <span class="conn-note">Use um LED que acenda com 3,3 V de um pino, como o LED externo que sobrou. O LED original do alarme da maquete só acendia ligado direto no 5 V.</span>
       </label>
       <label class="conn" style="--wire: var(--wire-black);">
         <input type="checkbox" class="conn-check" data-id="l22">
-        <span class="conn-body"><span class="n">24</span><span class="pin">GND do LED do alarme</span><span class="arrow">→</span><span class="pin">trilho − de cima</span></span>
+        <span class="conn-body"><span class="n">24</span><span class="pin">LED de armado, perna −</span><span class="arrow">→</span><span class="pin">trilho − de cima</span></span>
       </label>
       <label class="conn" style="--wire: var(--wire-blue);">
         <input type="checkbox" class="conn-check" data-id="l23">
@@ -1345,14 +1352,6 @@
         <input type="checkbox" class="conn-check" data-id="l24">
         <span class="conn-body"><span class="n">26</span><span class="pin">buzzer −</span><span class="arrow">→</span><span class="pin">trilho − de cima</span></span>
       </label>
-    </div>
-    <div class="alert care">
-      <div class="alert-title">Se o LED do alarme e o buzzer saem num fio só da maquete</div>
-      <p>
-        No Uno os dois estavam no pino 11. Aqui cada um tem o seu pino, porque as
-        correntes somadas passariam do limite de um pino. Se não der para separar
-        na maquete, ligue esse fio único no <code>D5</code> e pule a ligação 21.
-      </p>
     </div>
   </section>
 
@@ -1369,11 +1368,11 @@
           <tr><th>Pino NodeMCU</th><th>GPIO</th><th>Vai para</th></tr>
         </thead>
         <tbody>
-          <tr><td class="mono">D0</td><td class="mono">16</td><td>LED do alarme</td></tr>
+          <tr><td class="mono">D0</td><td class="mono">16</td><td>LED de alarme armado (HIGH = armado)</td></tr>
           <tr><td class="mono">D1</td><td class="mono">5</td><td>Push button</td></tr>
           <tr><td class="mono">D2</td><td class="mono">4</td><td>Ultrassom Echo (pelo divisor de 1 kΩ / 2 kΩ)</td></tr>
           <tr><td class="mono">D3</td><td class="mono">0</td><td>Ultrassom Trig</td></tr>
-          <tr><td class="mono">D5</td><td class="mono">14</td><td>Buzzer</td></tr>
+          <tr><td class="mono">D5</td><td class="mono">14</td><td>Buzzer (sirene)</td></tr>
           <tr><td class="mono">D6</td><td class="mono">12</td><td>LED externo</td></tr>
           <tr><td class="mono">D7</td><td class="mono">13</td><td>Relé IN1 → 4 LEDs internos</td></tr>
           <tr><td class="mono">A0</td><td class="mono">—</td><td>LDR + 10 kΩ</td></tr>
@@ -1459,10 +1458,10 @@
     <h2>Testar</h2>
     <p>
       Abra o Monitor Serial em <strong>115200</strong> — ou o painel do site, que
-      mostra o mesmo serial. Para as luzes fazerem o que faziam no Uno, crie no
-      site duas automações: <strong>Botão físico → Luz interna</strong> e
-      <strong>Escureceu → Luz externa</strong>. O alarme não precisa de automação:
-      a própria placa liga o LED e o buzzer quando algo chega a 6 cm do ultrassom.
+      mostra o mesmo serial. Crie no site uma automação:
+      <strong>Botão físico → Luz interna</strong>. O resto não precisa de automação:
+      o LED externo segue o LDR sozinho, e o alarme é armado pelo botão
+      <strong>Armar alarme</strong> do painel.
     </p>
     <div class="checklist">
       <label class="check-item">
@@ -1471,7 +1470,7 @@
       </label>
       <label class="check-item">
         <input type="checkbox" class="conn-check" data-id="test-dash">
-        <span class="check-text">Pelo quadro "Agora na casa" do painel: a luz interna faz o relé clicar e acende os 4 LEDs; a luz externa acende o LED externo. Entre o clique e a ação passam alguns segundos — é esperado.</span>
+        <span class="check-text">Pelo quadro "Agora na casa" do painel: a luz interna faz o relé clicar e acende os 4 LEDs, e "Armar alarme" acende o LED do D0. Entre o clique e a ação passam alguns segundos — é esperado.</span>
       </label>
       <label class="check-item">
         <input type="checkbox" class="conn-check" data-id="test-btn">
@@ -1483,17 +1482,17 @@
       </label>
       <label class="check-item">
         <input type="checkbox" class="conn-check" data-id="test-us">
-        <span class="check-text">A linha <code>Distancia:</code> do serial diminui ao aproximar a mão. Com algo a 6 cm ou menos, o LED do alarme e o buzzer tocam 2 s; depois o sensor fica 1,5 s sem ser lido.</span>
+        <span class="check-text">A linha <code>Distancia:</code> do serial diminui ao aproximar a mão. Com o alarme armado e algo a 6 cm ou menos, o buzzer toca 2 s; depois o sensor fica 1,5 s sem ser lido. Desarmado, nada toca.</span>
       </label>
     </div>
     <div class="alert note">
       <div class="alert-title">Diferença para o Uno</div>
       <p>
-        O alarme funciona como no Uno: toca só enquanto o sensor detecta. Já as
-        luzes mudaram: no Uno, os LEDs externos ficavam acesos enquanto estivesse
-        escuro; no sistema, cada evento <strong>alterna</strong> a luz — liga na
-        primeira vez e desliga na próxima — e as luzes também podem ser ligadas e
-        desligadas pelo site, pela voz e pelo celular.
+        O LED externo segue o LDR como no Uno: aceso no escuro, apagado no claro.
+        Mudaram a luz interna, que o botão <strong>alterna</strong> (liga num
+        aperto, desliga no outro) e que também responde ao site, à voz e ao
+        celular; e o alarme, que agora precisa ser <strong>armado</strong> pelo
+        site para o ultrassom fazer o buzzer tocar.
       </p>
     </div>
   </section>
