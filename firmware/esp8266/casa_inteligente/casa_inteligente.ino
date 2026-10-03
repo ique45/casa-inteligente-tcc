@@ -42,10 +42,11 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 // ─────────────────────────────────────────────────────────────
 
 // Pinos (numeracao GPIO, nao a numeracao "D" impressa na placa)
-// O D4 fica vazio de proposito: o ESP8266 le esse pino (e o D3 e o D8) no
-// boot para decidir como iniciar, e um LED, rele ou sensor ligado nele pode
-// impedir a placa de ligar. O D8 precisa estar em LOW no boot, e o LED do
-// alarme ligado ao GND mantem esse nivel. O D3 precisa estar em HIGH no boot,
+// O D8 fica vazio de proposito: o ESP8266 le esse pino (e o D3 e o D4) no
+// boot para decidir como iniciar, e precisa dele em LOW; um rele ou sensor
+// ligado nele pode impedir a placa de ligar. O D4 precisa estar em HIGH no
+// boot, e o modulo de rele (canal 2) puxa o pino para cima, o que ajuda. O D3
+// precisa estar em HIGH no boot,
 // o resistor da propria placa garante isso, e o Trig do HC-SR04 e so uma
 // entrada, que nao puxa o pino para baixo.
 //
@@ -67,9 +68,12 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 #define PIN_LED_EXTERNA     12   // D6
 // LED do alarme e buzzer (os dois no pino 11 no Uno). Aqui ficam em pinos
 // separados: somadas, as duas correntes passariam do limite de um pino.
-// O LED do alarme ficava no D0, mas na maquete o D0 ia a HIGH e o LED nao
-// acendia (o mesmo LED acendia no 3V3). Movido para o D8 em 03/10.
-#define PIN_LED_ALARME      15   // D8
+// O LED do alarme nao acendia em nenhum pino (nem com o pino comprovadamente
+// em HIGH): o resistor dele na maquete foi feito para 5 V. Passou a ser ligado
+// pelo canal 2 do rele (COM no 5 V, NO no LED), comandado pelo D4 (03/10).
+// Efeito colateral inofensivo: o LED azul do proprio ESP-12E, ligado ao D4,
+// acende junto com o alarme.
+#define PIN_RELE_ALARME      2   // D4 -> rele IN2
 #define PIN_BUZZER          14   // D5
 
 // Modulo de rele "ativo em LOW", o mais comum: o rele LIGA quando o pino vai
@@ -161,12 +165,12 @@ volatile float         distMin         = 9999;
 volatile int           distLeituras    = 0;
 volatile float         distDoDisparo   = 0;
 // Nivel lido de volta nos pinos do alarme logo depois de escrever, para o
-// serial provar que o D8 (LED) e o D5 (buzzer) foram mesmo a HIGH/LOW.
+// serial provar que o D4 (rele do LED) e o D5 (buzzer) mudaram de nivel.
 volatile bool          d0NoDisparo     = false;
 volatile bool          d5NoDisparo     = false;
 volatile bool          d0NaParada      = false;
 volatile bool          d5NaParada      = false;
-// Teste do LED do alarme pelo site: mantem o D8 em HIGH por TESTE_LED_MS,
+// Teste do LED do alarme pelo site: liga o rele do LED por TESTE_LED_MS,
 // sem buzzer e sem depender do sensor, para conferir a fiacao com calma.
 const unsigned long    TESTE_LED_MS    = 10000;
 volatile bool          testeLedAtivo   = false;
@@ -251,9 +255,19 @@ void connectWiFi() {
 
 // ─── Alarme (ultrassom + LED + buzzer) ───────────────────────
 
+// LED do alarme pelo rele: LOW liga, pino solto desliga (como o D7).
+void escreverLedAlarme(bool ligado) {
+  if (ligado) {
+    digitalWrite(PIN_RELE_ALARME, RELE_LIGADO);
+    pinMode(PIN_RELE_ALARME, OUTPUT);
+  } else {
+    pinMode(PIN_RELE_ALARME, INPUT);
+  }
+}
+
 void escreverAlarme(bool ligado) {
-  digitalWrite(PIN_LED_ALARME, ligado ? HIGH : LOW);
-  digitalWrite(PIN_BUZZER,     ligado ? HIGH : LOW);
+  escreverLedAlarme(ligado);
+  digitalWrite(PIN_BUZZER, ligado ? HIGH : LOW);
 }
 
 // Uma medicao do HC-SR04, em cm. -1 quando nada responde ate DISTANCIA_MAX_CM.
@@ -273,11 +287,11 @@ float medirDistanciaCm() {
 void verificarAlarme() {
   unsigned long agora = millis();
 
-  // Durante o teste do LED, o alarme fica parado e o D8 fica em HIGH.
+  // Durante o teste do LED, o alarme fica parado e o rele do LED ligado.
   if (testeLedAtivo) {
     if ((long)(agora - fimTesteLed) >= 0) {
       testeLedAtivo = false;
-      digitalWrite(PIN_LED_ALARME, LOW);
+      escreverLedAlarme(false);
       testeLedAcabou = true;
     }
     return;
@@ -297,7 +311,7 @@ void verificarAlarme() {
     if ((long)(agora - fimDaEtapa) >= 0) {
       alarmeDisparado = false;
       escreverAlarme(false);
-      d0NaParada = digitalRead(PIN_LED_ALARME) == HIGH;
+      d0NaParada = digitalRead(PIN_RELE_ALARME) == HIGH;
       d5NaParada = digitalRead(PIN_BUZZER) == HIGH;
       alarmeParou = true;
       alarmeEmPausa = true;
@@ -309,7 +323,7 @@ void verificarAlarme() {
     distDoDisparo = d;
     alarmeDisparado = true;
     escreverAlarme(true);
-    d0NoDisparo = digitalRead(PIN_LED_ALARME) == HIGH;
+    d0NoDisparo = digitalRead(PIN_RELE_ALARME) == HIGH;
     d5NoDisparo = digitalRead(PIN_BUZZER) == HIGH;
     fimDaEtapa = agora + ALARME_DURACAO_MS;
     disparoNovo = true;
@@ -368,7 +382,7 @@ void readSensors() {
   // avisa o backend (que pode ter outras automacoes de presenca).
   if (disparoNovo) {
     disparoNovo = false;
-    logar("Objeto a " + String(distDoDisparo, 1) + " cm: alarme disparado (D8 " +
+    logar("Objeto a " + String(distDoDisparo, 1) + " cm: alarme disparado (D4 rele " +
           (d0NoDisparo ? "HIGH" : "LOW") + ", D5 " + (d5NoDisparo ? "HIGH" : "LOW") + ")");
     if (!eventoJaPendente("presenca") && eventCount < 4) {
       events[eventCount++] = "presenca";
@@ -376,11 +390,11 @@ void readSensors() {
   }
   if (testeLedAcabou) {
     testeLedAcabou = false;
-    logar("Fim do teste do LED do alarme: D8 em LOW");
+    logar("Fim do teste do LED do alarme: D4 solto (rele desligado)");
   }
   if (alarmeParou) {
     alarmeParou = false;
-    logar(String("Alarme desligado (D8 ") + (d0NaParada ? "HIGH" : "LOW") + ", D5 " +
+    logar(String("Alarme desligado (D4 rele ") + (d0NaParada ? "HIGH" : "LOW") + ", D5 " +
           (d5NaParada ? "HIGH" : "LOW") + "; pausa de 1,5 s)");
   }
 
@@ -486,7 +500,7 @@ String nivelDoPino(int pin, bool rele) {
 String linhaDePinos() {
   return "Pinos: D7 rele=" + nivelDoPino(PIN_RELE_INTERNA, true) +
          " | D6 ext=" + nivelDoPino(PIN_LED_EXTERNA, false) +
-         " | D8 led alarme=" + nivelDoPino(PIN_LED_ALARME, false) +
+         " | D4 rele alarme=" + nivelDoPino(PIN_RELE_ALARME, false) +
          " | D5 buzzer=" + nivelDoPino(PIN_BUZZER, false) +
          " | D1 botao=" + nivelDoPino(PIN_BOTAO, false);
 }
@@ -511,11 +525,11 @@ void applyCommand(const char* device, bool state) {
       alarmeDisparado = false;
       alarmeEmPausa = false;
       escreverAlarme(false);
-      digitalWrite(PIN_LED_ALARME, HIGH);
+      escreverLedAlarme(true);
       fimTesteLed = millis() + TESTE_LED_MS;
       testeLedAtivo = true;
-      logar(String("Teste do LED do alarme: D8 em ") +
-            (digitalRead(PIN_LED_ALARME) == HIGH ? "HIGH" : "LOW") + " por 10 s");
+      logar(String("Teste do LED do alarme: D4 em ") +
+            (digitalRead(PIN_RELE_ALARME) == HIGH ? "HIGH" : "LOW") + " (rele ligado) por 10 s");
     }
     return;
   }
@@ -624,7 +638,6 @@ void setup() {
   }
   digitalWrite(PIN_LED_EXTERNA, LOW);
   pinMode(PIN_LED_EXTERNA, OUTPUT);   // controlado pelo LDR (lerLuz)
-  pinMode(PIN_LED_ALARME, OUTPUT);
   pinMode(PIN_BUZZER, OUTPUT);
   escreverAlarme(false);
 
