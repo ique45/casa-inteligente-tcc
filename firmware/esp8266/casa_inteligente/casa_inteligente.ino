@@ -95,10 +95,6 @@ const unsigned long ALARME_TICK_MS         = 100;    // de quanto em quanto temp
 // serial"). Ficam guardadas aqui ate um sync confirmado; com o buffer cheio,
 // a mais antiga sai.
 const int           LOG_MAX                = 12;
-// A luminosidade so entra no log quando muda de verdade, ou de tempos em
-// tempos, para nao encher o painel com a mesma leitura a cada 2s.
-const int           LUZ_LOG_VARIACAO       = 15;
-const unsigned long LUZ_LOG_INTERVALO_MS   = 5000;
 
 // Luminosidade. analogRead(A0) vai de 0 a 1023. Com o LDR ligado como no
 // projeto do Uno (LDR no 3V3, resistor de 10k para o GND, ponto do meio no
@@ -118,8 +114,6 @@ bool estadoLuzInterna = false;
 bool estadoLuzExterna = false;
 
 bool estaEscuro = false;  // estado do gatilho de luminosidade (edge-trigger, ve readSensors)
-int           ultimaLuzLogada = -1000;
-unsigned long ultimoLogLuz    = 0;
 const unsigned long PINOS_LOG_INTERVALO_MS = 30000;
 String        ultimaLinhaDePinos;
 unsigned long ultimoLogPinos  = 0;
@@ -294,13 +288,10 @@ void readSensors() {
   // passagem de claro para escuro, com histerese para re-armar. Isso evita
   // gerar o evento a cada ciclo de 2s enquanto continua escuro, o que faria
   // uma automacao de "Alternar" ligar/desligar a luz sem parar.
+  // Toda leitura vai para o log: uma por ciclo (~3 s). O ciclo e o limite,
+  // porque o envio ao servidor (TLS) ocupa quase todo ele.
   int leitura = analogRead(PIN_LDR);
-  if (abs(leitura - ultimaLuzLogada) >= LUZ_LOG_VARIACAO ||
-      millis() - ultimoLogLuz >= LUZ_LOG_INTERVALO_MS) {
-    logar("Luminosidade: " + String(leitura));
-    ultimaLuzLogada = leitura;
-    ultimoLogLuz    = millis();
-  }
+  logar("Luminosidade: " + String(leitura));
 
   // Nivel dos pinos: sempre que algum muda, e de tempos em tempos.
   String pinos = linhaDePinos();
