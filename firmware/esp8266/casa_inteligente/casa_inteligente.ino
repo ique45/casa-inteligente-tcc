@@ -9,7 +9,7 @@
  *    2. Envia esses eventos e o estado atual das luzes para o backend
  *    3. Recebe do backend a lista de comandos a executar
  *    4. Liga ou desliga a luz interna e a luz externa
- *  O alarme (LED + buzzer) e local: objeto a 6 cm ou menos, toca 2 s e espera 1,5 s
+ *  Alarme armado pelo site: objeto a 6 cm ou menos, o buzzer toca 2 s e espera 1,5 s
  *  antes de ler o sensor de novo, sem depender do backend.
  *
  *  Mesmas pecas da maquete do projeto do Uno (Projeto_Casa_Inteligente_v3):
@@ -68,11 +68,10 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 #define PIN_LED_EXTERNA     12   // D6
 // LED do alarme e buzzer (os dois no pino 11 no Uno). Aqui ficam em pinos
 // separados: somadas, as duas correntes passariam do limite de um pino.
-// O LED do alarme nao acendia em nenhum pino (nem com o pino comprovadamente
-// em HIGH): o resistor dele na maquete foi feito para 5 V. Passou a ser ligado
-// pelo canal 2 do rele (COM no 5 V, NO no LED), comandado pelo D4 (03/10).
-// Efeito colateral inofensivo: o LED azul do proprio ESP-12E, ligado ao D4,
-// acende junto com o alarme.
+// LED que indica "alarme armado": + no 5 V (com resistor), - no D4. O D4 em
+// LOW acende (o pino faz papel de GND) e solto apaga. Assim o LED recebe os
+// 5 V como no Uno e o D4 fica em HIGH no boot, como ele precisa. Efeito
+// colateral inofensivo: o LED azul do ESP-12E, ligado ao D4, acende junto.
 #define PIN_RELE_ALARME      2   // D4 -> rele IN2
 #define PIN_BUZZER          14   // D5
 
@@ -170,12 +169,10 @@ volatile bool          d0NoDisparo     = false;
 volatile bool          d5NoDisparo     = false;
 volatile bool          d0NaParada      = false;
 volatile bool          d5NaParada      = false;
-// Teste do LED do alarme pelo site: liga o rele do LED por TESTE_LED_MS,
-// sem buzzer e sem depender do sensor, para conferir a fiacao com calma.
-const unsigned long    TESTE_LED_MS    = 10000;
-volatile bool          testeLedAtivo   = false;
-volatile unsigned long fimTesteLed     = 0;
-volatile bool          testeLedAcabou  = false;
+// Alarme armado pelo site (botao "Armar alarme"). Desarmado, o ultrassom
+// continua medindo mas nao dispara. Armado, o LED do D4 fica aceso e o buzzer
+// toca quando algo chega perto. A placa liga sempre desarmada.
+volatile bool          alarmeArmado    = false;
 
 String logs[LOG_MAX];
 int    logCount = 0;
@@ -265,8 +262,8 @@ void escreverLedAlarme(bool ligado) {
   }
 }
 
+// No disparo so o buzzer toca: o LED do D4 indica que o alarme esta armado.
 void escreverAlarme(bool ligado) {
-  escreverLedAlarme(ligado);
   digitalWrite(PIN_BUZZER, ligado ? HIGH : LOW);
 }
 
@@ -287,16 +284,6 @@ float medirDistanciaCm() {
 void verificarAlarme() {
   unsigned long agora = millis();
 
-  // Durante o teste do LED, o alarme fica parado e o rele do LED ligado.
-  if (testeLedAtivo) {
-    if ((long)(agora - fimTesteLed) >= 0) {
-      testeLedAtivo = false;
-      escreverLedAlarme(false);
-      testeLedAcabou = true;
-    }
-    return;
-  }
-
   float d = medirDistanciaCm();
   distUltima = d;
   distLeituras = distLeituras + 1;
@@ -305,6 +292,9 @@ void verificarAlarme() {
   static int seguidasPerto = 0;
   seguidasPerto = (d >= 0 && d <= DISTANCIA_ALARME_CM) ? seguidasPerto + 1 : 0;
   bool objetoPerto = seguidasPerto >= LEITURAS_PERTO;
+
+  // Desarmado: mede (para o serial) mas nao dispara.
+  if (!alarmeArmado) return;
 
   // Tres etapas: lendo o sensor -> disparado (2 s) -> pausa sem ler (1,5 s).
   if (alarmeDisparado) {
@@ -382,20 +372,15 @@ void readSensors() {
   // avisa o backend (que pode ter outras automacoes de presenca).
   if (disparoNovo) {
     disparoNovo = false;
-    logar("Objeto a " + String(distDoDisparo, 1) + " cm: alarme disparado (D4 rele " +
-          (d0NoDisparo ? "HIGH" : "LOW") + ", D5 " + (d5NoDisparo ? "HIGH" : "LOW") + ")");
+    logar("Objeto a " + String(distDoDisparo, 1) + " cm: alarme disparado (buzzer D5 " +
+          (d5NoDisparo ? "HIGH" : "LOW") + ")");
     if (!eventoJaPendente("presenca") && eventCount < 4) {
       events[eventCount++] = "presenca";
     }
   }
-  if (testeLedAcabou) {
-    testeLedAcabou = false;
-    logar("Fim do teste do LED do alarme: D4 solto (rele desligado)");
-  }
   if (alarmeParou) {
     alarmeParou = false;
-    logar(String("Alarme desligado (D4 rele ") + (d0NaParada ? "HIGH" : "LOW") + ", D5 " +
-          (d5NaParada ? "HIGH" : "LOW") + "; pausa de 1,5 s)");
+    logar(String("Sirene parou (buzzer D5 ") + (d5NaParada ? "HIGH" : "LOW") + "; pausa de 1,5 s)");
   }
 
   // Distancia: uma linha por ciclo com a ultima medida e a menor do periodo.
@@ -500,7 +485,7 @@ String nivelDoPino(int pin, bool rele) {
 String linhaDePinos() {
   return "Pinos: D7 rele=" + nivelDoPino(PIN_RELE_INTERNA, true) +
          " | D6 ext=" + nivelDoPino(PIN_LED_EXTERNA, false) +
-         " | D4 rele alarme=" + nivelDoPino(PIN_RELE_ALARME, false) +
+         " | D4 led armado=" + nivelDoPino(PIN_RELE_ALARME, false) +
          " | D5 buzzer=" + nivelDoPino(PIN_BUZZER, false) +
          " | D1 botao=" + nivelDoPino(PIN_BOTAO, false);
 }
@@ -519,18 +504,21 @@ void applyCommand(const char* device, bool state) {
     logar("Comando para a luz externa ignorado: ela e controlada pelo LDR");
     return;
   }
-  // O alarme e do sensor de distancia; do site so vem o teste do LED.
-  if (strcmp(device, "alarme") == 0) {
-    if (state) {
+  // Armar / desarmar o alarme pelo site. O disparo continua do ultrassom.
+  if (strcmp(device, "alarme_armado") == 0) {
+    alarmeArmado = state;
+    escreverLedAlarme(state);
+    if (!state) {
       alarmeDisparado = false;
       alarmeEmPausa = false;
       escreverAlarme(false);
-      escreverLedAlarme(true);
-      fimTesteLed = millis() + TESTE_LED_MS;
-      testeLedAtivo = true;
-      logar(String("Teste do LED do alarme: D4 em ") +
-            (digitalRead(PIN_RELE_ALARME) == HIGH ? "HIGH" : "LOW") + " (rele ligado) por 10 s");
     }
+    logar(String(state ? "Alarme ARMADO" : "Alarme DESARMADO") + " (LED D4 " +
+          (digitalRead(PIN_RELE_ALARME) == HIGH ? "HIGH" : "LOW") + ")");
+    return;
+  }
+  if (strcmp(device, "alarme") == 0) {
+    logar("Comando para a sirene ignorado: ela toca pelo ultrassom, com o alarme armado");
     return;
   }
   logar(String("Comando ignorado, dispositivo desconhecido: ") + device);
@@ -566,6 +554,7 @@ void syncWithBackend() {
     devices[devicePins[i].name] = *(devicePins[i].stateVar);
   }
   devices["alarme"] = (bool) alarmeDisparado;
+  devices["alarme_armado"] = (bool) alarmeArmado;
   devices["luz_externa"] = (bool) estaEscuro;
 
   JsonArray eventsArray = doc["events"].to<JsonArray>();
@@ -640,6 +629,7 @@ void setup() {
   pinMode(PIN_LED_EXTERNA, OUTPUT);   // controlado pelo LDR (lerLuz)
   pinMode(PIN_BUZZER, OUTPUT);
   escreverAlarme(false);
+  escreverLedAlarme(false);   // comeca desarmado
 
   pinMode(PIN_ECHO, INPUT);
   digitalWrite(PIN_TRIG, LOW);

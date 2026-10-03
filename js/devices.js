@@ -2,11 +2,12 @@ const DEVICES = [
   { id: 'luz',         name: 'Luz interna', icon: '💡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: { on: 'Ligando...',   off: 'Desligando...' }, speechOn: 'ligada',  speechOff: 'desligada'  },
   { id: 'luz_externa', name: 'Luz externa', icon: '🏡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: null, speechOn: 'ligada',  speechOff: 'desligada', somenteLeitura: true,
     nota: 'Acende sozinha quando escurece (LDR) e apaga quando clareia.' },
-  // Luz externa (LDR) e alarme (ultrassom) são ligados pela placa, não pelo site:
-  // só aparecem como status.
-  { id: 'alarme',      name: 'Alarme',      icon: '🔔', labelOn: 'Disparado', labelOff: 'Desligado', labelTransition: null, speechOn: 'disparado', speechOff: 'desligado', somenteLeitura: true, alertaQuandoLigado: true,
-    nota: 'Toca 2 s quando algo chega a 6 cm do sensor de distância.',
-    teste: 'Testar LED (10 s)' }
+  // Armado pelo site; com ele armado, o ultrassom faz a sirene tocar.
+  { id: 'alarme_armado', name: 'Alarme', icon: '🛡️', labelOn: 'Armado', labelOff: 'Desarmado', labelTransition: { on: 'Armando...', off: 'Desarmando...' }, speechOn: 'armado', speechOff: 'desarmado',
+    acaoOn: 'Armar alarme', acaoOff: 'Desarmar alarme' },
+  // A sirene (buzzer) toca pelo ultrassom, na própria placa: só aparece como status.
+  { id: 'alarme',      name: 'Sirene',      icon: '🔔', labelOn: 'Tocando', labelOff: 'Desligada', labelTransition: null, speechOn: 'tocando', speechOff: 'desligada', somenteLeitura: true, alertaQuandoLigado: true,
+    nota: 'Toca 2 s quando algo chega a 6 cm do sensor de distância, com o alarme armado.' }
 ];
 
 // "Luz ligada", não "Luz ligado" — os rótulos visuais (labelOn) não concordam
@@ -32,13 +33,15 @@ const TRIGGER_INFO = {
 // Pares de verbos que o formulário oferece para a automação de voz. O
 // primeiro de cada lista é o padrão, já escolhido ao abrir a etapa de voz.
 const VOICE_VERBS = {
-  luz:         [{ on: 'Acender', off: 'Apagar' },   { on: 'Ligar', off: 'Desligar' }]
+  luz:           [{ on: 'Acender', off: 'Apagar' },   { on: 'Ligar', off: 'Desligar' }],
+  alarme_armado: [{ on: 'Armar',   off: 'Desarmar' }, { on: 'Ativar', off: 'Desativar' }]
 };
 
 // Toda automação alterna. O texto explica o que "alternar" faz em cada
 // dispositivo, concordando em gênero ("desligada" para luz).
 const ALTERNAR_DESC = {
-  luz:         'liga se estiver desligada, desliga se estiver ligada'
+  luz:           'liga se estiver desligada, desliga se estiver ligada',
+  alarme_armado: 'arma se estiver desarmado, desarma se estiver armado'
 };
 
 function descAlternar(deviceId) {

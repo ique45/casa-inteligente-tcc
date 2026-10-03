@@ -5,7 +5,7 @@ const { logHistory } = require('../services/history');
 
 const router = express.Router();
 
-const VALID_DEVICES  = ['luz', 'luz_externa', 'alarme'];
+const VALID_DEVICES  = ['luz', 'luz_externa', 'alarme_armado', 'alarme'];
 const VALID_TRIGGERS = ['presenca', 'botao_fisico', 'luminosidade'];
 
 const MUDADOS_PELA_PLACA = {

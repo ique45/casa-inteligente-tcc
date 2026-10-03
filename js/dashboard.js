@@ -106,16 +106,11 @@ function renderStatusInicial() {
         </div>
       </div>
       ${d.somenteLeitura
-        ? `<div class="status-nota">${escapeHtml(d.nota || '')}</div>` +
-          (d.teste ? `<button type="button" class="btn status-teste" id="status-teste-${d.id}" data-device-id="${d.id}">${escapeHtml(d.teste)}</button>
-             <div class="status-nota" id="status-teste-msg-${d.id}" aria-live="polite"></div>` : '')
+        ? `<div class="status-nota">${escapeHtml(d.nota || '')}</div>`
         : `<button type="button" class="btn btn-primary status-acao" id="status-acao-${d.id}" data-device-id="${d.id}" disabled>Aguarde…</button>`}
     </div>`).join('');
   grid.querySelectorAll('.status-acao').forEach(btn => {
     btn.addEventListener('click', () => alternarDispositivo(btn.dataset.deviceId));
-  });
-  grid.querySelectorAll('.status-teste').forEach(btn => {
-    btn.addEventListener('click', () => testarLed(btn.dataset.deviceId));
   });
 }
 
@@ -141,10 +136,10 @@ function atualizarStatus(deviceId) {
 
   const btn = document.getElementById(`status-acao-${deviceId}`);
   if (btn) {
-    const acao = isOn ? 'Desligar' : 'Ligar';
+    const acao = isOn ? (d.acaoOff || 'Desligar') : (d.acaoOn || 'Ligar');
     btn.disabled = !conhecido || pedido !== undefined;
     btn.textContent = conhecido ? acao : 'Aguarde…';
-    btn.setAttribute('aria-label', `${acao} ${d.name.toLowerCase()}`);
+    btn.setAttribute('aria-label', d.acaoOn ? acao : `${acao} ${d.name.toLowerCase()}`);
   }
 }
 
@@ -163,26 +158,6 @@ async function alternarDispositivo(deviceId) {
     delete _pendente[deviceId];
     atualizarStatus(deviceId);
     speech.falar(`Não foi possível ${newState ? 'ligar' : 'desligar'} ${d.name.toLowerCase()}`);
-  }
-}
-
-// Liga o LED do alarme por 10 s para conferir a fiação (o firmware mantém o
-// D0 em HIGH, sem buzzer e sem depender do sensor).
-async function testarLed(deviceId) {
-  if (!currentUser) return;
-  const btn = document.getElementById(`status-teste-${deviceId}`);
-  const msg = document.getElementById(`status-teste-msg-${deviceId}`);
-  if (btn) btn.disabled = true;
-  try {
-    await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: true, ts: Date.now() });
-    if (msg) msg.textContent = arduinoOnline()
-      ? 'Enviado. Em alguns segundos o LED acende por 10 s. Veja no monitor serial abaixo.'
-      : 'Enviado, mas a placa está offline: o teste roda quando ela voltar.';
-  } catch (err) {
-    console.error('Erro ao pedir o teste do LED:', err);
-    if (msg) msg.textContent = 'Não foi possível enviar o teste. Verifique sua conexão.';
-  } finally {
-    setTimeout(() => { if (btn) btn.disabled = false; if (msg) msg.textContent = ''; }, 15000);
   }
 }
 

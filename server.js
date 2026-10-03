@@ -49,7 +49,7 @@ const PREVIEW_SCRIPT = `
     ]
   };
   var RTDB_SEED = {
-    devices: { luz: { state: true }, luz_externa: { state: false }, alarme: { state: false } },
+    devices: { luz: { state: true }, luz_externa: { state: false }, alarme_armado: { state: true }, alarme: { state: false } },
     arduino_status: { online: true, lastSeen: now, log: [
       { t: now - 40000, m: '=== Casa Inteligente - iniciando ===' },
       { t: now - 38000, m: 'Conectado ao WiFi. IP: 192.168.0.42' },

@@ -10,9 +10,11 @@ test('luz concorda no feminino', () => {
   assert.strictEqual(frasePara('luz_externa', false), 'Luz externa desligada');
 });
 
-test('alarme fala disparado e desligado', () => {
-  assert.strictEqual(frasePara('alarme', true), 'Alarme disparado');
-  assert.strictEqual(frasePara('alarme', false), 'Alarme desligado');
+test('alarme fala armado e desarmado; sirene, tocando e desligada', () => {
+  assert.strictEqual(frasePara('alarme_armado', true), 'Alarme armado');
+  assert.strictEqual(frasePara('alarme_armado', false), 'Alarme desarmado');
+  assert.strictEqual(frasePara('alarme', true), 'Sirene tocando');
+  assert.strictEqual(frasePara('alarme', false), 'Sirene desligada');
 });
 
 test('todo dispositivo tem os dois participios', () => {

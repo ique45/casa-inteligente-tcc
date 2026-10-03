@@ -1,6 +1,7 @@
 const TRIGGERS_BY_DEVICE = {
-  luz:         ['voz', 'botao', 'botao_fisico', 'presenca', 'luminosidade']
-  // Sem luz externa nem alarme: a placa liga os dois sozinha (LDR e ultrassom).
+  luz:           ['voz', 'botao', 'botao_fisico', 'presenca', 'luminosidade'],
+  alarme_armado: ['voz', 'botao', 'botao_fisico']
+  // Sem luz externa nem sirene: a placa liga as duas sozinha (LDR e ultrassom).
 };
 
 // TRIGGER_INFO, VOICE_VERBS, montarComandos() e describeAutomation() vêm de
