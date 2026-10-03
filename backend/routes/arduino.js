@@ -8,6 +8,11 @@ const router = express.Router();
 const VALID_DEVICES  = ['luz', 'luz_externa', 'alarme'];
 const VALID_TRIGGERS = ['presenca', 'botao_fisico', 'luminosidade'];
 
+const MUDADOS_PELA_PLACA = {
+  alarme:      { device: 'Alarme',      trigger: 'presenca' },
+  luz_externa: { device: 'Luz externa', trigger: 'luminosidade' }
+};
+
 // Monitor serial no site: o firmware manda as linhas novas a cada sync e o
 // painel mostra as últimas LOG_MAX, em arduino_status/{uid}/log (o dono da
 // conta já tem leitura nesse caminho pelas regras do RTDB).
@@ -51,12 +56,14 @@ router.post('/sync', async (req, res) => {
     // 2. Grava estado real de cada dispositivo informado pelo Arduino
     for (const [deviceId, state] of Object.entries(devices)) {
       if (!VALID_DEVICES.includes(deviceId)) continue;
-      // O alarme é ligado pela própria placa (PIR), sem passar por automação,
-      // então o histórico dele nasce aqui: a cada disparo e a cada parada.
-      if (deviceId === 'alarme') {
-        const antes = (await rtdb.ref(`devices/${uid}/alarme`).once('value')).val();
+      // Alarme (PIR) e luz externa (LDR) são ligados pela própria placa, sem
+      // passar por automação, então o histórico deles nasce aqui, a cada
+      // mudança de estado.
+      const daPlaca = MUDADOS_PELA_PLACA[deviceId];
+      if (daPlaca) {
+        const antes = (await rtdb.ref(`devices/${uid}/${deviceId}`).once('value')).val();
         if (antes && typeof antes === 'object' && antes.state !== !!state) {
-          await logHistory(uid, { deviceId: 'alarme', device: 'Alarme', trigger: 'presenca', state: !!state });
+          await logHistory(uid, { deviceId, device: daPlaca.device, trigger: daPlaca.trigger, state: !!state });
         }
       }
       await rtdb.ref(`devices/${uid}/${deviceId}`).update({ state: !!state });

@@ -44,9 +44,7 @@ const PREVIEW_SCRIPT = `
     // db.collection('automations').doc(uid).collection('items')
     items: [
       { id: 'a1', data: { deviceType: 'luz',         deviceName: 'Luz da sala',       trigger: 'botao',        action: 'toggle', enabled: true,  createdAt: ts(now - 7 * 86400000) } },
-      { id: 'a2', data: { deviceType: 'luz_externa', deviceName: 'Luz do jardim',     trigger: 'botao',        action: 'toggle', enabled: true,  createdAt: ts(now - 7 * 86400000) } },
       { id: 'a5', data: { deviceType: 'luz',         deviceName: 'Luz da sala',       trigger: 'botao_fisico', action: 'toggle', enabled: true,  createdAt: ts(now - 4 * 86400000) } },
-      { id: 'a6', data: { deviceType: 'luz_externa', deviceName: 'Luz do jardim',     trigger: 'luminosidade', action: 'toggle', enabled: true,  createdAt: ts(now - 3 * 86400000) } },
       { id: 'a7', data: { deviceType: 'luz',         deviceName: 'Luz Quarto',        trigger: 'voz',          action: 'toggle', enabled: true,  voiceOn: 'Acender Luz Quarto', voiceOff: 'Apagar Luz Quarto', createdAt: ts(now - 2 * 86400000) } }
     ]
   };

@@ -16,7 +16,7 @@ function auto(id, voiceOn, voiceOff, extra) {
 // ---- VOICE_VERBS / montarComandos ----
 
 test('todo dispositivo tem pelo menos um par de verbos', () => {
-  for (const id of ['luz', 'luz_externa']) {
+  for (const id of ['luz']) {
     assert.ok(VOICE_VERBS[id] && VOICE_VERBS[id].length > 0, `${id} sem verbos`);
     for (const par of VOICE_VERBS[id]) assert.ok(par.on && par.off);
   }

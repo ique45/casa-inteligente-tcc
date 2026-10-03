@@ -110,11 +110,10 @@ const unsigned long LDR_TICK_MS            = 200;
 // Histerese: o gatilho so re-arma depois que a leitura volta LDR_HISTERESE
 // pontos para o lado claro. Sem isso, uma leitura oscilando em torno do
 // limite dispararia o evento (e a automacao de "Alternar") a cada 2s.
-const int           LDR_HISTERESE          = 50;
+const int           LDR_HISTERESE          = 20;     // apaga com 820 ou mais
 
 // ─── Estado global ───────────────────────────────────────────
 bool estadoLuzInterna = false;
-bool estadoLuzExterna = false;
 
 // Estado do LDR, mexido pelo timer (lerLuz) e lido pelo loop.
 Ticker                 timerLuz;
@@ -176,7 +175,6 @@ struct DevicePin {
 
 DevicePin devicePins[] = {
   { "luz",         PIN_RELE_INTERNA, true,  &estadoLuzInterna },
-  { "luz_externa", PIN_LED_EXTERNA,  false, &estadoLuzExterna },
 };
 const int DEVICE_COUNT = sizeof(devicePins) / sizeof(devicePins[0]);
 
@@ -311,7 +309,6 @@ void readSensors() {
     clareouNovo = false;
     logar("Clareou (leitura " + String(leituraClareou) + "): LEDs externos desligados");
   }
-  estadoLuzExterna = digitalRead(PIN_LED_EXTERNA) == HIGH;
 
   // Uma linha por ciclo com a ultima leitura e a faixa desde a linha anterior
   // (o timer le 5 vezes por segundo; o serial so e escrito entre os envios).
@@ -333,9 +330,9 @@ void readSensors() {
 }
 
 // Chamada pelo timer a cada LDR_TICK_MS. Como no Uno, os LEDs externos seguem
-// o LDR direto na placa: escureceu liga, clareou desliga, sem esperar o
-// servidor. So na passagem: entre uma e outra, o site pode ligar e desligar a
-// luz externa a vontade.
+// o LDR o tempo todo: escuro (800 ou menos) acende, claro (820 ou mais)
+// apaga, entre os dois mantem. O site so mostra o estado (decisao do grupo
+// em 03/10), por isso o pino e reescrito a cada leitura.
 void lerLuz() {
   int leitura = analogRead(PIN_LDR);
   luzUltima = leitura;
@@ -349,15 +346,14 @@ void lerLuz() {
                                         : (leitura > LDR_LIMITE_ESCURO + LDR_HISTERESE);
   if (escuroAgora && !estaEscuro) {
     estaEscuro = true;
-    digitalWrite(PIN_LED_EXTERNA, HIGH);
     leituraEscureceu = leitura;
     escureceuNovo = true;
   } else if (claroDeNovo && estaEscuro) {
     estaEscuro = false;
-    digitalWrite(PIN_LED_EXTERNA, LOW);
     leituraClareou = leitura;
     clareouNovo = true;
   }
+  digitalWrite(PIN_LED_EXTERNA, estaEscuro ? HIGH : LOW);
 }
 
 // ─── Aplicacao de comandos ───────────────────────────────────
@@ -402,6 +398,10 @@ void applyCommand(const char* device, bool state) {
       return;
     }
   }
+  if (strcmp(device, "luz_externa") == 0) {
+    logar("Comando para a luz externa ignorado: ela e controlada pelo LDR");
+    return;
+  }
   if (strcmp(device, "alarme") == 0) {
     logar("Comando para o alarme ignorado: ele e controlado pelo sensor de presenca");
     return;
@@ -439,6 +439,7 @@ void syncWithBackend() {
     devices[devicePins[i].name] = *(devicePins[i].stateVar);
   }
   devices["alarme"] = (bool) alarmeDisparado;
+  devices["luz_externa"] = (bool) estaEscuro;
 
   JsonArray eventsArray = doc["events"].to<JsonArray>();
   for (int i = 0; i < eventCount; i++) {
@@ -508,6 +509,8 @@ void setup() {
   for (int i = 0; i < DEVICE_COUNT; i++) {
     escreverDispositivo(devicePins[i], false);
   }
+  digitalWrite(PIN_LED_EXTERNA, LOW);
+  pinMode(PIN_LED_EXTERNA, OUTPUT);   // controlado pelo LDR (lerLuz)
   pinMode(PIN_LED_ALARME, OUTPUT);
   pinMode(PIN_BUZZER, OUTPUT);
   escreverAlarme(false);

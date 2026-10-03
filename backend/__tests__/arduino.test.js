@@ -233,6 +233,23 @@ describe('POST /arduino/sync', () => {
     expect(logHistory).not.toHaveBeenCalled();
   });
 
+  test('registra no histórico quando a placa acende a luz externa pelo LDR', async () => {
+    const { rtdb } = require('../firebase');
+    const { logHistory } = require('../services/history');
+    logHistory.mockClear();
+    rtdb.ref.mockImplementation((path) => {
+      if (path === 'devices/uid123/luz_externa') {
+        return { once: jest.fn().mockResolvedValue({ val: () => ({ state: false }) }), update: jest.fn().mockResolvedValue() };
+      }
+      return defaultMockRef();
+    });
+    await request(app).post('/arduino/sync').send({
+      uid: 'uid123', token: 'test-secret', devices: { luz_externa: true }, events: [], online: true
+    });
+    expect(logHistory).toHaveBeenCalledWith('uid123',
+      { deviceId: 'luz_externa', device: 'Luz externa', trigger: 'luminosidade', state: true });
+  });
+
   test('ignora event inválido', async () => {
     const { executeAutomations } = require('../services/automation');
     executeAutomations.mockClear();

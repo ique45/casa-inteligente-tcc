@@ -106,7 +106,7 @@ function renderStatusInicial() {
         </div>
       </div>
       ${d.somenteLeitura
-        ? '<div class="status-nota">Toca sozinho enquanto o sensor de presença detecta alguém.</div>'
+        ? `<div class="status-nota">${escapeHtml(d.nota || '')}</div>`
         : `<button type="button" class="btn btn-primary status-acao" id="status-acao-${d.id}" data-device-id="${d.id}" disabled>Aguarde…</button>`}
     </div>`).join('');
   grid.querySelectorAll('.status-acao').forEach(btn => {
@@ -122,8 +122,8 @@ function atualizarStatus(deviceId) {
   const isOn = deviceStates[deviceId] === true;
   const pedido = _pendente[deviceId];
 
-  card.classList.toggle('on', isOn && !d.somenteLeitura);
-  card.classList.toggle('alerta', isOn && !!d.somenteLeitura);
+  card.classList.toggle('on', isOn && !d.alertaQuandoLigado);
+  card.classList.toggle('alerta', isOn && !!d.alertaQuandoLigado);
 
   const estado = document.getElementById(`status-estado-${deviceId}`);
   if (estado) {
@@ -226,6 +226,7 @@ function renderAutomations() {
         <div class="automation-card-header">
           <span class="automation-card-icon" aria-hidden="true">${device?.icon || '⚙️'}</span>
           <div class="automation-card-name">${escapeHtml(d.deviceName)}</div>
+          <span class="toggle-legenda" aria-hidden="true">${isEnabled ? 'Automação ativa' : 'Automação desligada'}</span>
           <button type="button" class="toggle-switch ${isEnabled ? 'on' : ''}" data-id="${item.id}" role="switch" aria-checked="${isEnabled}" aria-label="Ativar ou desativar automação ${escapeHtml(d.deviceName)}"></button>
           <button class="btn-edit" data-id="${item.id}" aria-label="Editar automação ${escapeHtml(d.deviceName)}" title="Editar">✏️</button>
         </div>
@@ -505,6 +506,12 @@ function initVoice() {
     if (desativada) {
       _voiceResultHandled = true;
       status.textContent = `A automação "${automationName}" está desativada. Ative-a para usar este comando.`;
+      setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 5000);
+    } else if (deviceId && DEVICES.find(x => x.id === deviceId)?.somenteLeitura) {
+      _voiceResultHandled = true;
+      const nome = DEVICES.find(x => x.id === deviceId).name;
+      status.textContent = `${nome} é controlada pelo sensor da maquete, não pela voz.`;
+      speech.falar(`${nome} é controlada pelo sensor da maquete.`);
       setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 5000);
     } else if (deviceId && action !== null) {
       try {
