@@ -2,10 +2,10 @@ const DEVICES = [
   { id: 'luz',         name: 'Luz interna', icon: '💡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: { on: 'Ligando...',   off: 'Desligando...' }, speechOn: 'ligada',  speechOff: 'desligada'  },
   { id: 'luz_externa', name: 'Luz externa', icon: '🏡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: null, speechOn: 'ligada',  speechOff: 'desligada', somenteLeitura: true,
     nota: 'Acende sozinha quando escurece (LDR) e apaga quando clareia.' },
-  // Luz externa (LDR) e alarme (PIR) são ligados pela placa, não pelo site:
+  // Luz externa (LDR) e alarme (ultrassom) são ligados pela placa, não pelo site:
   // só aparecem como status.
   { id: 'alarme',      name: 'Alarme',      icon: '🔔', labelOn: 'Disparado', labelOff: 'Desligado', labelTransition: null, speechOn: 'disparado', speechOff: 'desligado', somenteLeitura: true, alertaQuandoLigado: true,
-    nota: 'Toca sozinho enquanto o sensor de presença detecta alguém.' }
+    nota: 'Toca 2 s quando algo chega a 3 cm do sensor de distância.' }
 ];
 
 // "Luz ligada", não "Luz ligado" — os rótulos visuais (labelOn) não concordam
@@ -24,7 +24,7 @@ const TRIGGER_INFO = {
   voz:          { label: 'Voz',                icon: '🎤' },
   botao:        { label: 'Botão no dashboard', icon: '🔘' },
   botao_fisico: { label: 'Botão físico',       icon: '🔲' },
-  presenca:     { label: 'Presença',           icon: '👁️' },
+  presenca:     { label: 'Objeto perto',       icon: '📏' },
   luminosidade: { label: 'Escureceu',          icon: '🌙' }
 };
 
@@ -149,7 +149,7 @@ function describeAutomation(d) {
   }
   else if (d.trigger === 'botao') whenText = `você clicar no botão do dashboard`;
   else if (d.trigger === 'botao_fisico') whenText = `você apertar o botão físico`;
-  else if (d.trigger === 'presenca') whenText = `o sensor detectar presença`;
+  else if (d.trigger === 'presenca') whenText = `algo chegar a 3 cm do sensor de distância`;
   else if (d.trigger === 'luminosidade') whenText = `o sensor de luminosidade perceber que escureceu`;
   else whenText = escapeHtml(d.trigger);
 

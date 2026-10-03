@@ -37,7 +37,7 @@ function buildActivatedBy(d) {
   if (d.trigger === 'voz')         return `🎤 Comando de voz`;
   if (d.trigger === 'botao')       return `🔘 Botão no dashboard`;
   if (d.trigger === 'botao_fisico') return `🔲 Botão físico apertado`;
-  if (d.trigger === 'presenca')    return `👁️ Sensor de presença detectou movimento`;
+  if (d.trigger === 'presenca')    return `📏 Sensor de distância: objeto a 3 cm`;
   if (d.trigger === 'luminosidade') return `🌙 Sensor de luminosidade: escureceu`;
   return `⚙️ ${escapeHtml(d.trigger)}`;
 }

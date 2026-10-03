@@ -185,7 +185,7 @@ test('describeAutomation de voz mostra os dois comandos', () => {
 test('describeAutomation de sensor diz alternar', () => {
   const { whenText, thenText } = describeAutomation(
     { deviceType: 'luz', deviceName: 'Luz Sala', trigger: 'presenca', action: 'toggle' });
-  assert.match(whenText, /sensor detectar presença/);
+  assert.match(whenText, /3 cm do sensor de distância/);
   assert.match(thenText, /alternar/);
   assert.match(thenText, /Luz Sala/);
 });

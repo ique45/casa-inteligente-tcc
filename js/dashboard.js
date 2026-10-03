@@ -89,7 +89,7 @@ auth.onAuthStateChanged(async user => {
 // ---- Agora na casa ----
 // Um card por dispositivo com o estado confirmado pela placa (devices/{uid}).
 // As luzes têm botão; o alarme só mostra o estado, porque quem liga e
-// desliga ele é o PIR, na própria placa.
+// desliga ele é o sensor de distância, na própria placa.
 
 const _pendente = {};   // deviceId -> estado pedido, enquanto a placa não confirma
 

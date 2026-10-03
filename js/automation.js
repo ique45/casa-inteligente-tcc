@@ -1,6 +1,6 @@
 const TRIGGERS_BY_DEVICE = {
   luz:         ['voz', 'botao', 'botao_fisico', 'presenca', 'luminosidade']
-  // Sem luz externa nem alarme: a placa liga os dois sozinha (LDR e PIR).
+  // Sem luz externa nem alarme: a placa liga os dois sozinha (LDR e ultrassom).
 };
 
 // TRIGGER_INFO, VOICE_VERBS, montarComandos() e describeAutomation() vêm de
@@ -89,7 +89,7 @@ function getTriggerNote(triggerId, deviceId) {
   }
   const NOTAS = {
     botao_fisico: 'Requer o botão (push button) ligado à placa. Cada apertada alterna o estado.',
-    presenca:     'Requer o sensor de presença (PIR) conectado à placa. Sem o sensor físico, essa automação não vai disparar.',
+    presenca:     'Dispara quando algo chega a 3 cm do sensor de distância (ultrassom) da maquete.',
     luminosidade: 'Requer sensor de luminosidade conectado à placa. Dispara quando o ambiente escurece; o nível de escuro é definido no código — não é possível ajustar aqui.'
   };
   return NOTAS[triggerId] || null;
@@ -294,7 +294,7 @@ function updatePreview() {
   } else if (trigger === 'botao_fisico') {
     text = `Ao apertar o botão físico, ${alternar}`;
   } else if (trigger === 'presenca') {
-    text = `Ao detectar presença, ${alternar}`;
+    text = `Quando algo chegar a 3 cm do sensor, ${alternar}`;
   } else if (trigger === 'luminosidade') {
     text = `Quando escurecer, ${alternar}`;
   } else {

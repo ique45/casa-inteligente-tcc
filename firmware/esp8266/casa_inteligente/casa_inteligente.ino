@@ -5,11 +5,11 @@
  * ============================================================
  *
  *  O que este programa faz, a cada 2 segundos:
- *    1. Le o push button, a presenca (sensor PIR) e a luminosidade (LDR)
+ *    1. Le o push button, a distancia (ultrassom HC-SR04) e a luminosidade (LDR)
  *    2. Envia esses eventos e o estado atual das luzes para o backend
  *    3. Recebe do backend a lista de comandos a executar
  *    4. Liga ou desliga a luz interna e a luz externa
- *  O alarme (LED + buzzer) e local: o PIR detecta, toca 2 s e espera 1,5 s
+ *  O alarme (LED + buzzer) e local: objeto a 3 cm ou menos, toca 2 s e espera 1,5 s
  *  antes de ler o sensor de novo, sem depender do backend.
  *
  *  Mesmas pecas da maquete do projeto do Uno (Projeto_Casa_Inteligente_v3):
@@ -42,17 +42,21 @@ const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
 // ─────────────────────────────────────────────────────────────
 
 // Pinos (numeracao GPIO, nao a numeracao "D" impressa na placa)
-// D3, D4 e D8 ficam vazios de proposito: o ESP8266 le esses tres pinos no
+// D4 e D8 ficam vazios de proposito: o ESP8266 le esses pinos (e o D3) no
 // boot para decidir como iniciar, e um LED, rele ou sensor ligado neles pode
-// impedir a placa de ligar.
+// impedir a placa de ligar. O D3 e a excecao: precisa estar em HIGH no boot,
+// o resistor da propria placa garante isso, e o Trig do HC-SR04 e so uma
+// entrada, que nao puxa o pino para baixo.
 //
 // Push button (pino 7 no Uno): um terminal no D1 e o outro no GND. O pull-up
 // e o interno do ESP8266 (INPUT_PULLUP): solto = HIGH, apertado = LOW.
 #define PIN_BOTAO            5   // D1
-// Sensor de presenca PIR HC-SR501 (no lugar do sensor IR que ficava no pino
-// 12 do Uno). Alimentado em 5 V, mas a saida dele e de 3,3 V: vai direto no
-// pino. HIGH = movimento detectado.
-#define PIN_PIR              4   // D2
+// Sensor ultrassonico HC-SR04 (no lugar do PIR, que disparava com qualquer
+// movimento na sala; decisao do grupo em 03/10). Alimentado em 5 V. O Echo
+// sai em 5 V e passa por um divisor (1 kOhm do Echo ao D2; 2 kOhm, ou dois
+// de 1 kOhm em serie, do D2 ao GND) para chegar ao pino em ~3,3 V.
+#define PIN_ECHO             4   // D2
+#define PIN_TRIG             0   // D3
 // Sensor de luminosidade (LDR, A0 no Uno) na unica entrada analogica da
 // placa. O NodeMCU tem um divisor interno que aceita de 0 a 3,3 V nesse pino.
 #define PIN_LDR             A0
@@ -88,15 +92,21 @@ const int           WIFI_TIMEOUT_ATTEMPTS  = 20;     // 20 x 500ms = ~10s
 const unsigned long BOTAO_TICK_MS          = 10;
 const int           BOTAO_LEITURAS_ESTAVEIS = 5;     // 5 x 10 ms = 50 ms
 
-// Alarme (definido pelo grupo em 03/10): o PIR detecta, LED e buzzer tocam
-// por ALARME_DURACAO_MS e desligam; depois o PIR fica ignorado por
-// ALARME_PAUSA_MS antes de voltar a ser lido. Se ainda houver presenca
-// quando a leitura volta, dispara de novo.
+// Alarme (definido pelo grupo em 03/10): um objeto a DISTANCIA_ALARME_CM ou
+// menos do sensor, LED e buzzer tocam por ALARME_DURACAO_MS e desligam;
+// depois o sensor fica ignorado por ALARME_PAUSA_MS antes de voltar a ser
+// lido. Se o objeto ainda estiver la quando a leitura volta, dispara de novo.
 // Roda num timer (Ticker), fora do loop: o sync segura o loop por segundos
 // (handshake TLS) e o alarme nao pode esperar por ele.
 const unsigned long ALARME_DURACAO_MS      = 2000;
 const unsigned long ALARME_PAUSA_MS        = 1500;
-const unsigned long ALARME_TICK_MS         = 100;    // de quanto em quanto tempo o timer olha o PIR
+const unsigned long ALARME_TICK_MS         = 100;    // uma medicao de distancia a cada 100 ms
+const float         DISTANCIA_ALARME_CM    = 3.0;    // perto o bastante para disparar
+const int           LEITURAS_PERTO         = 2;      // seguidas, para ignorar um eco perdido
+// Distancia maxima medida: alem disso o sensor responde "nada". Limita a
+// espera pelo eco a ~3 ms, para o timer nao segurar a placa.
+const float         DISTANCIA_MAX_CM       = 50.0;
+const unsigned long ECO_TIMEOUT_US         = (unsigned long)(DISTANCIA_MAX_CM * 58) + 600;
 
 // Linhas do Monitor Serial que tambem vao para o site (painel "Monitor
 // serial"). Ficam guardadas aqui ate um sync confirmado; com o buffer cheio,
@@ -144,13 +154,11 @@ volatile unsigned long fimDaEtapa      = 0;      // fim do disparo ou da pausa
 volatile bool          alarmeEmPausa   = false;
 volatile bool          disparoNovo     = false;  // o loop registra e avisa o backend
 volatile bool          alarmeParou     = false;
-// Saida crua do PIR, para ajustar os parafusos olhando o serial: cada subida
-// (detectou) e cada descida (com quanto tempo ficou em HIGH).
-volatile bool          pirSubiu        = false;
-volatile bool          pirDesceu       = false;
-volatile unsigned long pirSubiuEm      = 0;
-volatile unsigned long pirTempoEmHigh  = 0;
-volatile int           pirDeteccoes    = 0;   // subidas desde a ultima linha
+// Distancias medidas pelo timer desde a ultima linha do serial.
+volatile float         distUltima      = -1;     // -1 = nada ate DISTANCIA_MAX_CM
+volatile float         distMin         = 9999;
+volatile int           distLeituras    = 0;
+volatile float         distDoDisparo   = 0;
 
 String logs[LOG_MAX];
 int    logCount = 0;
@@ -179,7 +187,7 @@ WiFiClientSecure secureClient;
 
 // Tabela que liga o nome vindo do backend ao pino e a variavel de estado:
 // so os dispositivos que o site comanda. O alarme fica de fora de proposito,
-// porque quem decide se ele toca e o PIR (ve verificarAlarme).
+// porque quem decide se ele toca e o sensor de distancia (ve verificarAlarme).
 // rele = true quando o pino comanda o modulo de rele (logica invertida).
 struct DevicePin {
   const char* name;
@@ -228,30 +236,40 @@ void connectWiFi() {
   }
 }
 
-// ─── Alarme (PIR + LED + buzzer) ─────────────────────────────
+// ─── Alarme (ultrassom + LED + buzzer) ───────────────────────
 
 void escreverAlarme(bool ligado) {
   digitalWrite(PIN_LED_ALARME, ligado ? HIGH : LOW);
   digitalWrite(PIN_BUZZER,     ligado ? HIGH : LOW);
 }
 
-// Chamada pelo timer a cada ALARME_TICK_MS. Parado: dispara assim que o PIR
-// detecta. Disparado: so olha o PIR de novo quando passam os 5s.
+// Uma medicao do HC-SR04, em cm. -1 quando nada responde ate DISTANCIA_MAX_CM.
+float medirDistanciaCm() {
+  digitalWrite(PIN_TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(PIN_TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(PIN_TRIG, LOW);
+  unsigned long us = pulseIn(PIN_ECHO, HIGH, ECO_TIMEOUT_US);
+  if (us == 0) return -1;
+  return us / 58.0;   // ida e volta do som: 58 us por cm
+}
+
+// Chamada pelo timer a cada ALARME_TICK_MS: mede a distancia e cuida das
+// tres etapas do alarme.
 void verificarAlarme() {
   unsigned long agora = millis();
 
-  static bool pirAnterior = false;
-  bool pirAgora = digitalRead(PIN_PIR) == HIGH;
-  if (pirAgora && !pirAnterior) {
-    pirSubiuEm = agora;
-    pirDeteccoes = pirDeteccoes + 1;
-    pirSubiu = true;
-  } else if (!pirAgora && pirAnterior) {
-    pirTempoEmHigh = agora - pirSubiuEm;
-    pirDesceu = true;
-  }
-  pirAnterior = pirAgora;
-  // Tres etapas: lendo o PIR -> disparado (2 s) -> pausa sem ler (1,5 s).
+  float d = medirDistanciaCm();
+  distUltima = d;
+  distLeituras = distLeituras + 1;
+  if (d >= 0 && d < distMin) distMin = d;
+
+  static int seguidasPerto = 0;
+  seguidasPerto = (d >= 0 && d <= DISTANCIA_ALARME_CM) ? seguidasPerto + 1 : 0;
+  bool objetoPerto = seguidasPerto >= LEITURAS_PERTO;
+
+  // Tres etapas: lendo o sensor -> disparado (2 s) -> pausa sem ler (1,5 s).
   if (alarmeDisparado) {
     if ((long)(agora - fimDaEtapa) >= 0) {
       alarmeDisparado = false;
@@ -262,7 +280,8 @@ void verificarAlarme() {
     }
   } else if (alarmeEmPausa) {
     if ((long)(agora - fimDaEtapa) >= 0) alarmeEmPausa = false;
-  } else if (pirAgora) {
+  } else if (objetoPerto) {
+    distDoDisparo = d;
     alarmeDisparado = true;
     escreverAlarme(true);
     fimDaEtapa = agora + ALARME_DURACAO_MS;
@@ -322,27 +341,29 @@ void readSensors() {
   // avisa o backend (que pode ter outras automacoes de presenca).
   if (disparoNovo) {
     disparoNovo = false;
-    logar("Presenca detectada: alarme disparado");
+    logar("Objeto a " + String(distDoDisparo, 1) + " cm: alarme disparado");
     if (!eventoJaPendente("presenca") && eventCount < 4) {
       events[eventCount++] = "presenca";
     }
   }
   if (alarmeParou) {
     alarmeParou = false;
-    logar("Sem presenca: alarme desligado");
+    logar("Alarme desligado (pausa de 1,5 s)");
   }
 
-  // PIR cru, para calibrar a sensibilidade (alcance) e o tempo no sensor.
-  if (pirSubiu) {
-    pirSubiu = false;
-    int n = pirDeteccoes;
-    pirDeteccoes = 0;
-    logar(n > 1 ? "PIR: detectou (" + String(n) + " vezes desde a ultima linha)"
-                : String("PIR: detectou"));
-  }
-  if (pirDesceu) {
-    pirDesceu = false;
-    logar("PIR: parou depois de " + String(pirTempoEmHigh / 1000.0, 1) + " s em HIGH");
+  // Distancia: uma linha por ciclo com a ultima medida e a menor do periodo.
+  if (distLeituras > 0) {
+    float ultima = distUltima, menor = distMin;
+    int n = distLeituras;
+    distMin = 9999;
+    distLeituras = 0;
+    if (ultima < 0 && menor > 9000) {
+      logar("Distancia: nada ate " + String((int) DISTANCIA_MAX_CM) + " cm (" + String(n) + " leituras)");
+    } else {
+      logar("Distancia: " + (ultima < 0 ? String("nada") : String(ultima, 1) + " cm") +
+            " (menor " + (menor > 9000 ? String("-") : String(menor, 1) + " cm") +
+            ", " + String(n) + " leituras)");
+    }
   }
 
   // Luminosidade. O timer (lerLuz) ja ligou ou desligou os LEDs externos
@@ -435,7 +456,7 @@ String linhaDePinos() {
          " | D0 led alarme=" + nivelDoPino(PIN_LED_ALARME, false) +
          " | D5 buzzer=" + nivelDoPino(PIN_BUZZER, false) +
          " | D1 botao=" + nivelDoPino(PIN_BOTAO, false) +
-         " | D2 PIR=" + nivelDoPino(PIN_PIR, false);
+         " | D2 echo=" + nivelDoPino(PIN_ECHO, false);
 }
 
 void applyCommand(const char* device, bool state) {
@@ -565,7 +586,9 @@ void setup() {
   pinMode(PIN_BUZZER, OUTPUT);
   escreverAlarme(false);
 
-  pinMode(PIN_PIR, INPUT);
+  pinMode(PIN_ECHO, INPUT);
+  digitalWrite(PIN_TRIG, LOW);
+  pinMode(PIN_TRIG, OUTPUT);
   pinMode(PIN_BOTAO, INPUT_PULLUP);
   timerBotao.attach_ms(BOTAO_TICK_MS, lerBotao);
   timerAlarme.attach_ms(ALARME_TICK_MS, verificarAlarme);
