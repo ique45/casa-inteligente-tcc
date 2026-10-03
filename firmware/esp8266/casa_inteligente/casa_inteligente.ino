@@ -9,7 +9,7 @@
  *    2. Envia esses eventos e o estado atual das luzes para o backend
  *    3. Recebe do backend a lista de comandos a executar
  *    4. Liga ou desliga a luz interna e a luz externa
- *  O alarme (LED + buzzer) e local: objeto a 3 cm ou menos, toca 2 s e espera 1,5 s
+ *  O alarme (LED + buzzer) e local: objeto a 6 cm ou menos, toca 2 s e espera 1,5 s
  *  antes de ler o sensor de novo, sem depender do backend.
  *
  *  Mesmas pecas da maquete do projeto do Uno (Projeto_Casa_Inteligente_v3):
@@ -101,7 +101,7 @@ const int           BOTAO_LEITURAS_ESTAVEIS = 5;     // 5 x 10 ms = 50 ms
 const unsigned long ALARME_DURACAO_MS      = 2000;
 const unsigned long ALARME_PAUSA_MS        = 1500;
 const unsigned long ALARME_TICK_MS         = 100;    // uma medicao de distancia a cada 100 ms
-const float         DISTANCIA_ALARME_CM    = 3.0;    // perto o bastante para disparar
+const float         DISTANCIA_ALARME_CM    = 6.0;    // perto o bastante para disparar
 const int           LEITURAS_PERTO         = 2;      // seguidas, para ignorar um eco perdido
 // Distancia maxima medida: alem disso o sensor responde "nada". Limita a
 // espera pelo eco a ~3 ms, para o timer nao segurar a placa.
