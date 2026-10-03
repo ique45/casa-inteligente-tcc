@@ -98,7 +98,7 @@ const int           LOG_MAX                = 12;
 // A luminosidade so entra no log quando muda de verdade, ou de tempos em
 // tempos, para nao encher o painel com a mesma leitura a cada 2s.
 const int           LUZ_LOG_VARIACAO       = 15;
-const unsigned long LUZ_LOG_INTERVALO_MS   = 10000;
+const unsigned long LUZ_LOG_INTERVALO_MS   = 5000;
 
 // Luminosidade. analogRead(A0) vai de 0 a 1023. Com o LDR ligado como no
 // projeto do Uno (LDR no 3V3, resistor de 10k para o GND, ponto do meio no
