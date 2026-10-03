@@ -81,7 +81,12 @@ const bool RELE_DESLIGA_SOLTANDO_O_PINO = true;
 // Constantes de comportamento
 const unsigned long SYNC_INTERVAL          = 1000;   // ms entre cada sync (o envio em si leva ~2 s)
 const int           WIFI_TIMEOUT_ATTEMPTS  = 20;     // 20 x 500ms = ~10s
-const unsigned long BOTAO_DEBOUNCE_MS      = 200;    // ignora o "quique" do contato
+// Botao: lido por timer a cada 10 ms. Um aperto so conta depois de 50 ms
+// seguidos em LOW, e o proximo so depois de 50 ms seguidos solto. Sem isso,
+// o repique do contato ao SOLTAR contava como outro aperto e a luz ligava
+// e desligava em seguida (medido na maquete em 03/10).
+const unsigned long BOTAO_TICK_MS          = 10;
+const int           BOTAO_LEITURAS_ESTAVEIS = 5;     // 5 x 10 ms = 50 ms
 
 // Alarme. Toca so enquanto o PIR detecta: ao detectar, LED e buzzer ligam e
 // o sensor so e lido de novo depois de ALARME_RELEITURA_MS. Se ainda houver
@@ -141,10 +146,10 @@ String logs[LOG_MAX];
 int    logCount = 0;
 
 // O sync bloqueia o loop por varios segundos (handshake TLS), entao ler o
-// botao so dentro de readSensors() perderia quase todo aperto. A interrupcao
-// registra o aperto na hora; readSensors() so transforma isso em evento.
-volatile bool          botaoApertado = false;
-volatile unsigned long ultimoAperto  = 0;
+// botao so dentro de readSensors() perderia quase todo aperto. O timer
+// (lerBotao) registra o aperto na hora; readSensors() so transforma em evento.
+Ticker        timerBotao;
+volatile bool botaoApertado = false;
 
 unsigned long ultimoSync     = 0;
 
@@ -181,7 +186,7 @@ const int DEVICE_COUNT = sizeof(devicePins) / sizeof(devicePins[0]);
 // ─── Log ─────────────────────────────────────────────────────
 
 // Escreve no Monitor Serial e guarda a linha para mandar ao site no proximo
-// sync. Nao chamar de dentro do timer nem da interrupcao (aloca String).
+// sync. Nao chamar de dentro dos timers (aloca String).
 void logar(const String& msg) {
   Serial.println(msg);
   if (logCount == LOG_MAX) {
@@ -244,12 +249,21 @@ void verificarAlarme() {
 
 // ─── Sensores ────────────────────────────────────────────────
 
-// Roda dentro da interrupcao do botao: precisa ser curta e ficar na RAM.
-void IRAM_ATTR aoApertarBotao() {
-  unsigned long agora = millis();
-  if (agora - ultimoAperto > BOTAO_DEBOUNCE_MS) {
-    botaoApertado = true;
-    ultimoAperto  = agora;
+// Chamada pelo timer a cada BOTAO_TICK_MS. Troca o estado "estavel" do botao
+// so quando a leitura nova se repete BOTAO_LEITURAS_ESTAVEIS vezes seguidas;
+// conta um aperto na passagem de solto para apertado.
+void lerBotao() {
+  static bool apertadoEstavel = false;
+  static int  repeticoes      = 0;
+  bool apertadoAgora = digitalRead(PIN_BOTAO) == LOW;
+  if (apertadoAgora == apertadoEstavel) {
+    repeticoes = 0;
+    return;
+  }
+  if (++repeticoes >= BOTAO_LEITURAS_ESTAVEIS) {
+    apertadoEstavel = apertadoAgora;
+    repeticoes = 0;
+    if (apertadoEstavel) botaoApertado = true;
   }
 }
 
@@ -271,7 +285,7 @@ void readSensors() {
   // perdido por falha de rede seria descartado sem nunca ter sido
   // entregue (ve Secao 3 do spec / achado 3 da revisao).
 
-  // Botao. A flag e ligada pela interrupcao; aqui ela so vira evento. Com o
+  // Botao. A flag e ligada pelo timer (lerBotao); aqui ela so vira evento. Com o
   // buffer cheio a flag fica ligada e o evento sai no proximo ciclo.
   if (botaoApertado && eventCount < 4) {
     logar("Botao apertado");
@@ -517,7 +531,7 @@ void setup() {
 
   pinMode(PIN_PIR, INPUT);
   pinMode(PIN_BOTAO, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(PIN_BOTAO), aoApertarBotao, FALLING);
+  timerBotao.attach_ms(BOTAO_TICK_MS, lerBotao);
   timerAlarme.attach_ms(ALARME_TICK_MS, verificarAlarme);
   timerLuz.attach_ms(LDR_TICK_MS, lerLuz);
 
