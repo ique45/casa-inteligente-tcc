@@ -9,8 +9,8 @@
  *    2. Envia esses eventos e o estado atual das luzes para o backend
  *    3. Recebe do backend a lista de comandos a executar
  *    4. Liga ou desliga a luz interna e a luz externa
- *  O alarme (LED + buzzer) e local: toca enquanto o PIR detecta presenca,
- *  relendo o sensor a cada 5s, sem depender do backend.
+ *  O alarme (LED + buzzer) e local: o PIR detecta, toca 2 s e espera 1,5 s
+ *  antes de ler o sensor de novo, sem depender do backend.
  *
  *  Mesmas pecas da maquete do projeto do Uno (Projeto_Casa_Inteligente_v3):
  *    - 4 LEDs internos: por um canal do modulo de rele, que liga os LEDs nos
@@ -88,12 +88,14 @@ const int           WIFI_TIMEOUT_ATTEMPTS  = 20;     // 20 x 500ms = ~10s
 const unsigned long BOTAO_TICK_MS          = 10;
 const int           BOTAO_LEITURAS_ESTAVEIS = 5;     // 5 x 10 ms = 50 ms
 
-// Alarme. Toca so enquanto o PIR detecta: ao detectar, LED e buzzer ligam e
-// o sensor so e lido de novo depois de ALARME_RELEITURA_MS. Se ainda houver
-// presenca, continua tocando por mais um intervalo; se nao, desliga.
+// Alarme (definido pelo grupo em 03/10): o PIR detecta, LED e buzzer tocam
+// por ALARME_DURACAO_MS e desligam; depois o PIR fica ignorado por
+// ALARME_PAUSA_MS antes de voltar a ser lido. Se ainda houver presenca
+// quando a leitura volta, dispara de novo.
 // Roda num timer (Ticker), fora do loop: o sync segura o loop por segundos
 // (handshake TLS) e o alarme nao pode esperar por ele.
-const unsigned long ALARME_RELEITURA_MS    = 5000;
+const unsigned long ALARME_DURACAO_MS      = 2000;
+const unsigned long ALARME_PAUSA_MS        = 1500;
 const unsigned long ALARME_TICK_MS         = 100;    // de quanto em quanto tempo o timer olha o PIR
 
 // Linhas do Monitor Serial que tambem vao para o site (painel "Monitor
@@ -138,7 +140,8 @@ unsigned long ultimoLogPinos  = 0;
 // Estado do alarme, mexido pelo timer (verificarAlarme) e lido pelo loop.
 Ticker                 timerAlarme;
 volatile bool          alarmeDisparado = false;
-volatile unsigned long proximaLeitura  = 0;
+volatile unsigned long fimDaEtapa      = 0;      // fim do disparo ou da pausa
+volatile bool          alarmeEmPausa   = false;
 volatile bool          disparoNovo     = false;  // o loop registra e avisa o backend
 volatile bool          alarmeParou     = false;
 // Saida crua do PIR, para ajustar os parafusos olhando o serial: cada subida
@@ -248,21 +251,22 @@ void verificarAlarme() {
     pirDesceu = true;
   }
   pirAnterior = pirAgora;
-  if (!alarmeDisparado) {
-    if (digitalRead(PIN_PIR) == HIGH) {
-      alarmeDisparado = true;
-      escreverAlarme(true);
-      proximaLeitura = agora + ALARME_RELEITURA_MS;
-      disparoNovo = true;
-    }
-  } else if ((long)(agora - proximaLeitura) >= 0) {
-    if (digitalRead(PIN_PIR) == HIGH) {
-      proximaLeitura = agora + ALARME_RELEITURA_MS;   // ainda tem alguem: mais 5s
-    } else {
+  // Tres etapas: lendo o PIR -> disparado (2 s) -> pausa sem ler (1,5 s).
+  if (alarmeDisparado) {
+    if ((long)(agora - fimDaEtapa) >= 0) {
       alarmeDisparado = false;
       escreverAlarme(false);
       alarmeParou = true;
+      alarmeEmPausa = true;
+      fimDaEtapa = agora + ALARME_PAUSA_MS;
     }
+  } else if (alarmeEmPausa) {
+    if ((long)(agora - fimDaEtapa) >= 0) alarmeEmPausa = false;
+  } else if (pirAgora) {
+    alarmeDisparado = true;
+    escreverAlarme(true);
+    fimDaEtapa = agora + ALARME_DURACAO_MS;
+    disparoNovo = true;
   }
 }
 
