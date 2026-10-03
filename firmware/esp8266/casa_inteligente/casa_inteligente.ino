@@ -159,6 +159,12 @@ volatile float         distUltima      = -1;     // -1 = nada ate DISTANCIA_MAX_
 volatile float         distMin         = 9999;
 volatile int           distLeituras    = 0;
 volatile float         distDoDisparo   = 0;
+// Nivel lido de volta nos pinos do alarme logo depois de escrever, para o
+// serial provar que o D0 (LED) e o D5 (buzzer) foram mesmo a HIGH/LOW.
+volatile bool          d0NoDisparo     = false;
+volatile bool          d5NoDisparo     = false;
+volatile bool          d0NaParada      = false;
+volatile bool          d5NaParada      = false;
 
 String logs[LOG_MAX];
 int    logCount = 0;
@@ -274,6 +280,8 @@ void verificarAlarme() {
     if ((long)(agora - fimDaEtapa) >= 0) {
       alarmeDisparado = false;
       escreverAlarme(false);
+      d0NaParada = digitalRead(PIN_LED_ALARME) == HIGH;
+      d5NaParada = digitalRead(PIN_BUZZER) == HIGH;
       alarmeParou = true;
       alarmeEmPausa = true;
       fimDaEtapa = agora + ALARME_PAUSA_MS;
@@ -284,6 +292,8 @@ void verificarAlarme() {
     distDoDisparo = d;
     alarmeDisparado = true;
     escreverAlarme(true);
+    d0NoDisparo = digitalRead(PIN_LED_ALARME) == HIGH;
+    d5NoDisparo = digitalRead(PIN_BUZZER) == HIGH;
     fimDaEtapa = agora + ALARME_DURACAO_MS;
     disparoNovo = true;
   }
@@ -341,14 +351,16 @@ void readSensors() {
   // avisa o backend (que pode ter outras automacoes de presenca).
   if (disparoNovo) {
     disparoNovo = false;
-    logar("Objeto a " + String(distDoDisparo, 1) + " cm: alarme disparado");
+    logar("Objeto a " + String(distDoDisparo, 1) + " cm: alarme disparado (D0 " +
+          (d0NoDisparo ? "HIGH" : "LOW") + ", D5 " + (d5NoDisparo ? "HIGH" : "LOW") + ")");
     if (!eventoJaPendente("presenca") && eventCount < 4) {
       events[eventCount++] = "presenca";
     }
   }
   if (alarmeParou) {
     alarmeParou = false;
-    logar("Alarme desligado (pausa de 1,5 s)");
+    logar(String("Alarme desligado (D0 ") + (d0NaParada ? "HIGH" : "LOW") + ", D5 " +
+          (d5NaParada ? "HIGH" : "LOW") + "; pausa de 1,5 s)");
   }
 
   // Distancia: uma linha por ciclo com a ultima medida e a menor do periodo.
@@ -455,8 +467,7 @@ String linhaDePinos() {
          " | D6 ext=" + nivelDoPino(PIN_LED_EXTERNA, false) +
          " | D0 led alarme=" + nivelDoPino(PIN_LED_ALARME, false) +
          " | D5 buzzer=" + nivelDoPino(PIN_BUZZER, false) +
-         " | D1 botao=" + nivelDoPino(PIN_BOTAO, false) +
-         " | D2 echo=" + nivelDoPino(PIN_ECHO, false);
+         " | D1 botao=" + nivelDoPino(PIN_BOTAO, false);
 }
 
 void applyCommand(const char* device, bool state) {
