@@ -165,6 +165,12 @@ volatile bool          d0NoDisparo     = false;
 volatile bool          d5NoDisparo     = false;
 volatile bool          d0NaParada      = false;
 volatile bool          d5NaParada      = false;
+// Teste do LED do alarme pelo site: mantem o D0 em HIGH por TESTE_LED_MS,
+// sem buzzer e sem depender do sensor, para conferir a fiacao com calma.
+const unsigned long    TESTE_LED_MS    = 10000;
+volatile bool          testeLedAtivo   = false;
+volatile unsigned long fimTesteLed     = 0;
+volatile bool          testeLedAcabou  = false;
 
 String logs[LOG_MAX];
 int    logCount = 0;
@@ -266,6 +272,16 @@ float medirDistanciaCm() {
 void verificarAlarme() {
   unsigned long agora = millis();
 
+  // Durante o teste do LED, o alarme fica parado e o D0 fica em HIGH.
+  if (testeLedAtivo) {
+    if ((long)(agora - fimTesteLed) >= 0) {
+      testeLedAtivo = false;
+      digitalWrite(PIN_LED_ALARME, LOW);
+      testeLedAcabou = true;
+    }
+    return;
+  }
+
   float d = medirDistanciaCm();
   distUltima = d;
   distLeituras = distLeituras + 1;
@@ -356,6 +372,10 @@ void readSensors() {
     if (!eventoJaPendente("presenca") && eventCount < 4) {
       events[eventCount++] = "presenca";
     }
+  }
+  if (testeLedAcabou) {
+    testeLedAcabou = false;
+    logar("Fim do teste do LED do alarme: D0 em LOW");
   }
   if (alarmeParou) {
     alarmeParou = false;
@@ -484,8 +504,18 @@ void applyCommand(const char* device, bool state) {
     logar("Comando para a luz externa ignorado: ela e controlada pelo LDR");
     return;
   }
+  // O alarme e do sensor de distancia; do site so vem o teste do LED.
   if (strcmp(device, "alarme") == 0) {
-    logar("Comando para o alarme ignorado: ele e controlado pelo sensor de presenca");
+    if (state) {
+      alarmeDisparado = false;
+      alarmeEmPausa = false;
+      escreverAlarme(false);
+      digitalWrite(PIN_LED_ALARME, HIGH);
+      fimTesteLed = millis() + TESTE_LED_MS;
+      testeLedAtivo = true;
+      logar(String("Teste do LED do alarme: D0 em ") +
+            (digitalRead(PIN_LED_ALARME) == HIGH ? "HIGH" : "LOW") + " por 10 s");
+    }
     return;
   }
   logar(String("Comando ignorado, dispositivo desconhecido: ") + device);

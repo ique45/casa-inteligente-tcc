@@ -5,7 +5,8 @@ const DEVICES = [
   // Luz externa (LDR) e alarme (ultrassom) são ligados pela placa, não pelo site:
   // só aparecem como status.
   { id: 'alarme',      name: 'Alarme',      icon: '🔔', labelOn: 'Disparado', labelOff: 'Desligado', labelTransition: null, speechOn: 'disparado', speechOff: 'desligado', somenteLeitura: true, alertaQuandoLigado: true,
-    nota: 'Toca 2 s quando algo chega a 6 cm do sensor de distância.' }
+    nota: 'Toca 2 s quando algo chega a 6 cm do sensor de distância.',
+    teste: 'Testar LED (10 s)' }
 ];
 
 // "Luz ligada", não "Luz ligado" — os rótulos visuais (labelOn) não concordam
