@@ -171,6 +171,45 @@ document.getElementById('btn-load-more').addEventListener('click', () => {
   }
 });
 
+// ---- Excluir histórico ----
+// Apaga tudo de users/{uid}/history, sem olhar o filtro. O Firestore aceita
+// no máximo 500 operações por lote, então apagamos de 400 em 400 até não
+// sobrar nada. Se a conexão cair no meio, o que já foi apagado fica apagado.
+const LOTE_EXCLUSAO = 400;
+
+async function excluirHistorico() {
+  if (!currentUser) return;
+  if (!confirm('Excluir todo o histórico? Isso não pode ser desfeito.')) return;
+
+  const btn = document.getElementById('btn-excluir-historico');
+  const erro = document.getElementById('history-erro');
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Excluindo...';
+  erro.hidden = true;
+
+  const ref = db.collection('users').doc(currentUser.uid).collection('history');
+  try {
+    for (;;) {
+      const snap = await ref.limit(LOTE_EXCLUSAO).get();
+      if (snap.empty) break;
+      const lote = db.batch();
+      snap.docs.forEach(doc => lote.delete(doc.ref));
+      await lote.commit();
+    }
+  } catch (err) {
+    console.error('Erro ao excluir histórico:', err);
+    erro.textContent = 'Erro ao excluir. Verifique sua conexão.';
+    erro.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+    loadHistory(true);
+  }
+}
+
+document.getElementById('btn-excluir-historico').addEventListener('click', excluirHistorico);
+
 // ---- Monitor serial ----
 // Só escuta o log enquanto o quadro está aberto: fechado, a página não baixa
 // as linhas da placa à toa.

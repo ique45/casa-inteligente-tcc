@@ -27,6 +27,11 @@
     .filter-label { font-size: var(--fs-sm); font-weight: 700; letter-spacing: 1px; color: var(--text-muted); min-width: 5rem; text-transform: uppercase; }
     .history-table { display: flex; flex-direction: column; gap: 0.5rem; }
     .btn-load-more { width: 100%; margin-top: 0.75rem; }
+    .history-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+    .btn-excluir-historico { background: transparent; color: var(--danger); border: 2px solid var(--danger); }
+    .btn-excluir-historico:hover:not(:disabled) { background: var(--danger-weak); color: var(--text); }
+    .btn-excluir-historico:disabled { opacity: 0.6; cursor: wait; }
+    .history-erro { color: var(--danger); font-weight: 700; margin: 0 0 1rem; }
     .serial-wrap { margin-top: 2rem; }
     .serial-box {
       margin-top: 0.75rem;
@@ -85,8 +90,14 @@
     </nav>
 
     <main class="page-body" id="conteudo">
-      <h1 class="section-title">Histórico de ativações</h1>
-      <p class="section-subtitle">Tudo que aconteceu nos seus dispositivos</p>
+      <div class="history-header">
+        <div>
+          <h1 class="section-title">Histórico de ativações</h1>
+          <p class="section-subtitle">Tudo que aconteceu nos seus dispositivos</p>
+        </div>
+        <button type="button" class="btn btn-excluir-historico" id="btn-excluir-historico">🗑️ Excluir histórico</button>
+      </div>
+      <p class="history-erro" id="history-erro" role="alert" hidden></p>
 
       <div class="filters">
         <div class="filter-row">
