@@ -8,7 +8,7 @@ let _historyGen = 0;
 let _historyInitialized = false;
 
 auth.onAuthStateChanged(user => {
-  if (!user) { _historyInitialized = false; window.location.href = 'login.html'; return; }
+  if (!user) { _historyInitialized = false; pararSerial(); window.location.href = 'login.html'; return; }
   if (_historyInitialized) return;
   _historyInitialized = true;
   currentUser = user;
@@ -171,8 +171,43 @@ document.getElementById('btn-load-more').addEventListener('click', () => {
   }
 });
 
+// ---- Monitor serial ----
+// Só escuta o log enquanto o quadro está aberto: fechado, a página não baixa
+// as linhas da placa à toa.
+let _serialRef = null;
+
+function pararSerial() {
+  if (_serialRef) { _serialRef.off('value'); _serialRef = null; }
+}
+
+function abrirSerial() {
+  if (!currentUser) return;
+  pararSerial();
+  const box = document.getElementById('serial-box');
+  box.innerHTML = linhasDoSerial(null);
+  _serialRef = rtdb.ref(`arduino_status/${currentUser.uid}/log`);
+  _serialRef.on('value', snap => {
+    // Só desce sozinho se a pessoa já estava no fim; se ela subiu para ler
+    // uma linha antiga, não arrancamos a rolagem dela.
+    const noFim = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+    box.innerHTML = linhasDoSerial(snap.val());
+    if (noFim) box.scrollTop = box.scrollHeight;
+  });
+}
+
+document.getElementById('btn-serial').addEventListener('click', () => {
+  const btn = document.getElementById('btn-serial');
+  const box = document.getElementById('serial-box');
+  const abrir = box.hidden;
+  box.hidden = !abrir;
+  btn.setAttribute('aria-expanded', String(abrir));
+  btn.textContent = abrir ? 'Esconder monitor serial' : 'Ver monitor serial';
+  if (abrir) abrirSerial(); else pararSerial();
+});
+
 // ---- Navegação ----
 
 document.getElementById('btn-logout').addEventListener('click', () => {
+  pararSerial();
   auth.signOut().then(() => window.location.href = 'login.html');
 });

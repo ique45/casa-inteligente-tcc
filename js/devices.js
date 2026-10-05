@@ -197,11 +197,27 @@ function formatRelativeTime(date) {
   return `${dayMonth} · ${time}`;
 }
 
+// Monitor serial: o firmware manda as linhas a cada sync e o backend guarda
+// as últimas em arduino_status/{uid}/log como [{ t: hora do recebimento, m }].
+// O RTDB pode devolver um array como objeto de chaves, então aceitamos os dois.
+function linhasDoSerial(log) {
+  const linhas = Array.isArray(log) ? log
+    : (log && typeof log === 'object') ? Object.values(log) : [];
+  if (!linhas.length) return '<div class="serial-vazio">Aguardando a placa…</div>';
+  return linhas.map(l => {
+    const hora = l && l.t ? new Date(l.t).toLocaleTimeString('pt-BR') : '';
+    const msg = String((l && l.m) || '');
+    const alerta = /erro|falha|sem wifi|disparado/i.test(msg);
+    return `<div${alerta ? ' class="serial-alerta"' : ''}><span class="serial-hora">${hora}</span>${escapeHtml(msg)}</div>`;
+  }).join('');
+}
+
 // Inerte no navegador, onde `module` não existe; só o Node (testes) usa isto.
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     DEVICES, TRIGGERS_BY_DEVICE, escapeHtml, formatRelativeTime, frasePara,
     VOICE_VERBS, montarComandos, normalizarFrase, encontrarComando, comandoDesativado,
-    comandoJaUsado, describeAutomation, descAlternar, detectarPar, validarComandos
+    comandoJaUsado, describeAutomation, descAlternar, detectarPar, validarComandos,
+    linhasDoSerial
   };
 }

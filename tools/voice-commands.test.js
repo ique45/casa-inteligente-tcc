@@ -297,3 +297,26 @@ test('automacao antiga com gatilho removido ainda e descrita', () => {
     assert.ok(whenText && thenText, `sem descricao para ${trigger}`);
   }
 });
+
+// ---- Monitor serial (historico) ----
+const { linhasDoSerial } = require('../js/devices.js');
+
+test('serial vazio mostra aguardando', () => {
+  for (const vazio of [null, undefined, [], {}, 'x']) {
+    assert.match(linhasDoSerial(vazio), /Aguardando a placa/);
+  }
+});
+
+test('serial escapa html e marca alertas', () => {
+  const html = linhasDoSerial([
+    { t: 0, m: 'Luminosidade: 580' },
+    { t: 0, m: 'Falha <b>HTTP</b>' }
+  ]);
+  assert.ok(!html.includes('<b>'), 'html da placa nao pode virar tag');
+  assert.match(html, /class="serial-alerta"[^>]*>.*Falha &lt;b&gt;HTTP/);
+  assert.match(html, /Luminosidade: 580/);
+});
+
+test('serial aceita log como objeto de chaves', () => {
+  assert.match(linhasDoSerial({ a: { t: 0, m: 'Botao apertado' } }), /Botao apertado/);
+});
