@@ -33,6 +33,12 @@ const TRIGGERS_BY_DEVICE = {
   alarme_armado: ['voz', 'botao_fisico']
 };
 
+// Aparelho que ainda aceita automação. A luz externa e a sirene já foram
+// automatizáveis; uma automação antiga delas só pode ser excluída.
+function aceitaAutomacao(device) {
+  return !!TRIGGERS_BY_DEVICE[device];
+}
+
 // Gatilho que a edição pode manter: só um dos que o formulário oferece para
 // o aparelho. Uma automação antiga (botão no dashboard, objeto perto,
 // escureceu) volta sem gatilho, para a pessoa escolher Voz ou Botão físico em
@@ -223,7 +229,7 @@ function linhasDoSerial(log) {
 // Inerte no navegador, onde `module` não existe; só o Node (testes) usa isto.
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    DEVICES, TRIGGERS_BY_DEVICE, gatilhoOferecido, escapeHtml, formatRelativeTime, frasePara,
+    DEVICES, TRIGGERS_BY_DEVICE, aceitaAutomacao, gatilhoOferecido, escapeHtml, formatRelativeTime, frasePara,
     VOICE_VERBS, montarComandos, normalizarFrase, encontrarComando, comandoDesativado,
     comandoJaUsado, describeAutomation, descAlternar, detectarPar, validarComandos,
     linhasDoSerial

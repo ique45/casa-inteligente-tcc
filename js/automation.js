@@ -78,7 +78,12 @@ function selectDevice(id) {
   updatePreview();
 }
 
-function getTriggerNote(triggerId) {
+function getTriggerNote(triggerId, deviceId) {
+  // Automação antiga de um aparelho que a placa controla sozinha (luz
+  // externa, sirene): não há gatilho para escolher, então explicamos.
+  if (deviceId && !aceitaAutomacao(deviceId)) {
+    return 'Este aparelho é controlado pela própria placa e não aceita mais automação. Cancele e exclua esta automação pela lixeira 🗑️ na lista.';
+  }
   const NOTAS = {
     botao_fisico: 'Requer o botão (push button) ligado à placa. Cada apertada alterna o estado.'
   };
@@ -281,6 +286,8 @@ function updatePreview() {
     text = `Ao falar "<strong>${on}</strong>", liga ${nome}; ao falar "<strong>${off}</strong>", desliga.`;
   } else if (trigger === 'botao_fisico') {
     text = `Ao apertar o botão físico, ${alternar}`;
+  } else if (!aceitaAutomacao(form.device)) {
+    text = `<strong>${escapeHtml(d.name)}</strong> — não aceita mais automação`;
   } else {
     text = `<strong>${escapeHtml(d.name)}</strong> — escolha o gatilho`;
   }

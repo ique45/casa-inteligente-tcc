@@ -336,3 +336,12 @@ test('gatilho oferecido e mantido na edicao', () => {
   assert.strictEqual(gatilhoOferecido('luz', 'voz'), 'voz');
   assert.strictEqual(gatilhoOferecido('alarme_armado', 'botao_fisico'), 'botao_fisico');
 });
+
+test('aparelho que nao aceita mais automacao e identificado', () => {
+  const { aceitaAutomacao } = require('../js/devices.js');
+  assert.strictEqual(aceitaAutomacao('luz'), true);
+  assert.strictEqual(aceitaAutomacao('alarme_armado'), true);
+  assert.strictEqual(aceitaAutomacao('luz_externa'), false);
+  assert.strictEqual(aceitaAutomacao('alarme'), false);
+  assert.strictEqual(aceitaAutomacao(undefined), false);
+});
