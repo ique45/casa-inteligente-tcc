@@ -33,6 +33,14 @@ const TRIGGERS_BY_DEVICE = {
   alarme_armado: ['voz', 'botao_fisico']
 };
 
+// Gatilho que a edição pode manter: só um dos que o formulário oferece para
+// o aparelho. Uma automação antiga (botão no dashboard, objeto perto,
+// escureceu) volta sem gatilho, para a pessoa escolher Voz ou Botão físico em
+// vez de salvar de novo um gatilho que não aparece mais na tela.
+function gatilhoOferecido(device, trigger) {
+  return (TRIGGERS_BY_DEVICE[device] || []).includes(trigger) ? trigger : null;
+}
+
 const TRIGGER_INFO = {
   voz:          { label: 'Voz',                icon: '🎤' },
   botao:        { label: 'Botão no dashboard', icon: '🔘' },
@@ -215,7 +223,7 @@ function linhasDoSerial(log) {
 // Inerte no navegador, onde `module` não existe; só o Node (testes) usa isto.
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    DEVICES, TRIGGERS_BY_DEVICE, escapeHtml, formatRelativeTime, frasePara,
+    DEVICES, TRIGGERS_BY_DEVICE, gatilhoOferecido, escapeHtml, formatRelativeTime, frasePara,
     VOICE_VERBS, montarComandos, normalizarFrase, encontrarComando, comandoDesativado,
     comandoJaUsado, describeAutomation, descAlternar, detectarPar, validarComandos,
     linhasDoSerial

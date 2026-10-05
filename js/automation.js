@@ -203,7 +203,7 @@ function enterEditMode(id) {
   editingId = id;
   form = formVazio(d.deviceType);
   form.name = d.deviceName;
-  form.trigger = d.trigger;
+  form.trigger = gatilhoOferecido(d.deviceType, d.trigger);
   form.voiceOn = d.voiceOn || '';
   form.voiceOff = d.voiceOff || '';
   // A frase que ainda é a gerada pelo par continua sendo recalculada ao

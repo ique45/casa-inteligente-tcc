@@ -320,3 +320,19 @@ test('serial escapa html e marca alertas', () => {
 test('serial aceita log como objeto de chaves', () => {
   assert.match(linhasDoSerial({ a: { t: 0, m: 'Botao apertado' } }), /Botao apertado/);
 });
+
+// ---- Edicao de automacao antiga (code review 2026-10-05) ----
+const { gatilhoOferecido } = require('../js/devices.js');
+
+test('gatilho removido nao volta ao abrir a edicao', () => {
+  for (const t of ['botao', 'presenca', 'luminosidade', undefined, null]) {
+    assert.strictEqual(gatilhoOferecido('luz', t), null, `${t} deveria virar null`);
+  }
+  assert.strictEqual(gatilhoOferecido('alarme_armado', 'presenca'), null);
+  assert.strictEqual(gatilhoOferecido('luz_externa', 'voz'), null);
+});
+
+test('gatilho oferecido e mantido na edicao', () => {
+  assert.strictEqual(gatilhoOferecido('luz', 'voz'), 'voz');
+  assert.strictEqual(gatilhoOferecido('alarme_armado', 'botao_fisico'), 'botao_fisico');
+});
