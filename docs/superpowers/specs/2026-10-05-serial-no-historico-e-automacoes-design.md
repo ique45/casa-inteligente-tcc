@@ -65,7 +65,8 @@ não tem frase de voz, então não precisa do campo.
 ### Painel (`dashboard.html`, `js/dashboard.js`)
 
 - Remover a seção "Monitor serial" (HTML, CSS `.serial-*` e `renderSerial`).
-  A assinatura do log em `arduino_status/{uid}/log` deixa de existir no painel.
+  O painel continua ouvindo `arduino_status/{uid}` para o status Online/Offline,
+  só deixa de desenhar o log.
 - "Suas automações": subtítulo passa a ser
   *"Frases de voz suas e o que o botão da maquete faz"*.
 
