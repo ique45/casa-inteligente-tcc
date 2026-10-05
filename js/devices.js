@@ -1,7 +1,8 @@
 const DEVICES = [
   { id: 'luz',         name: 'Luz interna', icon: '💡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: { on: 'Ligando...',   off: 'Desligando...' }, speechOn: 'ligada',  speechOff: 'desligada'  },
   { id: 'luz_externa', name: 'Luz externa', icon: '🏡', labelOn: 'Ligado',  labelOff: 'Desligado', labelTransition: null, speechOn: 'ligada',  speechOff: 'desligada', somenteLeitura: true,
-    nota: 'Acende sozinha quando escurece (LDR) e apaga quando clareia.' },
+    nota: 'Acende sozinha quando escurece (LDR) e apaga quando clareia.',
+    respostaVoz: 'A luz externa acende sozinha quando escurece.' },
   // Armado pelo site; com ele armado, o ultrassom faz a sirene tocar.
   { id: 'alarme_armado', name: 'Alarme', icon: '🛡️', labelOn: 'Armado', labelOff: 'Desarmado', labelTransition: { on: 'Armando...', off: 'Desarmando...' }, speechOn: 'armado', speechOff: 'desarmado',
     acaoOn: 'Armar alarme', acaoOff: 'Desarmar alarme' },
@@ -22,6 +23,15 @@ function frasePara(deviceId, isOn) {
 // Compartilhado entre automation.html (formulário) e dashboard.html (lista
 // de cards e microfone): gatilhos, comandos de voz e os textos
 // "Quando: / O sistema vai:" de uma automação salva.
+
+// Gatilhos que o formulário de automação oferece. Escureceu e objeto perto
+// ficaram de fora: a placa já cuida da luz externa e da sirene sozinha.
+// Botão no dashboard também: os cartões de "Agora na casa" já fazem isso.
+// TRIGGER_INFO continua com todos, porque o histórico antigo usa os rótulos.
+const TRIGGERS_BY_DEVICE = {
+  luz:           ['voz', 'botao_fisico'],
+  alarme_armado: ['voz', 'botao_fisico']
+};
 
 const TRIGGER_INFO = {
   voz:          { label: 'Voz',                icon: '🎤' },
@@ -190,7 +200,7 @@ function formatRelativeTime(date) {
 // Inerte no navegador, onde `module` não existe; só o Node (testes) usa isto.
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    DEVICES, escapeHtml, formatRelativeTime, frasePara,
+    DEVICES, TRIGGERS_BY_DEVICE, escapeHtml, formatRelativeTime, frasePara,
     VOICE_VERBS, montarComandos, normalizarFrase, encontrarComando, comandoDesativado,
     comandoJaUsado, describeAutomation, descAlternar, detectarPar, validarComandos
   };

@@ -274,3 +274,26 @@ test('fala que nao casa com nenhuma automacao desativada devolve null', () => {
   assert.strictEqual(comandoDesativado('armar alarme', lista), null);
   assert.strictEqual(comandoDesativado('', lista), null);
 });
+
+// ---- Gatilhos oferecidos e resposta da luz externa (2026-10-05) ----
+const { TRIGGERS_BY_DEVICE, DEVICES } = require('../js/devices.js');
+
+test('formulario oferece so voz e botao fisico', () => {
+  assert.deepStrictEqual(TRIGGERS_BY_DEVICE.luz, ['voz', 'botao_fisico']);
+  assert.deepStrictEqual(TRIGGERS_BY_DEVICE.alarme_armado, ['voz', 'botao_fisico']);
+  assert.strictEqual(TRIGGERS_BY_DEVICE.luz_externa, undefined);
+  assert.strictEqual(TRIGGERS_BY_DEVICE.alarme, undefined);
+});
+
+test('luz externa explica que acende sozinha', () => {
+  const ext = DEVICES.find(d => d.id === 'luz_externa');
+  assert.strictEqual(ext.respostaVoz, 'A luz externa acende sozinha quando escurece.');
+});
+
+test('automacao antiga com gatilho removido ainda e descrita', () => {
+  for (const trigger of ['botao', 'presenca', 'luminosidade']) {
+    const { whenText, thenText } = describeAutomation(
+      { deviceType: 'luz', deviceName: 'Luz', trigger, action: 'toggle', enabled: true });
+    assert.ok(whenText && thenText, `sem descricao para ${trigger}`);
+  }
+});
