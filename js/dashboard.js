@@ -161,30 +161,6 @@ async function alternarDispositivo(deviceId) {
   }
 }
 
-// ---- Monitor serial ----
-// O firmware manda as linhas do serial a cada sync; o backend guarda as
-// últimas em arduino_status/{uid}/log como [{ t: hora do recebimento, m }].
-
-function renderSerial() {
-  const box = document.getElementById('serial-box');
-  if (!box) return;
-  const log = Array.isArray(_arduinoStatus?.log) ? _arduinoStatus.log : [];
-  if (!log.length) {
-    box.innerHTML = '<div class="serial-vazio">Aguardando a placa…</div>';
-    return;
-  }
-  // Só desce sozinho se a pessoa já estava no fim; se ela subiu para ler
-  // uma linha antiga, não arrancamos a rolagem dela.
-  const noFim = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
-  box.innerHTML = log.map(l => {
-    const hora = l && l.t ? new Date(l.t).toLocaleTimeString('pt-BR') : '';
-    const msg = String((l && l.m) || '');
-    const alerta = /erro|falha|sem wifi|disparado/i.test(msg);
-    return `<div${alerta ? ' class="serial-alerta"' : ''}><span class="serial-hora">${hora}</span>${escapeHtml(msg)}</div>`;
-  }).join('');
-  if (noFim) box.scrollTop = box.scrollHeight;
-}
-
 function renderAutomations() {
   const grid = document.getElementById('automations-grid');
   if (!automationsList.length) {
@@ -203,24 +179,6 @@ function renderAutomations() {
     const isEnabled = d.enabled !== false;
     const { whenText, thenText } = describeAutomation(d);
 
-    // Só a automação de gatilho "botão" tem um dispositivo físico pra
-    // acionar de verdade — vira o botão grande do card. As outras (voz,
-    // presença, luminosidade...) não têm essa ação, só o interruptor pequeno.
-    let primaryBtnHtml = '';
-    if (d.trigger === 'botao' && device) {
-      const isOn = deviceStates[d.deviceType] === true;
-      const label = isOn ? device.labelOn.toUpperCase() : device.labelOff.toUpperCase();
-      primaryBtnHtml = `
-        <div class="automation-card-primary-wrap">
-          <button type="button" class="automation-card-primary-btn${isOn ? ' on' : ''}" id="acionar-${item.id}"
-            data-automation-id="${item.id}" data-device-id="${d.deviceType}"
-            aria-pressed="${isOn}" ${isEnabled ? '' : 'disabled'}
-            title="${isEnabled ? 'Ligar ou desligar agora' : 'Ative a automação para poder acionar'}">
-            <span id="acionar-label-${item.id}">${label}</span>
-          </button>
-        </div>`;
-    }
-
     return `
       <div class="automation-card ${isEnabled ? '' : 'disabled'}">
         <div class="automation-card-header">
@@ -230,7 +188,6 @@ function renderAutomations() {
           <button type="button" class="toggle-switch ${isEnabled ? 'on' : ''}" data-id="${item.id}" role="switch" aria-checked="${isEnabled}" aria-label="Ativar ou desativar automação ${escapeHtml(d.deviceName)}"></button>
           <button class="btn-edit" data-id="${item.id}" aria-label="Editar automação ${escapeHtml(d.deviceName)}" title="Editar">✏️</button>
         </div>
-        ${primaryBtnHtml}
         <div class="automation-card-body">
           <div class="automation-card-when"><span style="color:var(--text-muted);font-weight:600">Quando: </span>${whenText}</div>
           <div class="automation-card-then"><span style="color:var(--text-muted);font-weight:600">O sistema vai: </span>${thenText}</div>
@@ -244,41 +201,6 @@ function renderAutomations() {
   grid.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', () => { window.location.href = `automation.html?edit=${btn.dataset.id}`; });
   });
-  grid.querySelectorAll('.automation-card-primary-btn').forEach(btn => {
-    btn.addEventListener('click', () => acionarDispositivo(btn.dataset.automationId, btn.dataset.deviceId));
-  });
-}
-
-async function acionarDispositivo(automationId, deviceId) {
-  if (!currentUser) return;
-  if (deviceStates[deviceId] === undefined) return;
-  const item = automationsList.find(x => x.id === automationId);
-  if (!item) return;
-  const d = DEVICES.find(x => x.id === deviceId);
-  const prevState = deviceStates[deviceId] === true;
-  const newState = !prevState;   // toda automação alterna
-
-  const btn = document.getElementById(`acionar-${automationId}`);
-  const label = document.getElementById(`acionar-label-${automationId}`);
-
-  if (d?.labelTransition) {
-    if (label) label.textContent = (newState ? d.labelTransition.on : d.labelTransition.off).toUpperCase();
-    if (btn) btn.disabled = true;
-    await new Promise(r => setTimeout(r, 1200));
-    if (!currentUser) { if (btn) btn.disabled = false; return; }
-  }
-
-  try {
-    await rtdb.ref(`commands/${currentUser.uid}/${deviceId}`).set({ state: newState, ts: Date.now() });
-    await logHistory(deviceId, 'botao', newState);
-    aguardarConfirmacao(deviceId, newState);
-  } catch (err) {
-    console.error('Erro ao acionar dispositivo:', err);
-    if (label) label.textContent = (prevState ? d.labelOn : d.labelOff).toUpperCase();
-    speech.falar(`Não foi possível ${newState ? 'ligar' : 'desligar'} ${d ? d.name.toLowerCase() : 'o dispositivo'}`);
-  } finally {
-    if (btn) btn.disabled = false;
-  }
 }
 
 // Chamada depois de gravar um comando (botão ou voz): espera o ESP8266
@@ -305,16 +227,9 @@ function arduinoOnline() {
 // Volta os rótulos dos botões deste dispositivo para o último estado
 // confirmado, sem anunciar por voz (nada mudou de fato na casa).
 function mostrarEstadoReal(deviceId) {
-  const d = DEVICES.find(x => x.id === deviceId);
-  if (!d) return;
-  const isOn = deviceStates[deviceId] === true;
+  if (!DEVICES.find(x => x.id === deviceId)) return;
   delete _pendente[deviceId];
   atualizarStatus(deviceId);
-  automationsList.forEach(item => {
-    if (item.data.trigger !== 'botao' || item.data.deviceType !== deviceId) return;
-    const label = document.getElementById(`acionar-label-${item.id}`);
-    if (label) label.textContent = (isOn ? d.labelOn : d.labelOff).toUpperCase();
-  });
 }
 
 function avisarSemPlaca(deviceId) {
@@ -351,25 +266,14 @@ function listenDeviceStates() {
   });
 }
 
-// Atualiza os botoes "acionar" das automacoes de gatilho botao que
-// controlam este dispositivo, e anuncia por voz toda mudanca de estado
-// confirmada pelo Firebase — venha do proprio botao, da voz ou do ESP8266.
+// Anuncia por voz toda mudanca de estado confirmada pelo Firebase — venha
+// do card, da voz ou do ESP8266.
 function updateDeviceUI(deviceId, isOn) {
   const d = DEVICES.find(x => x.id === deviceId);
   if (!d) return;
   _pararEspera(deviceId);
   delete _pendente[deviceId];
   atualizarStatus(deviceId);
-  automationsList.forEach(item => {
-    if (item.data.trigger !== 'botao' || item.data.deviceType !== deviceId) return;
-    const btn = document.getElementById(`acionar-${item.id}`);
-    const label = document.getElementById(`acionar-label-${item.id}`);
-    if (btn && !btn.disabled) {
-      btn.classList.toggle('on', isOn);
-      btn.setAttribute('aria-pressed', String(isOn));
-    }
-    if (label) label.textContent = isOn ? d.labelOn.toUpperCase() : d.labelOff.toUpperCase();
-  });
   if (_falaLiberada && !d.semFala) speech.falar(frasePara(deviceId, isOn));
 }
 
@@ -378,7 +282,6 @@ function listenArduinoStatus() {
   _rtdbStatusRef.on('value', snap => {
     _arduinoStatus = snap.val() || {};
     renderArduinoStatus();
-    renderSerial();
   });
 
   // O listener acima só dispara quando o valor muda no banco. Um aparelho
@@ -509,9 +412,10 @@ function initVoice() {
       setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 5000);
     } else if (deviceId && DEVICES.find(x => x.id === deviceId)?.somenteLeitura) {
       _voiceResultHandled = true;
-      const nome = DEVICES.find(x => x.id === deviceId).name;
-      status.textContent = `${nome} é controlada pelo sensor da maquete, não pela voz.`;
-      speech.falar(`${nome} é controlada pelo sensor da maquete.`);
+      const ro = DEVICES.find(x => x.id === deviceId);
+      const resposta = ro.respostaVoz || `${ro.name} é controlada pelo sensor da maquete.`;
+      status.textContent = resposta;
+      speech.falar(resposta);
       setTimeout(() => { status.textContent = 'Clique para falar um comando'; }, 5000);
     } else if (deviceId && action !== null) {
       try {

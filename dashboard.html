@@ -84,18 +84,6 @@
     /* O interruptor do card liga e desliga a automação, não o aparelho. */
     .toggle-legenda { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 
-    /* ── Monitor serial ── */
-    .serial-box {
-      background: #0b0b14; color: #d7f5d7; border-radius: var(--radius);
-      border: 2px solid var(--border);
-      font-family: Consolas, 'Courier New', monospace; font-size: var(--fs-xs);
-      line-height: 1.55; padding: 0.75rem 1rem;
-      height: 14rem; overflow-y: auto; white-space: pre-wrap; word-break: break-word;
-    }
-    .serial-box:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-    .serial-hora { color: #8a93a6; margin-right: 0.6rem; }
-    .serial-alerta { color: #ff9b92; }
-    .serial-vazio { color: #8a93a6; }
     .link-ver-mais:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
   </style>
 </head>
@@ -156,20 +144,10 @@
 
       <div class="status-grid" id="status-grid" aria-live="polite"></div>
 
-      <div class="section-header" style="margin-top:1.75rem">
-        <div>
-          <h2 class="section-title" style="margin:0">Monitor serial</h2>
-          <p class="section-subtitle" style="margin:0.25rem 0 0">O que a placa está escrevendo, como no Monitor Serial da IDE</p>
-        </div>
-      </div>
-      <div class="serial-box" id="serial-box" role="log" aria-label="Monitor serial da placa" tabindex="0">
-        <div class="serial-vazio">Aguardando a placa…</div>
-      </div>
-
       <div class="section-header" style="margin-top:2rem">
         <div>
           <h2 class="section-title" style="margin:0">Suas automações</h2>
-          <p class="section-subtitle" style="margin:0.25rem 0 0">Ative, desative ou edite as automações que você criou</p>
+          <p class="section-subtitle" style="margin:0.25rem 0 0">Frases de voz suas e o que o botão da maquete faz</p>
         </div>
         <a href="automation.html" class="btn btn-primary" style="text-decoration:none">+ Nova automação</a>
       </div>
