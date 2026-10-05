@@ -655,10 +655,18 @@ void loop() {
   // anterior e a placa nunca conectava (visto em 05/10). Por isso espera
   // WIFI_RETRY_MS entre tentativas e, enquanto isso, mostra a luminosidade
   // no serial para dar para calibrar o LDR mesmo sem internet.
+  static bool          desconectado    = false;
+  static unsigned long ultimaTentativa = 0;
   if (WiFi.status() != WL_CONNECTED) {
-    static unsigned long ultimaTentativa = 0;
     static unsigned long ultimoAviso     = 0;
     unsigned long agora = millis();
+    // Os 10 s contam a partir de quando a queda foi notada: a tentativa do
+    // setup() ou a reconexao automatica do SDK podem ainda estar em curso, e
+    // um WiFi.begin() imediato as cancelaria.
+    if (!desconectado) {
+      desconectado = true;
+      ultimaTentativa = agora;
+    }
     if (agora - ultimaTentativa >= WIFI_RETRY_MS) {
       ultimaTentativa = agora;
       Serial.println("WiFi desconectado (status " + String(WiFi.status()) + "), tentando reconectar...");
@@ -671,6 +679,7 @@ void loop() {
     delay(100);
     return;
   }
+  desconectado = false;
 
   unsigned long agora = millis();
   if (agora - ultimoSync >= SYNC_INTERVAL) {
