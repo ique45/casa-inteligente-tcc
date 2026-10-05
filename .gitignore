@@ -20,3 +20,6 @@ serviceAccountKey.json
 !/favicon.png
 !/apple-touch-icon.png
 !/logo-icon.png
+
+# Segredos do firmware (WiFi, UID, token) — modelo em segredos.exemplo.h
+firmware/esp8266/casa_inteligente/segredos.h

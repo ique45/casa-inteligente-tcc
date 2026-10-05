@@ -108,9 +108,10 @@ npm test
 
 ### Firmware
 
-Abra `firmware/esp8266/casa_inteligente/casa_inteligente.ino` na IDE do Arduino,
-preencha o bloco `EDITE AQUI` no topo (rede WiFi, UID do Firebase e token) e
-envie para a placa.
+Na pasta `firmware/esp8266/casa_inteligente/`, copie `segredos.exemplo.h` para
+`segredos.h` e preencha a rede WiFi, o UID do Firebase e o token. O `segredos.h`
+fica fora do git, porque o token deixa qualquer um se passar pela placa. Depois
+abra `casa_inteligente.ino` na IDE do Arduino e envie para a placa.
 
 **Placa:** NodeMCU 1.0 (ESP-12E Module) — instale o pacote ESP8266 pelo
 Gerenciador de Placas, usando esta URL adicional:
@@ -125,7 +126,7 @@ https://arduino.esp8266.com/stable/package_esp8266com_index.json
 |---|---|
 | ArduinoJson | **7.x** — a v6 não compila com `JsonDocument` |
 
-O `TOKEN` do bloco `EDITE AQUI` precisa ser o mesmo valor da variável
+O `TOKEN_REAL` do `segredos.h` precisa ser o mesmo valor da variável
 `ARDUINO_SECRET` configurada **no Railway** — não a do `.env` local. Se os dois
 não baterem, todo sync recebe `401` e nada funciona.
 

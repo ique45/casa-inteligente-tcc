@@ -33,12 +33,17 @@
 #include <ArduinoJson.h>
 #include <Ticker.h>
 
+// Rede WiFi, UID e token ficam em segredos.h, fora do git. Na primeira vez,
+// copie segredos.exemplo.h para segredos.h e preencha. Sem ele a compilacao
+// para com "segredos.h: No such file or directory".
+#include "segredos.h"
+
 // ─── EDITE AQUI ──────────────────────────────────────────────
-const char* WIFI_SSID     = "NomeDaSuaRede";
-const char* WIFI_PASSWORD = "SenhaDaSuaRede";
+const char* WIFI_SSID     = WIFI_SSID_REAL;
+const char* WIFI_PASSWORD = WIFI_PASSWORD_REAL;
 const char* BACKEND_URL   = "https://casa-inteligente-tcc-production.up.railway.app/arduino/sync";
-const char* UID           = "cole-aqui-o-uid-do-firebase";
-const char* TOKEN         = "cole-aqui-o-mesmo-valor-de-ARDUINO_SECRET";
+const char* UID           = UID_REAL;
+const char* TOKEN         = TOKEN_REAL;
 // ─────────────────────────────────────────────────────────────
 
 // Pinos (numeracao GPIO, nao a numeracao "D" impressa na placa)
@@ -86,6 +91,7 @@ const bool RELE_DESLIGA_SOLTANDO_O_PINO = true;
 // Constantes de comportamento
 const unsigned long SYNC_INTERVAL          = 1000;   // ms entre cada sync (o envio em si leva ~2 s)
 const int           WIFI_TIMEOUT_ATTEMPTS  = 20;     // 20 x 500ms = ~10s
+const unsigned long WIFI_RETRY_MS          = 10000;  // sem WiFi: nova tentativa a cada 10 s
 // Botao: lido por timer a cada 10 ms. Um aperto so conta depois de 50 ms
 // seguidos em LOW, e o proximo so depois de 50 ms seguidos solto. Sem isso,
 // o repique do contato ao SOLTAR contava como outro aperto e a luz ligava
@@ -121,14 +127,14 @@ const int           LOG_MAX                = 12;
 // Para calibrar, abra o Monitor Serial: a leitura aparece a cada ciclo
 // ("Luminosidade: ..."). 650 e o valor que o grupo usava no Uno.
 const bool          LDR_ESCURO_E_MAIOR     = false;
-const int           LDR_LIMITE_ESCURO      = 750;    // 750 ou menos = escuro (definido pelo grupo em 03/10)
+const int           LDR_LIMITE_ESCURO      = 499;    // abaixo de 500 = escuro (era 750; sala clara le ~550-630, 05/10)
 // O LDR e lido por um timer proprio, fora do ciclo de envio: 5 vezes por
 // segundo. Assim os LEDs externos reagem quase na hora.
 const unsigned long LDR_TICK_MS            = 200;
 // Histerese: o gatilho so re-arma depois que a leitura volta LDR_HISTERESE
 // pontos para o lado claro. Sem isso, uma leitura oscilando em torno do
 // limite dispararia o evento (e a automacao de "Alternar") a cada 2s.
-const int           LDR_HISTERESE          = 20;     // apaga com 770 ou mais
+const int           LDR_HISTERESE          = 20;     // apaga com 520 ou mais
 
 // ─── Estado global ───────────────────────────────────────────
 bool estadoLuzInterna = false;
@@ -425,7 +431,7 @@ void readSensors() {
 }
 
 // Chamada pelo timer a cada LDR_TICK_MS. Como no Uno, os LEDs externos seguem
-// o LDR o tempo todo: escuro (750 ou menos) acende, claro (770 ou mais)
+// o LDR o tempo todo: escuro (abaixo de 500) acende, claro (520 ou mais)
 // apaga, entre os dois mantem. O site so mostra o estado (decisao do grupo
 // em 03/10), por isso o pino e reescrito a cada leitura.
 void lerLuz() {
@@ -644,11 +650,25 @@ void setup() {
 
 void loop() {
   // Se o WiFi caiu, tenta reconectar e pula este ciclo. As luzes ficam no
-  // ultimo estado, e o alarme segue funcionando pelo timer.
+  // ultimo estado, e o alarme segue funcionando pelo timer. A conexao leva
+  // alguns segundos: chamar reconnect() a cada 500 ms cancelava a tentativa
+  // anterior e a placa nunca conectava (visto em 05/10). Por isso espera
+  // WIFI_RETRY_MS entre tentativas e, enquanto isso, mostra a luminosidade
+  // no serial para dar para calibrar o LDR mesmo sem internet.
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi desconectado, tentando reconectar...");
-    WiFi.reconnect();
-    delay(500);
+    static unsigned long ultimaTentativa = 0;
+    static unsigned long ultimoAviso     = 0;
+    unsigned long agora = millis();
+    if (agora - ultimaTentativa >= WIFI_RETRY_MS) {
+      ultimaTentativa = agora;
+      Serial.println("WiFi desconectado (status " + String(WiFi.status()) + "), tentando reconectar...");
+      WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    }
+    if (agora - ultimoAviso >= 2000) {
+      ultimoAviso = agora;
+      Serial.println("Luminosidade: " + String(luzUltima) + (estaEscuro ? " (escuro, LED externo aceso)" : " (claro)"));
+    }
+    delay(100);
     return;
   }
 
