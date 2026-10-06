@@ -9,7 +9,7 @@
  *    2. Envia esses eventos e o estado atual das luzes para o backend
  *    3. Recebe do backend a lista de comandos a executar
  *    4. Liga ou desliga a luz interna e a luz externa
- *  Alarme armado pelo site: objeto a 6 cm ou menos, o buzzer toca 2 s e espera 1,5 s
+ *  Alarme armado pelo site: objeto a 6 cm ou menos, o buzzer toca 1 s e espera 1,5 s
  *  antes de ler o sensor de novo, sem depender do backend.
  *
  *  Mesmas pecas da maquete do projeto do Uno (Projeto_Casa_Inteligente_v3):
@@ -105,7 +105,7 @@ const int           BOTAO_LEITURAS_ESTAVEIS = 5;     // 5 x 10 ms = 50 ms
 // lido. Se o objeto ainda estiver la quando a leitura volta, dispara de novo.
 // Roda num timer (Ticker), fora do loop: o sync segura o loop por segundos
 // (handshake TLS) e o alarme nao pode esperar por ele.
-const unsigned long ALARME_DURACAO_MS      = 2000;
+const unsigned long ALARME_DURACAO_MS      = 1000;
 const unsigned long ALARME_PAUSA_MS        = 1500;
 const unsigned long ALARME_TICK_MS         = 100;    // uma medicao de distancia a cada 100 ms
 const float         DISTANCIA_ALARME_CM    = 6.0;    // perto o bastante para disparar
@@ -294,7 +294,7 @@ void verificarAlarme() {
   // Desarmado: mede (para o serial) mas nao dispara.
   if (!alarmeArmado) return;
 
-  // Tres etapas: lendo o sensor -> disparado (2 s) -> pausa sem ler (1,5 s).
+  // Tres etapas: lendo o sensor -> disparado (1 s) -> pausa sem ler (1,5 s).
   if (alarmeDisparado) {
     if ((long)(agora - fimDaEtapa) >= 0) {
       alarmeDisparado = false;
