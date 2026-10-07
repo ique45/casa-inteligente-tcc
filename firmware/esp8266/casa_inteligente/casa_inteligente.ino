@@ -127,14 +127,14 @@ const int           LOG_MAX                = 12;
 // Para calibrar, abra o Monitor Serial: a leitura aparece a cada ciclo
 // ("Luminosidade: ..."). 650 e o valor que o grupo usava no Uno.
 const bool          LDR_ESCURO_E_MAIOR     = false;
-const int           LDR_LIMITE_ESCURO      = 299;    // abaixo de 300 = bem escuro (era 500 em 05/10, 750 antes; sala clara le ~550-630)
+const int           LDR_LIMITE_ESCURO      = 199;    // abaixo de 200 = bem escuro (era 300 e 500 antes; sala clara le ~550-630)
 // O LDR e lido por um timer proprio, fora do ciclo de envio: 5 vezes por
 // segundo. Assim os LEDs externos reagem quase na hora.
 const unsigned long LDR_TICK_MS            = 200;
 // Histerese: o gatilho so re-arma depois que a leitura volta LDR_HISTERESE
 // pontos para o lado claro. Sem isso, uma leitura oscilando em torno do
 // limite dispararia o evento (e a automacao de "Alternar") a cada 2s.
-const int           LDR_HISTERESE          = 20;     // apaga com 320 ou mais
+const int           LDR_HISTERESE          = 20;     // apaga com 220 ou mais
 
 // ─── Estado global ───────────────────────────────────────────
 bool estadoLuzInterna = false;
@@ -431,7 +431,7 @@ void readSensors() {
 }
 
 // Chamada pelo timer a cada LDR_TICK_MS. Como no Uno, os LEDs externos seguem
-// o LDR o tempo todo: escuro (abaixo de 300) acende, claro (320 ou mais)
+// o LDR o tempo todo: escuro (abaixo de 200) acende, claro (220 ou mais)
 // apaga, entre os dois mantem. O site so mostra o estado (decisao do grupo
 // em 03/10), por isso o pino e reescrito a cada leitura.
 void lerLuz() {
