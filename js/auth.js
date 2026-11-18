@@ -1,6 +1,26 @@
 let isSignup = false;
 let isPendingRedirect = false;
 
+const btnSubmit  = document.getElementById('btn-submit');
+const btnGoogle  = document.getElementById('btn-google');
+const toggleLink = document.getElementById('toggle-link');
+const toggleText = document.getElementById('toggle-text');
+const inputEmail = document.getElementById('input-email');
+const inputSenha = document.getElementById('input-senha');
+const errorMsg   = document.getElementById('error-msg');
+
+// Login por e-mail ou pelo Google em andamento: o botão de quem está
+// entrando fica desativado do início ao fim (inclusive durante o
+// redirecionamento do sucesso), e nada mais começa enquanto isso.
+function emAndamento() {
+  return btnSubmit.disabled || btnGoogle.disabled;
+}
+
+// Ação ignorada por já haver um login em andamento: avisa em vez de ficar mudo.
+function avisarEmAndamento() {
+  if (window.anunciar) window.anunciar('Aguarde: já há um login em andamento.');
+}
+
 auth.onAuthStateChanged(async user => {
   if (user && window.location.pathname.includes('login.html') && !isSignup && !isPendingRedirect) {
     try {
@@ -25,22 +45,38 @@ function handleLoginError(err) {
   showError(msg);
 }
 
-document.getElementById('toggle-link').addEventListener('click', () => {
-  isSignup = !isSignup;
-  document.getElementById('btn-submit').textContent = isSignup ? 'Cadastrar' : 'Entrar';
-  document.getElementById('toggle-text').textContent = isSignup ? 'Já tem conta? ' : 'Não tem conta? ';
-  document.getElementById('toggle-link').textContent = isSignup ? 'Entrar' : 'Criar minha conta';
+// Entrar (signup = false) ou Criar minha conta (signup = true).
+function aplicarModo(signup) {
+  isSignup = signup;
+  btnSubmit.textContent  = signup ? 'Cadastrar' : 'Entrar';
+  toggleText.textContent = signup ? 'Já tem conta? ' : 'Não tem conta? ';
+  toggleLink.textContent = signup ? 'Entrar' : 'Criar minha conta';
+  // No cadastro o navegador deve sugerir senha nova, não preencher a salva.
+  inputSenha.setAttribute('autocomplete', signup ? 'new-password' : 'current-password');
+}
+
+toggleLink.addEventListener('click', () => {
+  // Trocar de modo no meio de um envio (e-mail ou Google) quebraria o fluxo.
+  if (emAndamento()) return avisarEmAndamento();
+  aplicarModo(!isSignup);
+  // O foco fica no botão de alternar; quem usa leitor de tela precisa ouvir
+  // que o formulário mudou de modo.
+  if (window.anunciar) window.anunciar(isSignup ? 'Modo cadastro: crie sua conta.' : 'Modo entrada: entre na sua conta.');
   hideError();
 });
 
-document.getElementById('btn-submit').addEventListener('click', async () => {
-  const email = document.getElementById('input-email').value.trim();
-  const senha = document.getElementById('input-senha').value;
+// Um único caminho para o envio: o botão Entrar/Cadastrar, o Enter nos campos
+// e o envio por script (form.requestSubmit) disparam o "submit".
+document.getElementById('login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (emAndamento()) return avisarEmAndamento();
+
+  const email = inputEmail.value.trim();
+  const senha = inputSenha.value;
   if (!email || !senha) return showError('Preencha email e senha.');
   if (isSignup && senha.length < 6) return showError('Senha deve ter pelo menos 6 caracteres.');
 
-  const btn = document.getElementById('btn-submit');
-  btn.disabled = true;
+  btnSubmit.disabled = true;
   hideError();
 
   try {
@@ -55,8 +91,10 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
           activeToggles: {}
         });
       } catch (fsErr) {
-        await cred.user.delete().catch(delErr => {
+        await cred.user.delete().catch(async delErr => {
           console.error('Aviso: conta Auth criada mas Firestore falhou e conta não pôde ser excluída:', delErr);
+          // Não deixa a pessoa logada numa conta sem cadastro no banco.
+          await auth.signOut().catch(() => {});
         });
         throw fsErr;
       }
@@ -64,19 +102,28 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
     } else {
       isPendingRedirect = true;
       const cred = await auth.signInWithEmailAndPassword(email, senha);
-      await redirectAfterLogin(cred.user.uid);
+      try {
+        await redirectAfterLogin(cred.user.uid);
+      } catch (perfilErr) {
+        // Logado, mas a leitura do perfil falhou: mesmo plano B do
+        // onAuthStateChanged, em vez de deixar a pessoa presa no login.
+        console.error('Erro ao verificar perfis, redirecionando para dashboard:', perfilErr);
+        window.location.href = 'dashboard.html';
+      }
     }
   } catch (err) {
     handleLoginError(err);
     isPendingRedirect = false;
-  } finally {
-    btn.disabled = false;
+    // Só reativa quando falhou: no sucesso a página está sendo trocada, e um
+    // segundo Enter durante o carregamento repetiria o login ou o cadastro.
+    btnSubmit.disabled = false;
   }
 });
 
-document.getElementById('btn-google').addEventListener('click', async () => {
-  const btn = document.getElementById('btn-google');
-  btn.disabled = true;
+btnGoogle.addEventListener('click', async () => {
+  // Não abre o Google enquanto o login/cadastro por e-mail está em andamento.
+  if (emAndamento()) return avisarEmAndamento();
+  btnGoogle.disabled = true;
   isPendingRedirect = true;
 
   const provider = new firebase.auth.GoogleAuthProvider();
@@ -98,6 +145,7 @@ document.getElementById('btn-google').addEventListener('click', async () => {
         isPendingRedirect = false;
         await auth.signOut().catch(() => {});
         showError('Erro ao criar conta. Verifique sua conexão e tente novamente.');
+        btnGoogle.disabled = false;
         return;
       }
       window.location.href = 'profile.html';
@@ -107,20 +155,42 @@ document.getElementById('btn-google').addEventListener('click', async () => {
   } catch (err) {
     handleLoginError(err);
     isPendingRedirect = false;
-  } finally {
-    btn.disabled = false;
+    // Como no e-mail: só reativa quando falhou, nunca durante o redirecionamento.
+    btnGoogle.disabled = false;
   }
 });
 
+let erroPendente = 0;
+
 function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg;
-  el.style.display = 'block';
+  // Mostra antes de escrever e escreve logo depois: o role="alert" precisa
+  // estar visível e ver o texto mudar, inclusive quando o erro se repete,
+  // para o leitor de tela anunciar. setTimeout e não requestAnimationFrame,
+  // que pausa com a aba escondida (popup do Google no celular).
+  clearTimeout(erroPendente);
+  errorMsg.style.display = 'block';
+  errorMsg.textContent = '';
+  erroPendente = setTimeout(() => { errorMsg.textContent = msg; }, 30);
 }
 
 function hideError() {
-  document.getElementById('error-msg').style.display = 'none';
+  clearTimeout(erroPendente);
+  errorMsg.style.display = 'none';
+  errorMsg.textContent = '';
 }
+
+// Ao voltar para esta página pelo botão Voltar, o navegador pode restaurá-la
+// do cache como estava no último envio (botões travados, modo cadastro).
+// Só desfaz um envio que estava em andamento; se não havia envio, mantém o
+// modo que a pessoa escolheu. Sem recarregar nem redirecionar.
+window.addEventListener('pageshow', e => {
+  if (!e.persisted || !emAndamento()) return;
+  btnSubmit.disabled = false;
+  btnGoogle.disabled = false;
+  isPendingRedirect = false;
+  aplicarModo(false);
+  hideError();
+});
 
 function translateError(code) {
   const msgs = {

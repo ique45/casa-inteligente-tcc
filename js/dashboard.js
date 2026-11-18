@@ -67,9 +67,7 @@ auth.onAuthStateChanged(async user => {
         <h2 class="section-title">Controle por voz</h2>
         <p style="color:var(--text-muted);font-size:0.875rem">
           Controle por voz desativado.
-          <span style="color:var(--purple-light);cursor:pointer" onclick="window.location.href='profile.html'">
-            Ativar nas configurações de perfil →
-          </span>
+          <a class="link-inline" href="profile.html">Ativar nas configurações de perfil<span aria-hidden="true">&nbsp;→</span></a>
         </p>
       `;
     }
@@ -166,9 +164,7 @@ function renderAutomations() {
   if (!automationsList.length) {
     grid.innerHTML = `<p class="empty-msg">
       Nenhuma automação cadastrada ainda.
-      <span style="color:var(--purple-light);cursor:pointer" onclick="window.location.href='automation.html'">
-        Criar a primeira automação →
-      </span>
+      <a class="link-inline" href="automation.html">Criar a primeira automação<span aria-hidden="true">&nbsp;→</span></a>
     </p>`;
     return;
   }

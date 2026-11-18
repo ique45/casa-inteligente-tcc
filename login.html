@@ -68,7 +68,6 @@
       text-align: center; margin-top: 1.25rem;
       font-size: var(--fs-base); color: var(--text-muted);
     }
-    .toggle-mode a { color: var(--accent-text); cursor: pointer; font-weight: 700; text-decoration: underline; }
     #btn-submit { width: 100%; margin-top: 0.25rem; }
   </style>
 </head>
@@ -98,22 +97,30 @@
       </div>
 
       <div class="login-box">
-        <div class="form-group">
-          <label class="form-label" for="input-email">E-mail</label>
-          <input type="email" id="input-email" class="form-input" placeholder="seu@email.com"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="input-senha">Senha</label>
-          <input type="password" id="input-senha" class="form-input" placeholder="••••••••"/>
-        </div>
+        <!-- form: Enter no e-mail ou na senha envia; o envio é tratado em js/auth.js.
+             autocomplete ajuda o navegador a preencher/salvar (a senha vira
+             new-password no modo cadastro). novalidate: e-mail inválido cai na
+             mensagem em português do site, não no balão do navegador. -->
+        <!-- method/action: se o JavaScript não carregar, o envio nativo não
+             vira GET com e-mail e senha na barra de endereço. -->
+        <form id="login-form" method="post" action="javascript:void(0)" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="input-email">E-mail</label>
+            <input type="email" id="input-email" name="email" autocomplete="email" class="form-input" placeholder="seu@email.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="input-senha">Senha</label>
+            <input type="password" id="input-senha" name="senha" autocomplete="current-password" class="form-input" placeholder="••••••••"/>
+          </div>
 
-        <div id="error-msg" class="error-msg" style="display:none"></div>
+          <div id="error-msg" class="error-msg" role="alert" style="display:none"></div>
 
-        <button id="btn-submit" class="btn btn-primary">Entrar</button>
+          <button type="submit" id="btn-submit" class="btn btn-primary">Entrar</button>
+        </form>
 
         <div class="divider">ou</div>
 
-        <button class="btn-google" id="btn-google">
+        <button type="button" class="btn-google" id="btn-google">
           <svg width="18" height="18" viewBox="0 0 18 18">
             <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
             <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
@@ -125,7 +132,7 @@
 
         <div class="toggle-mode">
           <span id="toggle-text">Não tem conta? </span>
-          <a id="toggle-link">Criar minha conta</a>
+          <button type="button" id="toggle-link" class="link-inline">Criar minha conta</button>
         </div>
       </div>
     </div>

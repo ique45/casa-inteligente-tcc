@@ -498,6 +498,21 @@ h1.section-title { font-size: var(--fs-2xl); }
 .section-subtitle { font-size: var(--fs-sm); color: var(--text-muted); margin-bottom: 1.25rem; }
 .error-msg { color: var(--danger); font-size: var(--fs-base); margin-top: 0.5rem; }
 .empty-msg { color: var(--text-muted); font-size: var(--fs-base); text-align: center; padding: 2rem 0; }
+/* Link dentro de um texto (ex.: "Criar a primeira automação →", "Criar minha
+   conta"): cor de destaque com contraste nos dois temas e sublinhado para não
+   depender só da cor. O <a> fica inline e quebra a linha junto com o texto;
+   link dentro de frase é exceção do critério de tamanho de alvo da WCAG
+   (2.5.8), então não ganha área de toque extra que invadiria as linhas
+   vizinhas. O <button> do login fica sozinho na linha e ganha --tap-min. */
+.link-inline {
+  color: var(--accent-text); font-weight: 700; text-decoration: underline;
+}
+button.link-inline {
+  display: inline-flex; align-items: center; min-height: var(--tap-min);
+  background: none; border: 0; padding: 0 0.25rem; cursor: pointer;
+  font: inherit; font-weight: 700;
+}
+.link-inline:hover, .link-inline:active { text-decoration-thickness: 3px; }
 
 .trigger-note {
   font-size: var(--fs-sm); color: var(--text-muted); margin-top: 0.625rem;

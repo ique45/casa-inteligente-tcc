@@ -9,9 +9,17 @@
   var root = document.documentElement;
   var live = document.getElementById('a11y-live');
 
+  // Limpa e escreve logo depois: assim uma mensagem repetida (ex.: o mesmo
+  // aviso duas vezes) muda o texto da regiao e e anunciada de novo.
+  var anuncioPendente = 0;
   function anunciar(msg) {
-    if (live) live.textContent = msg;
+    if (!live) return;
+    clearTimeout(anuncioPendente); // so a mensagem mais recente e escrita
+    live.textContent = '';
+    anuncioPendente = setTimeout(function () { live.textContent = msg; }, 30);
   }
+  // Outras telas (ex.: login) anunciam pela mesma regiao.
+  window.anunciar = anunciar;
 
   // ---- Tamanho do texto ----
   // A raiz esta em 100%, entao mudar o tamanho dela escala a interface
